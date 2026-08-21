@@ -1,0 +1,22 @@
+{
+  "short_name": "Surya Icecreams",
+  "name": "Surya Agencies — Arun Icecreams Ordering",
+  "description": "Order delicious Arun Icecreams online from Surya Agencies. Pick up fresh at counter with instant QR ticket.",
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/#customer",
+  "background_color": "#fff1f2",
+  "theme_color": "#e11d48",
+  "display": "standalone",
+  "orientation": "portrait"
+}

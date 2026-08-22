@@ -1,6 +1,6 @@
 /**
  * Customer Portal Logic — Surya Agencies
- * 8 Official Categories, Fixed Product Cards, Cart, Checkout, Live Tracking & My Orders
+ * 8 Official Categories, Fixed Product Cards, Cart, Dynamic UPI QR Code, Live Tracking & My Orders
  */
 
 class CustomerApp {
@@ -1059,6 +1059,7 @@ class CustomerApp {
     this.myOrders = [];
     this.isSubmittingOrder = false;
     this.currentView = 'catalog'; // 'catalog' | 'tracking' | 'orders'
+    this.upiId = 'suryaagencies@upi';
 
     this.categories = [
       { id: 'ALL', name: 'All Products', icon: '🍨' },
@@ -1122,7 +1123,6 @@ class CustomerApp {
   setupRealtimeListeners() {
     if (!window.socketClient) return;
 
-    // Real-Time stock updates when any order is placed or shopkeeper edits stock
     window.socketClient.on('products:stock_batch_updated', (updatedList) => {
       if (!Array.isArray(updatedList)) return;
       let changed = false;
@@ -1140,7 +1140,6 @@ class CustomerApp {
       }
     });
 
-    // Real-time product price/stock/availability update
     window.socketClient.on('product:updated', (updatedProd) => {
       const idx = this.products.findIndex(p => p.id === updatedProd.id);
       if (idx !== -1) {
@@ -1151,16 +1150,13 @@ class CustomerApp {
       this.renderProductGrid();
     });
 
-    // Real-time status update for active tracked order
     window.socketClient.on('order:status_updated', (updatedOrder) => {
-      // Update in myOrders list
       const idx = this.myOrders.findIndex(o => o.id === updatedOrder.id || o.orderNumber === updatedOrder.orderNumber);
       if (idx !== -1) {
         this.myOrders[idx] = { ...this.myOrders[idx], ...updatedOrder };
         this.saveMyOrdersToStorage();
       }
 
-      // Update in active tracked ticket
       if (this.activeTrackedOrder && (this.activeTrackedOrder.id === updatedOrder.id || this.activeTrackedOrder.orderNumber === updatedOrder.orderNumber)) {
         this.activeTrackedOrder = { ...this.activeTrackedOrder, ...updatedOrder };
         if (window.appController) window.appController.playChime();
@@ -1529,7 +1525,7 @@ class CustomerApp {
     if (totalEl) totalEl.textContent = `₹${total}`;
   }
 
-  // --- CHECKOUT & ORDER CREATION ---
+  // --- CHECKOUT & DYNAMIC UPI QR CODE ---
 
   openCheckoutModal() {
     this.closeCartDrawer();
@@ -1566,14 +1562,50 @@ class CustomerApp {
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 mb-2">Choose Payment Option</label>
               <div class="grid grid-cols-2 gap-3">
-                <label class="border-2 border-rose-600 bg-rose-50/60 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer">
-                  <input type="radio" name="checkout-payment" value="upi" checked class="text-rose-600 focus:ring-rose-500" />
+                <label id="payment-upi-label" class="border-2 border-rose-600 bg-rose-50/60 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all">
+                  <input type="radio" name="checkout-payment" value="upi" checked onchange="customerApp.togglePaymentMethod('upi')" class="text-rose-600 focus:ring-rose-500" />
                   <span class="text-xs font-extrabold text-slate-800">📱 UPI Payment</span>
                 </label>
-                <label class="border border-slate-300 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400">
-                  <input type="radio" name="checkout-payment" value="pay_at_shop" class="text-rose-600 focus:ring-rose-500" />
+                <label id="payment-cash-label" class="border border-slate-300 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all">
+                  <input type="radio" name="checkout-payment" value="pay_at_shop" onchange="customerApp.togglePaymentMethod('pay_at_shop')" class="text-rose-600 focus:ring-rose-500" />
                   <span class="text-xs font-extrabold text-slate-800">💵 Pay at Shop</span>
                 </label>
+              </div>
+            </div>
+
+            <!-- DYNAMIC UPI QR CODE SECTION -->
+            <div id="checkout-upi-box" class="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-slate-50 to-pink-50 border border-purple-200/80 space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="text-xl">📱</span>
+                  <div>
+                    <h5 class="text-xs font-black text-slate-900">Scan & Pay ₹${total} with any UPI App</h5>
+                    <p class="text-[10px] text-slate-500 font-semibold">GPay, PhonePe, Paytm, BHIM</p>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200">INSTANT UPI</span>
+              </div>
+
+              <!-- QR Code Canvas Container -->
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-4 py-2">
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-md flex items-center justify-center min-w-[140px] min-h-[140px]">
+                  <div id="checkout-upi-qrcode"></div>
+                </div>
+                <div class="text-center sm:text-left space-y-1.5 flex-1">
+                  <div class="p-2 rounded-xl bg-white border border-slate-200/80 shadow-xs">
+                    <span class="text-[9px] uppercase font-bold text-slate-400 block">Surya Agencies UPI ID</span>
+                    <span class="font-mono text-xs font-extrabold text-slate-800 select-all">${this.upiId}</span>
+                  </div>
+
+                  <!-- Direct UPI Intent Link for Mobile Users -->
+                  <a 
+                    href="upi://pay?pa=${this.upiId}&pn=Surya%20Agencies&am=${total}&cu=INR&tn=Surya%20Agencies%20Order" 
+                    class="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition-all space-x-1.5 sm:hidden"
+                  >
+                    <span>⚡ Pay Directly via UPI App</span>
+                  </a>
+                  <p class="text-[10px] text-slate-400 font-medium hidden sm:block">Scan this QR code with Google Pay, PhonePe, or Paytm app on your phone.</p>
+                </div>
               </div>
             </div>
 
@@ -1600,6 +1632,46 @@ class CustomerApp {
         </div>
       </div>
     `;
+
+    // Render Dynamic UPI QR Code
+    this.renderCheckoutUPIQR(total);
+  }
+
+  togglePaymentMethod(method) {
+    const upiBox = document.getElementById('checkout-upi-box');
+    const upiLabel = document.getElementById('payment-upi-label');
+    const cashLabel = document.getElementById('payment-cash-label');
+
+    if (method === 'upi') {
+      if (upiBox) upiBox.classList.remove('hidden');
+      if (upiLabel) upiLabel.className = 'border-2 border-rose-600 bg-rose-50/60 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all';
+      if (cashLabel) cashLabel.className = 'border border-slate-300 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all';
+    } else {
+      if (upiBox) upiBox.classList.add('hidden');
+      if (upiLabel) upiLabel.className = 'border border-slate-300 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all';
+      if (cashLabel) cashLabel.className = 'border-2 border-rose-600 bg-rose-50/60 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all';
+    }
+  }
+
+  renderCheckoutUPIQR(amount) {
+    setTimeout(() => {
+      const qrContainer = document.getElementById('checkout-upi-qrcode');
+      if (!qrContainer) return;
+
+      const upiUrl = `upi://pay?pa=${this.upiId}&pn=Surya%20Agencies&am=${amount}&cu=INR&tn=Surya%20Icecream%20Order`;
+
+      qrContainer.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(qrContainer, {
+          text: upiUrl,
+          width: 130,
+          height: 130,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+    }, 50);
   }
 
   closeCheckoutModal(event) {
@@ -1635,7 +1707,7 @@ class CustomerApp {
           customerEmail: user.email || null,
           items: this.cart,
           paymentMethod: paymentMethod,
-          paymentStatus: paymentMethod === 'upi' ? 'PENDING' : 'PENDING'
+          paymentStatus: paymentMethod === 'upi' ? 'PAID' : 'PENDING'
         })
       });
 
@@ -1757,14 +1829,18 @@ class CustomerApp {
           </div>
         ` : ''}
 
-        <!-- QR Code Display -->
+        <!-- QR Code & Counter Instructions -->
         <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 rounded-2xl bg-slate-50 border border-slate-200">
-          <div id="tracking-qrcode-container" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center min-w-[128px] min-h-[128px]"></div>
+          <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center min-w-[130px] min-h-[130px]">
+            <div id="tracking-qrcode-container"></div>
+          </div>
           <div class="text-center sm:text-left space-y-1">
-            <span class="text-xs font-bold text-slate-500">Show this QR code at the counter</span>
+            <span class="text-xs font-bold text-slate-500">Show this QR code at Surya Agencies counter</span>
             <h4 class="font-extrabold text-slate-900 text-sm">Surya Agencies Counter Pickup</h4>
             <p class="text-xs text-slate-500">Customer: ${order.customerName} (${order.customerPhone || 'Counter Pickup'})</p>
-            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-slate-200 text-slate-700">Payment: ${order.paymentMethod === 'upi' ? 'UPI' : 'Pay at Shop'} (${order.paymentStatus})</span>
+            <div class="pt-1">
+              <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-black ${order.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'}">Payment: ${order.paymentMethod === 'upi' ? 'UPI Online' : 'Pay at Shop'} (${order.paymentStatus})</span>
+            </div>
           </div>
         </div>
 
@@ -1780,7 +1856,7 @@ class CustomerApp {
             `).join('')}
           </div>
           <div class="flex justify-between items-center text-sm font-black text-slate-900 pt-2">
-            <span>Total Payable</span>
+            <span>Total Amount</span>
             <span class="text-rose-600 font-mono text-base">₹${order.total}</span>
           </div>
         </div>

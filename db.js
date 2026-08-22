@@ -15,7 +15,7 @@ class DatabaseService {
       }
     });
 
-    this.initTables();
+    this.ready = this.initTables();
   }
 
   // Promise helper for db.run
@@ -64,7 +64,8 @@ class DatabaseService {
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         category TEXT NOT NULL,
-        price REAL NOT NULL,
+        packSize TEXT,
+        price REAL,
         stock INTEGER NOT NULL DEFAULT 0,
         available INTEGER NOT NULL DEFAULT 1,
         description TEXT,
@@ -76,8 +77,10 @@ class DatabaseService {
       CREATE TABLE IF NOT EXISTS orders (
         id TEXT PRIMARY KEY,
         orderNumber TEXT NOT NULL UNIQUE,
+        customerId TEXT,
         customerName TEXT NOT NULL,
         customerPhone TEXT,
+        customerEmail TEXT,
         items TEXT NOT NULL,
         total REAL NOT NULL,
         paymentMethod TEXT NOT NULL,
@@ -91,7 +94,11 @@ class DatabaseService {
       CREATE TABLE IF NOT EXISTS customers (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        phone TEXT NOT NULL UNIQUE,
+        email TEXT,
+        phone TEXT,
+        avatar TEXT,
+        googleId TEXT,
+        authProvider TEXT DEFAULT 'local',
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         lastActive DATETIME DEFAULT CURRENT_TIMESTAMP
       );
@@ -104,9 +111,15 @@ class DatabaseService {
 
     try {
       await this.exec(createSchema);
+      
+      // Dynamic column migration for safety
+      try { await this.run('ALTER TABLE products ADD COLUMN packSize TEXT'); } catch(e){}
+      try { await this.run('ALTER TABLE orders ADD COLUMN customerId TEXT'); } catch(e){}
+      try { await this.run('ALTER TABLE orders ADD COLUMN customerEmail TEXT'); } catch(e){}
+
       console.log('✅ SQLite Schema initialized successfully');
       await this.initDefaultSettings();
-      await this.checkInitialProducts();
+      await this.syncProductsWithCatalog();
     } catch (err) {
       console.error('❌ Error initializing database tables:', err);
     }
@@ -115,13 +128,14 @@ class DatabaseService {
   async initDefaultSettings() {
     const defaults = {
       shopName: 'Surya Agencies',
-      tagline: 'Authorized Arun Icecreams Parlour',
+      tagline: 'Ice Cream & Dairy Ordering Portal',
       upiId: 'suryaagencies@upi',
-      shopPhone: '+91 98765 43210',
-      shopAddress: 'Surya Agencies, Main Bazaar, Arun Icecreams Junction',
+      shopPhone: '+91 98400 12345',
+      shopAddress: 'Surya Agencies, Main Road, Ice Cream & Dairy Junction',
       currency: '₹',
       orderCounter: '1',
-      shopkeeperPin: '1234'
+      shopkeeperUsername: 'surya_agencies',
+      shopkeeperPassword: 'suryaiceavi23'
     };
 
     for (const [key, value] of Object.entries(defaults)) {
@@ -130,171 +144,121 @@ class DatabaseService {
         [key, value]
       );
     }
-    // Update shop name to Surya Agencies if previously set differently
-    await this.run(`UPDATE settings SET value = 'Surya Agencies' WHERE key = 'shopName' AND value != 'Surya Agencies'`);
-    await this.run(`UPDATE settings SET value = 'Authorized Arun Icecreams Parlour' WHERE key = 'tagline'`);
+
+    // Ensure shopkeeper credentials match exact specification
+    await this.run(`UPDATE settings SET value = 'surya_agencies' WHERE key = 'shopkeeperUsername'`);
+    await this.run(`UPDATE settings SET value = 'suryaiceavi23' WHERE key = 'shopkeeperPassword'`);
+    await this.run(`UPDATE settings SET value = 'Surya Agencies' WHERE key = 'shopName'`);
   }
 
-  async checkInitialProducts() {
+  async syncProductsWithCatalog() {
     const countRow = await this.get(`SELECT COUNT(*) as count FROM products`);
     if (countRow && countRow.count === 0) {
-      console.log('🌱 Database empty. Seeding Arun Icecreams catalog...');
       await this.seedProducts(SAMPLE_PRODUCTS);
+      return;
+    }
+
+    // Ensure all 75 products exist in the database with their pack sizes
+    for (const p of SAMPLE_PRODUCTS) {
+      const existing = await this.get(`SELECT id FROM products WHERE id = ?`, [p.id]);
+      if (!existing) {
+        await this.run(
+          `INSERT INTO products (id, name, category, packSize, price, stock, available, description, image, createdAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          [p.id, p.name, p.category, p.packSize || '', p.price, p.stock, p.available, p.description, p.image]
+        );
+      } else {
+        await this.run(
+          `UPDATE products SET packSize = ?, category = ? WHERE id = ?`,
+          [p.packSize || '', p.category, p.id]
+        );
+      }
     }
   }
 
-  async seedProducts(productsList) {
-    for (const p of productsList) {
+  async seedProducts(products) {
+    for (const p of products) {
       await this.run(
-        `INSERT OR REPLACE INTO products (id, name, category, price, stock, available, description, image)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          p.id || `arun-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          p.name,
-          p.category || 'Cups',
-          Number(p.price) || 0,
-          Number(p.stock) || 0,
-          p.available !== undefined ? (p.available ? 1 : 0) : 1,
-          p.description || '',
-          p.image || ''
-        ]
+        `INSERT OR REPLACE INTO products (id, name, category, packSize, price, stock, available, description, image, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        [p.id, p.name, p.category, p.packSize || '', p.price, p.stock, p.available, p.description, p.image]
       );
     }
-    console.log(`🍦 Seeded ${productsList.length} Arun Icecreams products.`);
+    console.log(`🍦 Seeded ${products.length} Surya Agencies products into database.`);
   }
 
-  // --- PRODUCT METHODS ---
+  // --- PRODUCTS MANAGEMENT ---
 
   async getProducts() {
-    const rows = await this.all(`SELECT * FROM products ORDER BY category, name ASC`);
+    if (this.ready) await this.ready;
+    const rows = await this.all(`SELECT * FROM products ORDER BY category ASC, name ASC`);
     return rows.map(r => ({
       ...r,
       available: Boolean(r.available),
-      price: Number(r.price),
+      price: r.price !== null && r.price !== undefined ? Number(r.price) : null,
       stock: Number(r.stock)
     }));
   }
 
   async getProductById(id) {
-    const row = await this.get(`SELECT * FROM products WHERE id = ?`, [id]);
-    if (!row) return null;
+    if (this.ready) await this.ready;
+    const r = await this.get(`SELECT * FROM products WHERE id = ?`, [id]);
+    if (!r) return null;
     return {
-      ...row,
-      available: Boolean(row.available),
-      price: Number(row.price),
-      stock: Number(row.stock)
+      ...r,
+      available: Boolean(r.available),
+      price: r.price !== null && r.price !== undefined ? Number(r.price) : null,
+      stock: Number(r.stock)
     };
   }
 
-  async createProduct({ id, name, category, price, stock, description, image, available }) {
-    const prodId = id || `arun-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-    const isAvail = available !== undefined ? (available ? 1 : 0) : 1;
+  async updateProduct(id, updateData) {
+    if (this.ready) await this.ready;
+    const existing = await this.getProductById(id);
+    if (!existing) throw new Error(`Product not found: ${id}`);
 
-    await this.run(
-      `INSERT INTO products (id, name, category, price, stock, available, description, image, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [prodId, name.trim(), category.trim(), Number(price), Number(stock), isAvail, description || '', image || '']
-    );
-
-    return this.getProductById(prodId);
-  }
-
-  async updateProduct(id, updates) {
-    const current = await this.getProductById(id);
-    if (!current) throw new Error('Product not found');
-
-    const name = updates.name !== undefined ? updates.name.trim() : current.name;
-    const category = updates.category !== undefined ? updates.category.trim() : current.category;
-    const price = updates.price !== undefined ? Number(updates.price) : current.price;
-    const stock = updates.stock !== undefined ? Number(updates.stock) : current.stock;
-    const description = updates.description !== undefined ? updates.description : current.description;
-    const image = updates.image !== undefined ? updates.image : current.image;
-    const available = updates.available !== undefined ? (updates.available ? 1 : 0) : (current.available ? 1 : 0);
+    const name = updateData.name !== undefined ? updateData.name : existing.name;
+    const category = updateData.category !== undefined ? updateData.category : existing.category;
+    const packSize = updateData.packSize !== undefined ? updateData.packSize : existing.packSize;
+    const price = updateData.price !== undefined ? (updateData.price === null || updateData.price === '' ? null : Number(updateData.price)) : existing.price;
+    const stock = updateData.stock !== undefined ? parseInt(updateData.stock, 10) : existing.stock;
+    const available = updateData.available !== undefined ? (updateData.available ? 1 : 0) : (existing.available ? 1 : 0);
+    const description = updateData.description !== undefined ? updateData.description : existing.description;
+    const image = updateData.image !== undefined ? updateData.image : existing.image;
 
     await this.run(
       `UPDATE products 
-       SET name = ?, category = ?, price = ?, stock = ?, description = ?, image = ?, available = ?, updatedAt = CURRENT_TIMESTAMP
+       SET name = ?, category = ?, packSize = ?, price = ?, stock = ?, available = ?, description = ?, image = ?, updatedAt = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name, category, price, stock, description, image, available, id]
+      [name, category, packSize, price, stock, available, description, image, id]
     );
 
     return this.getProductById(id);
   }
 
-  async updateStock(id, newStock) {
-    const current = await this.getProductById(id);
-    if (!current) throw new Error('Product not found');
-
-    const stock = Math.max(0, parseInt(newStock, 10) || 0);
-
-    await this.run(
-      `UPDATE products 
-       SET stock = ?, updatedAt = CURRENT_TIMESTAMP 
-       WHERE id = ?`,
-      [stock, id]
-    );
-
-    return this.getProductById(id);
-  }
-
-  async deleteProduct(id) {
-    const current = await this.getProductById(id);
-    if (!current) throw new Error('Product not found');
-    await this.run(`DELETE FROM products WHERE id = ?`, [id]);
-    return { success: true, id };
-  }
-
-  // --- CUSTOMER PROFILE METHODS ---
-
-  async registerOrUpdateCustomer(name, phone) {
-    if (!name || !phone) throw new Error('Name and phone are required');
-    const cleanPhone = phone.trim().replace(/\D/g, '');
-    const cleanName = name.trim();
-
-    const existing = await this.get(`SELECT * FROM customers WHERE phone = ?`, [cleanPhone]);
-    if (existing) {
-      await this.run(`UPDATE customers SET name = ?, lastActive = CURRENT_TIMESTAMP WHERE id = ?`, [cleanName, existing.id]);
-      return this.get(`SELECT * FROM customers WHERE id = ?`, [existing.id]);
-    } else {
-      const custId = `cust-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-      await this.run(
-        `INSERT INTO customers (id, name, phone, createdAt, lastActive) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-        [custId, cleanName, cleanPhone]
-      );
-      return this.get(`SELECT * FROM customers WHERE id = ?`, [custId]);
-    }
-  }
-
-  async getCustomerByPhone(phone) {
-    const cleanPhone = phone.trim().replace(/\D/g, '');
-    return this.get(`SELECT * FROM customers WHERE phone = ?`, [cleanPhone]);
-  }
-
-  // --- ORDER METHODS & ATOMIC TRANSACTIONS ---
+  // --- ORDER NUMBER GENERATOR ---
 
   async getNextOrderNumber() {
-    const counterRow = await this.get(`SELECT value FROM settings WHERE key = 'orderCounter'`);
-    let count = counterRow ? parseInt(counterRow.value, 10) : 1;
-    if (isNaN(count) || count < 1) count = 1;
+    if (this.ready) await this.ready;
+    const row = await this.get(`SELECT value FROM settings WHERE key = 'orderCounter'`);
+    let count = row ? parseInt(row.value, 10) : 1;
+    if (isNaN(count) || count <= 0) count = 1;
 
-    const formattedNumber = `#A${String(count).padStart(3, '0')}`;
+    const formattedNumber = '#A' + String(count).padStart(3, '0');
     await this.run(`UPDATE settings SET value = ? WHERE key = 'orderCounter'`, [String(count + 1)]);
-
     return formattedNumber;
   }
 
-  async createOrder({ customerName, customerPhone, items, paymentMethod, paymentStatus = 'PENDING', notes = '' }) {
+  // --- ORDERS & TRANSACTIONAL STOCK ---
+
+  async createOrder({ customerId, customerName, customerPhone, customerEmail, items, paymentMethod, paymentStatus = 'PENDING', notes = '' }) {
+    if (this.ready) await this.ready;
     if (!items || !Array.isArray(items) || items.length === 0) {
-      throw new Error('Order must contain at least one Arun Icecream item');
+      throw new Error('Order must contain at least one item');
     }
 
     if (!customerName || !customerName.trim()) {
       throw new Error('Customer name is required');
-    }
-
-    // Save/update customer profile
-    if (customerPhone) {
-      await this.registerOrUpdateCustomer(customerName, customerPhone).catch(() => {});
     }
 
     // Begin SQLite Transaction
@@ -313,34 +277,40 @@ class DatabaseService {
           throw new Error(`Product not found: "${item.name || item.productId}"`);
         }
 
+        if (!prod.available) {
+          throw new Error(`"${prod.name}" is currently unavailable.`);
+        }
+
         const quantity = parseInt(item.quantity, 10);
         if (isNaN(quantity) || quantity <= 0) {
           throw new Error(`Invalid quantity for "${prod.name}"`);
         }
 
         if (prod.stock < quantity) {
-          if (prod.stock === 0) {
+          if (prod.stock <= 0) {
             throw new Error(`"${prod.name}" is currently Out of Stock at Surya Agencies.`);
           } else {
             throw new Error(`Only ${prod.stock} available for "${prod.name}".`);
           }
         }
 
-        const itemTotal = prod.price * quantity;
+        const unitPrice = prod.price || 0;
+        const itemTotal = unitPrice * quantity;
         calculatedTotal += itemTotal;
 
         verifiedItems.push({
           productId: prod.id,
           name: prod.name,
           category: prod.category,
-          price: prod.price,
+          packSize: prod.packSize || '',
+          price: unitPrice,
           quantity: quantity,
-          total: itemTotal,
+          itemTotal: itemTotal,
           image: prod.image
         });
       }
 
-      // 2. Decrement stock for all items
+      // 2. Decrement stock for verified items
       for (const item of verifiedItems) {
         await this.run(
           `UPDATE products 
@@ -358,7 +328,7 @@ class DatabaseService {
         });
       }
 
-      // 3. Generate Order Number & Record Order
+      // 3. Create Order Record
       const orderNumber = await this.getNextOrderNumber();
       const orderId = `order-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
       
@@ -367,85 +337,66 @@ class DatabaseService {
       const initialOrderStatus = 'NEW';
 
       await this.run(
-        `INSERT INTO orders (id, orderNumber, customerName, customerPhone, items, total, paymentMethod, paymentStatus, orderStatus, notes, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        `INSERT INTO orders (id, orderNumber, customerId, customerName, customerPhone, customerEmail, items, total, paymentMethod, paymentStatus, orderStatus, notes, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
         [
           orderId,
           orderNumber,
+          customerId || null,
           customerName.trim(),
           customerPhone ? customerPhone.trim() : '',
+          customerEmail ? customerEmail.trim() : '',
           JSON.stringify(verifiedItems),
           calculatedTotal,
           normalizedPaymentMethod,
           normalizedPaymentStatus,
           initialOrderStatus,
-          notes || ''
+          notes ? notes.trim() : ''
         ]
       );
 
-      // Commit Transaction
+      // Commit transaction
       await this.run('COMMIT');
 
-      const savedOrder = await this.getOrderById(orderId);
-
+      const createdOrder = await this.getOrderById(orderId);
       return {
-        order: savedOrder,
+        order: createdOrder,
         updatedProducts
       };
 
     } catch (err) {
-      await this.run('ROLLBACK').catch(() => {});
+      await this.run('ROLLBACK');
       throw err;
     }
   }
 
-  async getOrders(filterStatus = null, customerPhone = null) {
-    let sql = `SELECT * FROM orders`;
-    const conditions = [];
-    const params = [];
-
-    if (filterStatus && filterStatus !== 'ALL') {
-      conditions.push(`orderStatus = ?`);
-      params.push(filterStatus.toUpperCase());
-    }
-
-    if (customerPhone) {
-      conditions.push(`customerPhone = ?`);
-      params.push(customerPhone.trim());
-    }
-
-    if (conditions.length > 0) {
-      sql += ` WHERE ` + conditions.join(' AND ');
-    }
-
-    sql += ` ORDER BY createdAt DESC`;
-
-    const rows = await this.all(sql, params);
+  async getOrders() {
+    if (this.ready) await this.ready;
+    const rows = await this.all(`SELECT * FROM orders ORDER BY createdAt DESC`);
     return rows.map(r => ({
       ...r,
-      items: JSON.parse(r.items || '[]'),
+      items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
       total: Number(r.total)
     }));
   }
 
   async getOrderById(idOrOrderNumber) {
-    let row = await this.get(`SELECT * FROM orders WHERE id = ?`, [idOrOrderNumber]);
-    if (!row) {
-      let cleanNum = idOrOrderNumber.trim().toUpperCase();
-      if (!cleanNum.startsWith('#')) cleanNum = `#${cleanNum}`;
-      row = await this.get(`SELECT * FROM orders WHERE UPPER(orderNumber) = ? OR UPPER(orderNumber) = ?`, [cleanNum, idOrOrderNumber.toUpperCase()]);
-    }
-
+    if (this.ready) await this.ready;
+    const row = await this.get(
+      `SELECT * FROM orders WHERE id = ? OR orderNumber = ?`,
+      [idOrOrderNumber, idOrOrderNumber]
+    );
     if (!row) return null;
 
     return {
       ...row,
-      items: JSON.parse(row.items || '[]'),
+      items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items,
       total: Number(row.total)
     };
   }
 
   async updateOrderStatus(orderId, newStatus) {
+    if (this.ready) await this.ready;
     const validStatuses = ['NEW', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP', 'COMPLETED', 'CANCELLED'];
     const status = newStatus.toUpperCase();
 
@@ -456,19 +407,18 @@ class DatabaseService {
     const currentOrder = await this.getOrderById(orderId);
     if (!currentOrder) throw new Error('Order not found');
 
-    const prevStatus = currentOrder.orderStatus;
     const updatedProducts = [];
 
-    // If transitioning to CANCELLED from an active status, return items back to product stock
-    if (status === 'CANCELLED' && prevStatus !== 'CANCELLED' && prevStatus !== 'COMPLETED') {
-      for (const item of (currentOrder.items || [])) {
+    // If cancelling an active order, return stock back to inventory
+    if (status === 'CANCELLED' && currentOrder.orderStatus !== 'CANCELLED' && currentOrder.orderStatus !== 'COMPLETED') {
+      for (const item of currentOrder.items) {
         if (item.productId && item.quantity > 0) {
           await this.run(
             `UPDATE products SET stock = stock + ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
             [item.quantity, item.productId]
           );
-          const up = await this.getProductById(item.productId);
-          if (up) updatedProducts.push(up);
+          const p = await this.getProductById(item.productId);
+          if (p) updatedProducts.push(p);
         }
       }
     }
@@ -485,26 +435,8 @@ class DatabaseService {
     return updatedOrder;
   }
 
-  async updatePaymentStatus(orderId, newPaymentStatus) {
-    const validStatuses = ['PENDING', 'PAID', 'FAILED', 'REFUNDED'];
-    const pStatus = newPaymentStatus.toUpperCase();
-
-    if (!validStatuses.includes(pStatus)) {
-      throw new Error(`Invalid payment status: ${newPaymentStatus}`);
-    }
-
-    const currentOrder = await this.getOrderById(orderId);
-    if (!currentOrder) throw new Error('Order not found');
-
-    await this.run(
-      `UPDATE orders SET paymentStatus = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
-      [pStatus, currentOrder.id]
-    );
-
-    return this.getOrderById(currentOrder.id);
-  }
-
   async completePickup(orderIdOrNumber) {
+    if (this.ready) await this.ready;
     const order = await this.getOrderById(orderIdOrNumber);
     if (!order) {
       throw new Error('Order not found in database. Invalid QR code or ticket.');
@@ -515,16 +447,88 @@ class DatabaseService {
     }
 
     await this.run(
-      `UPDATE orders SET orderStatus = 'COMPLETED', updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+      `UPDATE orders SET orderStatus = 'COMPLETED', paymentStatus = 'PAID', updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
       [order.id]
     );
 
     return this.getOrderById(order.id);
   }
 
+  // --- CUSTOMER AUTH & PERSONAL ORDERS ---
+
+  async findOrCreateCustomer({ name, email, phone, avatar, googleId, authProvider = 'local' }) {
+    if (this.ready) await this.ready;
+    let customer = null;
+
+    if (googleId) {
+      customer = await this.get('SELECT * FROM customers WHERE googleId = ?', [googleId]);
+    }
+
+    if (!customer && email) {
+      customer = await this.get('SELECT * FROM customers WHERE LOWER(email) = LOWER(?)', [email.trim()]);
+    }
+
+    if (!customer && phone) {
+      customer = await this.get('SELECT * FROM customers WHERE phone = ?', [phone.trim()]);
+    }
+
+    if (customer) {
+      const updatedName = name || customer.name;
+      const updatedAvatar = avatar || customer.avatar;
+      const updatedEmail = email || customer.email;
+      const updatedGoogleId = googleId || customer.googleId;
+      const updatedPhone = phone || customer.phone;
+
+      await this.run(
+        `UPDATE customers SET name = ?, email = ?, phone = ?, avatar = ?, googleId = ?, lastActive = CURRENT_TIMESTAMP WHERE id = ?`,
+        [updatedName, updatedEmail, updatedPhone, updatedAvatar, updatedGoogleId, customer.id]
+      );
+
+      return this.getCustomerById(customer.id);
+    }
+
+    const newId = 'cust-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
+    const newName = name || (email ? email.split('@')[0] : 'Surya Customer');
+    const newAvatar = avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150';
+
+    await this.run(
+      `INSERT INTO customers (id, name, email, phone, avatar, googleId, authProvider, createdAt, lastActive)
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [newId, newName, email ? email.trim() : null, phone ? phone.trim() : null, newAvatar, googleId || null, authProvider]
+    );
+
+    return this.getCustomerById(newId);
+  }
+
+  async getCustomerById(id) {
+    if (this.ready) await this.ready;
+    const row = await this.get('SELECT * FROM customers WHERE id = ?', [id]);
+    return row || null;
+  }
+
+  async getCustomerOrders(customerIdOrEmail) {
+    if (this.ready) await this.ready;
+    if (!customerIdOrEmail) return [];
+    const term = customerIdOrEmail.trim();
+    
+    const rows = await this.all(
+      `SELECT * FROM orders 
+       WHERE customerId = ? OR LOWER(customerEmail) = LOWER(?) OR customerPhone = ?
+       ORDER BY createdAt DESC`,
+      [term, term, term]
+    );
+
+    return rows.map(r => ({
+      ...r,
+      items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
+      total: Number(r.total)
+    }));
+  }
+
   // --- STATS & SETTINGS ---
 
   async getDashboardStats() {
+    if (this.ready) await this.ready;
     const totalProductsRow = await this.get(`SELECT COUNT(*) as count FROM products`);
     const totalStockRow = await this.get(`SELECT SUM(stock) as totalStock FROM products`);
     
@@ -547,32 +551,34 @@ class DatabaseService {
   }
 
   async getSettings() {
+    if (this.ready) await this.ready;
     const rows = await this.all(`SELECT * FROM settings`);
     const settings = {};
     rows.forEach(r => { settings[r.key] = r.value; });
     return settings;
   }
 
-  async updateSetting(key, value) {
-    await this.run(
-      `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
-      [key, String(value)]
-    );
-    return this.getSettings();
-  }
+  async verifyShopkeeperCredentials(username, password) {
+    if (this.ready) await this.ready;
+    const userRow = await this.get(`SELECT value FROM settings WHERE key = 'shopkeeperUsername'`);
+    const passRow = await this.get(`SELECT value FROM settings WHERE key = 'shopkeeperPassword'`);
+    
+    const expectedUser = userRow ? userRow.value : 'surya_agencies';
+    const expectedPass = passRow ? passRow.value : 'suryaiceavi23';
 
-  async verifyShopkeeperPin(pin) {
-    const pinRow = await this.get(`SELECT value FROM settings WHERE key = 'shopkeeperPin'`);
-    const storedPin = pinRow ? pinRow.value : '1234';
-    return String(pin).trim() === String(storedPin).trim();
+    return (
+      String(username || '').trim() === String(expectedUser).trim() &&
+      String(password || '').trim() === String(expectedPass).trim()
+    );
   }
 
   async resetAllData() {
+    if (this.ready) await this.ready;
     await this.run('DELETE FROM orders');
     await this.run('DELETE FROM products');
     await this.run(`UPDATE settings SET value = '1' WHERE key = 'orderCounter'`);
     await this.seedProducts(SAMPLE_PRODUCTS);
-    console.log('🔄 All data reset and re-seeded with Surya Agencies Arun Icecreams catalog.');
+    console.log('🔄 All data reset and re-seeded with Surya Agencies catalog.');
     return { success: true };
   }
 }

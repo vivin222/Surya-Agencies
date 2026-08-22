@@ -1,268 +1,243 @@
-/* ==========================================================================
-   Surya Agencies — Arun Icecreams Complete Offline & Live Stylesheet
-   Works 100% standalone without requiring external CDN or internet access
-   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap');
 
 :root {
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-display: 'Space Grotesk', var(--font-sans);
-  --primary-rose: #e11d48;
-  --primary-rose-hover: #be123c;
-  --primary-rose-dark: #9f1239;
-  --rose-50: #fff1f2;
-  --rose-100: #ffe4e6;
-  --rose-200: #fecdd3;
-  --rose-500: #f43f5e;
-  --rose-600: #e11d48;
-  --rose-700: #be123c;
-  --slate-50: #f8fafc;
-  --slate-100: #f1f5f9;
-  --slate-200: #e2e8f0;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #64748b;
-  --slate-600: #475569;
-  --slate-700: #334155;
-  --slate-800: #1e293b;
-  --slate-900: #0f172a;
+  --primary: #e11d48;
+  --primary-hover: #be123c;
+  --primary-light: #fff1f2;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
 }
 
-*, *::before, *::after {
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
-  font-family: var(--font-sans);
-  background-color: var(--slate-50);
-  color: var(--slate-800);
-  -webkit-tap-highlight-color: transparent;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  line-height: 1.5;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f8fafc;
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
 .font-display {
-  font-family: var(--font-display);
+  font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Glassmorphism navigation & cards */
-.glass-nav {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+/* -------------------------------------------------------------
+   PRODUCT CARD & IMAGE CONTAINER (FIXED NON-COLLIDING LAYOUT)
+   ------------------------------------------------------------- */
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.25rem;
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+@media (min-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+@media (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
-/* No scrollbar utility */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+@media (min-width: 1280px) {
+  .product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
-/* Animations */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.92; transform: scale(1.01); }
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 2s infinite ease-in-out;
-}
-
-@keyframes bounce-small {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-.animate-bounce-small {
-  animation: bounce-small 1.5s infinite ease-in-out;
-}
-
-/* Digital Ticket Styles */
-.ticket-container {
+.product-card {
   background: #ffffff;
-  position: relative;
-  border-radius: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-}
-
-.ticket-container::before,
-.ticket-container::after {
-  content: '';
-  position: absolute;
-  top: 65%;
-  width: 22px;
-  height: 22px;
-  background-color: #f8fafc;
-  border-radius: 50%;
-  z-index: 10;
-}
-
-.ticket-container::before {
-  left: -11px;
-  box-shadow: inset -2px 0 3px rgba(0,0,0,0.06);
-}
-
-.ticket-container::after {
-  right: -11px;
-  box-shadow: inset 2px 0 3px rgba(0,0,0,0.06);
-}
-
-.ticket-perforation {
-  position: absolute;
-  top: 66.5%;
-  left: 16px;
-  right: 16px;
-  border-top: 2px dashed #cbd5e1;
-}
-
-/* Arun Brand Gradient Badges */
-.bg-arun-gradient {
-  background: linear-gradient(135deg, #e11d48 0%, #be123c 50%, #9f1239 100%);
-}
-
-.bg-arun-gold {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-/* Status Badges */
-.badge-new {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
-}
-
-.badge-preparing {
-  background-color: #fefce8;
-  color: #a16207;
-  border: 1px solid #fef08a;
-}
-
-.badge-ready {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-}
-
-.badge-completed {
-  background-color: #f8fafc;
-  color: #475569;
   border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+  height: 100%;
 }
 
-.badge-cancelled {
-  background-color: #fff1f2;
-  color: #be123c;
-  border: 1px solid #fecdd3;
+.product-card:hover {
+  border-color: #f43f5e;
+  box-shadow: 0 12px 24px -8px rgba(225, 29, 72, 0.12);
+  transform: translateY(-2px);
 }
 
-/* Connection Status Pill */
+/* Strict Image Box with Fixed Height and Contain */
+.product-image-box {
+  width: 100%;
+  height: 160px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.product-image-box img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.product-card:hover .product-image-box img {
+  transform: scale(1.04);
+}
+
+/* -------------------------------------------------------------
+   STATUS PILLS & BADGES
+   ------------------------------------------------------------- */
+
 .conn-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
   border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 0.6875rem;
+  font-weight: 700;
   transition: all 0.2s ease;
 }
 
 .conn-status-online {
-  background-color: #ecfdf5;
-  color: #047857;
+  background: #ecfdf5;
+  color: #065f46;
   border: 1px solid #a7f3d0;
 }
 
 .conn-status-reconnecting {
-  background-color: #fefce8;
-  color: #a16207;
-  border: 1px solid #fef08a;
-  animation: pulse-subtle 1.5s infinite;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
 }
 
 .conn-status-offline {
-  background-color: #fff1f2;
-  color: #be123c;
-  border: 1px solid #fecdd3;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
 }
 
 .conn-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   display: inline-block;
 }
 
 .conn-dot-online {
-  background-color: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
 }
 
 .conn-dot-reconnecting {
-  background-color: #f59e0b;
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  background: #f59e0b;
+  animation: pulse 1.5s infinite;
 }
 
 .conn-dot-offline {
-  background-color: #ef4444;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  background: #ef4444;
 }
 
-/* QR Code & Scanner styling */
-#qr-camera-reader {
-  width: 100% !important;
-  border: none !important;
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
 
-#qr-camera-reader video {
-  border-radius: 1rem;
-  object-fit: cover;
+/* -------------------------------------------------------------
+   ORDER STATUS STEPPER
+   ------------------------------------------------------------- */
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
 }
 
-/* Print Styling */
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #customer-order-ticket-view, #customer-order-ticket-view * {
-    visibility: visible;
-  }
-  #customer-order-ticket-view {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-  button, .no-print {
-    display: none !important;
-  }
+.stepper-circle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 2px solid #e2e8f0;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.stepper-circle.active {
+  background: #e11d48;
+  color: #ffffff;
+  border-color: #be123c;
+  box-shadow: 0 0 0 4px #ffe4e6;
+}
+
+.stepper-circle.completed {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #059669;
+}
+
+.stepper-line {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.stepper-line.completed {
+  background: #10b981;
+}
+
+/* Glass Header */
+.glass-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

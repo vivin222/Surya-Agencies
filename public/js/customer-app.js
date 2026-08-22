@@ -1,179 +1,1093 @@
 /**
- * Customer Portal — Surya Agencies (Arun Icecreams)
- * Connects to shared central database & real-time Socket.io backend
+ * Customer Portal Logic — Surya Agencies
+ * 8 Official Categories, Fixed Product Cards, Cart, Checkout, Live Tracking & My Orders
  */
 
 class CustomerApp {
   constructor() {
     this.products = [
   {
-    "id": "arun-trio",
-    "name": "Arun Trio (Choco-Vanilla-Strawberry)",
-    "category": "Bars & Sticks",
-    "price": 35,
+    "id": "arokya-full-cream-500ml",
+    "name": "Arokya Full Cream Milk (500ml)",
+    "category": "Dairy Products",
+    "packSize": "500ml",
+    "price": 36,
     "stock": 50,
     "available": 1,
-    "description": "Iconic 3-in-1 ice cream bar combining luscious chocolate, classic vanilla, and sweet strawberry in authentic Arun packaging.",
+    "description": "Fresh, pasteurized, rich full cream milk with 6.0% fat content for thick curd, tea, and coffee.",
     "image": "/assets/arun-trio.jpg"
   },
   {
-    "id": "arun-cassatta",
-    "name": "Arun Cassatta Slice",
-    "category": "Slices & Cakes",
-    "price": 65,
-    "stock": 35,
+    "id": "arokya-full-cream-1l",
+    "name": "Arokya Full Cream Milk (1 Litre)",
+    "category": "Dairy Products",
+    "packSize": "1 Litre",
+    "price": 70,
+    "stock": 40,
     "available": 1,
-    "description": "Rich multi-layered sponge cake topped with strawberry, vanilla, and pistachio ice cream garnished with roasted cashew praline.",
-    "image": "/assets/arun-cassatta.jpg"
+    "description": "Pure rich wholesome milk with high cream content, ideal for daily family consumption.",
+    "image": "/assets/arun-trio.jpg"
   },
   {
-    "id": "arun-icon-chocobar",
-    "name": "Arun Icon Chocobar Feast",
-    "category": "Bars & Sticks",
-    "price": 40,
+    "id": "arokya-toned-milk-500ml",
+    "name": "Arokya Toned Milk (500ml)",
+    "category": "Dairy Products",
+    "packSize": "500ml",
+    "price": 28,
+    "stock": 60,
+    "available": 1,
+    "description": "Nutritious pasteurized toned milk with 3.0% fat, perfect for balanced everyday health.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "arokya-toned-milk-1l",
+    "name": "Arokya Toned Milk (1 Litre)",
+    "category": "Dairy Products",
+    "packSize": "1 Litre",
+    "price": 54,
     "stock": 45,
     "available": 1,
-    "description": "Velvety vanilla ice cream bar dipped in thick, crackling dark Belgian chocolate coating in official Arun Icon packaging.",
-    "image": "/assets/arun-chocobar.jpg"
+    "description": "Fresh homogenized toned milk packed with essential proteins and calcium.",
+    "image": "/assets/arun-trio.jpg"
   },
   {
-    "id": "arun-spirals-cone",
-    "name": "Arun Spirals Swirled Waffle Cone",
-    "category": "Cones",
-    "price": 55,
+    "id": "arokya-double-toned-500ml",
+    "name": "Arokya Double Toned Milk (500ml)",
+    "category": "Dairy Products",
+    "packSize": "500ml",
+    "price": 25,
+    "stock": 35,
+    "available": 1,
+    "description": "Low-fat light double toned milk with 1.5% fat, ideal for fitness and low-calorie diets.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "hatsun-curd-pouch-200g",
+    "name": "Hatsun Curd Pouch (200g)",
+    "category": "Dairy Products",
+    "packSize": "200g",
+    "price": 18,
     "stock": 40,
     "available": 1,
-    "description": "Crispy baked waffle cone filled with twirled dark chocolate and vanilla cream topped with chocolate drizzle and roasted nuts.",
-    "image": "/assets/arun-spirals-cone.jpg"
-  },
-  {
-    "id": "arun-kulfi-maharaj",
-    "name": "Arun Kulfi Maharaj Stick",
-    "category": "Kulfi Special",
-    "price": 35,
-    "stock": 40,
-    "available": 1,
-    "description": "Traditional slow-cooked thick rabri kulfi enriched with roasted almonds, Iranian pistachio, and fragrant cardamom.",
-    "image": "/assets/arun-kulfi-maharaj.jpg"
-  },
-  {
-    "id": "arun-matka-kulfi",
-    "name": "Arun Royal Matka Kulfi",
-    "category": "Kulfi Special",
-    "price": 80,
-    "stock": 25,
-    "available": 1,
-    "description": "Authentic royal saffron-infused kesar pista kulfi served in a traditional reusable clay matka pot.",
+    "description": "Traditional thick, creamy dahi made from farm-fresh pasteurized milk.",
     "image": "/assets/arun-matka-kulfi.jpg"
   },
   {
-    "id": "arun-vanilla-magic-cup",
-    "name": "Arun Vanilla Magic Cup (100ml)",
-    "category": "Cups",
-    "price": 25,
-    "stock": 60,
+    "id": "hatsun-curd-pouch-400g",
+    "name": "Hatsun Curd Pouch (400g)",
+    "category": "Dairy Products",
+    "packSize": "400g",
+    "price": 34,
+    "stock": 50,
     "available": 1,
-    "description": "Pure smooth cream blended with natural vanilla extracts in convenient tamper-proof cups.",
+    "description": "Smooth, naturally set thick curd pouch for everyday meals, curd rice, and raita.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "hatsun-curd-pouch-1kg",
+    "name": "Hatsun Curd Pouch (1kg)",
+    "category": "Dairy Products",
+    "packSize": "1kg",
+    "price": 80,
+    "stock": 30,
+    "available": 1,
+    "description": "Family size pack of rich, thick, and delicious Hatsun farm curd.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "hatsun-curd-cup-200g",
+    "name": "Hatsun Curd Cup (200g)",
+    "category": "Dairy Products",
+    "packSize": "200g",
+    "price": 22,
+    "stock": 35,
+    "available": 1,
+    "description": "Tamper-proof, spill-proof premium tub of naturally cultured creamy curd.",
     "image": "/assets/arun-vanilla-cup.jpg"
   },
   {
-    "id": "arun-butterscotch-tub",
-    "name": "Arun Butterscotch Crunch Tub (500ml)",
-    "category": "Family Tubs",
-    "price": 160,
-    "stock": 20,
-    "available": 1,
-    "description": "Generous family dessert tub with creamy rich butterscotch ice cream packed with golden cashew crunchies in official Arun tub.",
-    "image": "/assets/arun-butterscotch-tub.jpg"
-  },
-  {
-    "id": "arun-cotton-candy-cone",
-    "name": "Arun Cotton Candy Delight Cone",
-    "category": "Cones",
-    "price": 45,
+    "id": "hatsun-curd-cup-400g",
+    "name": "Hatsun Curd Cup (400g)",
+    "category": "Dairy Products",
+    "packSize": "400g",
+    "price": 42,
     "stock": 30,
     "available": 1,
-    "description": "Playful pastel pink and blue swirls of cotton candy flavoured ice cream in a crunchy waffle cone.",
-    "image": "/assets/arun-spirals-cone.jpg"
+    "description": "Convenient table tub of smooth, creamy curd made with natural active cultures.",
+    "image": "/assets/arun-vanilla-cup.jpg"
   },
   {
-    "id": "arun-choco-rocks-tub",
-    "name": "Arun Choco Rocks Tub (700ml)",
-    "category": "Family Tubs",
-    "price": 220,
-    "stock": 15,
+    "id": "hatsun-fresh-paneer-200g",
+    "name": "Hatsun Fresh Paneer (200g)",
+    "category": "Dairy Products",
+    "packSize": "200g",
+    "price": 110,
+    "stock": 30,
     "available": 1,
-    "description": "Ultimate chocolate lovers tub filled with chunky chocolate brownies, fudge ripples, and chocolate flakes in Arun tub.",
+    "description": "Soft, melt-in-mouth cottage cheese made from 100% cow milk, perfect for curries and tikka.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "hatsun-fresh-paneer-500g",
+    "name": "Hatsun Fresh Paneer (500g)",
+    "category": "Dairy Products",
+    "packSize": "500g",
+    "price": 260,
+    "stock": 20,
+    "available": 1,
+    "description": "Premium fresh paneer block with high protein and tender texture.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "hatsun-cooking-butter-100g",
+    "name": "Hatsun Cooking Butter (100g)",
+    "category": "Dairy Products",
+    "packSize": "100g",
+    "price": 60,
+    "stock": 25,
+    "available": 1,
+    "description": "Unsalted pure white cooking butter for traditional sweets, baking, and clarified ghee.",
     "image": "/assets/arun-butterscotch-tub.jpg"
   },
   {
-    "id": "arun-wonder-bar",
-    "name": "Arun Wonder Bar Alphonso Mango",
-    "category": "Bars & Sticks",
-    "price": 25,
+    "id": "hatsun-cooking-butter-500g",
+    "name": "Hatsun Cooking Butter (500g)",
+    "category": "Dairy Products",
+    "packSize": "500g",
+    "price": 285,
+    "stock": 20,
+    "available": 1,
+    "description": "Pure churned unsalted dairy butter block for cooking and baking.",
+    "image": "/assets/arun-butterscotch-tub.jpg"
+  },
+  {
+    "id": "hatsun-table-butter-100g",
+    "name": "Hatsun Table Butter (100g)",
+    "category": "Dairy Products",
+    "packSize": "100g",
+    "price": 62,
+    "stock": 30,
+    "available": 1,
+    "description": "Delicious salted golden table butter for morning toasts, parathas, and dosas.",
+    "image": "/assets/arun-butterscotch-tub.jpg"
+  },
+  {
+    "id": "hatsun-table-butter-500g",
+    "name": "Hatsun Table Butter (500g)",
+    "category": "Dairy Products",
+    "packSize": "500g",
+    "price": 295,
+    "stock": 15,
+    "available": 1,
+    "description": "Creamy salted table butter made from fresh dairy cream.",
+    "image": "/assets/arun-butterscotch-tub.jpg"
+  },
+  {
+    "id": "hatsun-pure-ghee-pouch-200ml",
+    "name": "Hatsun Pure Cow Ghee Pouch (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 150,
+    "stock": 25,
+    "available": 1,
+    "description": "Traditional aroma-rich golden granular cow ghee in a convenient flexible pouch.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "hatsun-pure-ghee-pouch-500ml",
+    "name": "Hatsun Pure Cow Ghee Pouch (500ml)",
+    "category": "Dairy Products",
+    "packSize": "500ml",
+    "price": 360,
+    "stock": 20,
+    "available": 1,
+    "description": "100% pure granular aromatic cow ghee for festival sweets and daily meals.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "hatsun-pure-ghee-jar-500ml",
+    "name": "Hatsun Pure Cow Ghee Jar (500ml)",
+    "category": "Dairy Products",
+    "packSize": "500ml",
+    "price": 375,
+    "stock": 20,
+    "available": 1,
+    "description": "Pure cow ghee packed in a reusable, airtight hygienic jar.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "hatsun-pure-ghee-tin-1l",
+    "name": "Hatsun Pure Cow Ghee Tin (1 Litre)",
+    "category": "Dairy Products",
+    "packSize": "1 Litre",
+    "price": 740,
+    "stock": 15,
+    "available": 1,
+    "description": "Premium sealed metal tin of aromatic granular pure cow ghee.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "hatsun-dairy-whitener-200g",
+    "name": "Hatsun Dairy Whitener (200g)",
+    "category": "Dairy Products",
+    "packSize": "200g",
+    "price": 85,
+    "stock": 30,
+    "available": 1,
+    "description": "Instant dissolving dairy milk powder for rich, creamy tea and coffee anywhere.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "hatsun-dairy-whitener-500g",
+    "name": "Hatsun Dairy Whitener (500g)",
+    "category": "Dairy Products",
+    "packSize": "500g",
+    "price": 210,
+    "stock": 20,
+    "available": 1,
+    "description": "Fine grade sweet dairy whitener powder made from fresh cow milk.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "hatsun-flavoured-milk-choco",
+    "name": "Hatsun Flavoured Milk Chocolate (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 35,
     "stock": 45,
     "available": 1,
-    "description": "Juicy tropical real Alphonso mango fruit bar with a smooth dairy cream centre in authentic Arun packaging.",
+    "description": "Creamy chilled milk blended with rich cocoa chocolate flavour in an easy-sip bottle.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "hatsun-flavoured-milk-badam",
+    "name": "Hatsun Flavoured Milk Badam (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 35,
+    "stock": 45,
+    "available": 1,
+    "description": "Traditional almond badam infused chilled dairy drink with crushed nut flavor.",
+    "image": "/assets/arun-kulfi-maharaj.jpg"
+  },
+  {
+    "id": "hatsun-flavoured-milk-pista",
+    "name": "Hatsun Flavoured Milk Pista (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 35,
+    "stock": 40,
+    "available": 1,
+    "description": "Refreshing pistachio green flavoured milk with natural cardamom aroma.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "hatsun-flavoured-milk-strawberry",
+    "name": "Hatsun Flavoured Milk Strawberry (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 35,
+    "stock": 40,
+    "available": 1,
+    "description": "Sweet berry flavoured chilled dairy beverage.",
     "image": "/assets/arun-trio.jpg"
   },
   {
-    "id": "arun-strawberry-blast",
-    "name": "Arun Strawberry Blast Cup (100ml)",
-    "category": "Cups",
-    "price": 30,
+    "id": "hatsun-lassi-200ml",
+    "name": "Hatsun Lassi (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 25,
     "stock": 40,
     "available": 1,
-    "description": "Fresh farm strawberry puree churned into sweet, silky smooth pink cream in tamper-proof Arun cup.",
+    "description": "Sweet, thick churned refreshing Punjabi-style yogurt drink.",
     "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "hatsun-buttermilk-200ml",
+    "name": "Hatsun Buttermilk (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 15,
+    "stock": 50,
+    "available": 1,
+    "description": "Spiced cooling traditional moru buttermilk with ginger, curry leaves, and green chillies.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "hatsun-yogurt-shake-strawberry",
+    "name": "Hatsun Yogurt Shake Strawberry (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 40,
+    "stock": 35,
+    "available": 1,
+    "description": "Probiotic smooth yogurt shake infused with natural strawberry fruit puree.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "hatsun-yogurt-shake-mango",
+    "name": "Hatsun Yogurt Shake Mango (200ml)",
+    "category": "Dairy Products",
+    "packSize": "200ml",
+    "price": 40,
+    "stock": 35,
+    "available": 1,
+    "description": "Delicious thick probiotic mango yogurt shake packed with tropical flavor.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "icone-premium-butterscotch",
+    "name": "iCone Premium Butterscotch",
+    "category": "Ice Cream Cones",
+    "packSize": "110ml",
+    "price": 55,
+    "stock": 40,
+    "available": 1,
+    "description": "Crispy waffle cone filled with rich butterscotch ice cream, butterscotch drizzle, and cashew crunchies.",
+    "image": "/assets/arun-spirals-cone.jpg"
+  },
+  {
+    "id": "icone-premium-double-chocolate",
+    "name": "iCone Premium Double Chocolate",
+    "category": "Ice Cream Cones",
+    "packSize": "110ml",
+    "price": 60,
+    "stock": 45,
+    "available": 1,
+    "description": "Baked chocolate waffle cone with dark chocolate swirl and chocolate chips.",
+    "image": "/assets/arun-spirals-cone.jpg"
+  },
+  {
+    "id": "icone-premium-blackcurrant",
+    "name": "iCone Premium Blackcurrant",
+    "category": "Ice Cream Cones",
+    "packSize": "110ml",
+    "price": 55,
+    "stock": 35,
+    "available": 1,
+    "description": "Tangy exotic blackcurrant swirls in a crunchy cone crowned with berry chocolate disc.",
+    "image": "/assets/arun-spirals-cone.jpg"
+  },
+  {
+    "id": "icone-classic-vanilla",
+    "name": "iCone Classic Vanilla",
+    "category": "Ice Cream Cones",
+    "packSize": "100ml",
+    "price": 45,
+    "stock": 40,
+    "available": 1,
+    "description": "Pure Bourbon vanilla ice cream in a crispy wafer cone with chocolate tip.",
+    "image": "/assets/arun-spirals-cone.jpg"
+  },
+  {
+    "id": "icone-classic-strawberry",
+    "name": "iCone Classic Strawberry",
+    "category": "Ice Cream Cones",
+    "packSize": "100ml",
+    "price": 45,
+    "stock": 35,
+    "available": 1,
+    "description": "Creamy farm-fresh strawberry cream swirled in a crunchy baked waffle cone.",
+    "image": "/assets/arun-spirals-cone.jpg"
+  },
+  {
+    "id": "icone-choco-coffee",
+    "name": "iCone Choco Coffee",
+    "category": "Ice Cream Cones",
+    "packSize": "110ml",
+    "price": 55,
+    "stock": 30,
+    "available": 1,
+    "description": "Aromatic roasted South Indian filter coffee ice cream paired with dark chocolate syrup.",
+    "image": "/assets/arun-spirals-cone.jpg"
+  },
+  {
+    "id": "icone-mini-chocolate",
+    "name": "iCone Mini Chocolate",
+    "category": "Ice Cream Cones",
+    "packSize": "60ml",
+    "price": 30,
+    "stock": 45,
+    "available": 1,
+    "description": "Bite-sized crispy mini chocolate cone, ideal for quick treats.",
+    "image": "/assets/arun-spirals-cone.jpg"
+  },
+  {
+    "id": "icone-mini-butterscotch",
+    "name": "iCone Mini Butterscotch",
+    "category": "Ice Cream Cones",
+    "packSize": "60ml",
+    "price": 30,
+    "stock": 45,
+    "available": 1,
+    "description": "Miniature crunch cone packed with sweet golden butterscotch.",
+    "image": "/assets/arun-spirals-cone.jpg"
+  },
+  {
+    "id": "arun-chocobar-classic",
+    "name": "Arun Chocobar Classic",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "65ml",
+    "price": 25,
+    "stock": 60,
+    "available": 1,
+    "description": "The iconic classic vanilla ice cream bar dipped in crackling dark chocolate coating.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "arun-chocobar-premium-double-choco",
+    "name": "Arun Chocobar Premium Double Choco",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "80ml",
+    "price": 40,
+    "stock": 50,
+    "available": 1,
+    "description": "Rich chocolate ice cream core dipped in thick Belgian chocolate shell with almond bits.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "ibar-mango-premium",
+    "name": "iBar Mango Premium",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "75ml",
+    "price": 35,
+    "stock": 45,
+    "available": 1,
+    "description": "Real Alphonso mango pulp outer crust with a velvety dairy milk centre.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "ibar-raspberry-premium",
+    "name": "iBar Raspberry Premium",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "75ml",
+    "price": 35,
+    "stock": 40,
+    "available": 1,
+    "description": "Zesty red raspberry fruit crust filled with smooth vanilla cream.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "ibar-choco-feast",
+    "name": "iBar Choco Feast",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "90ml",
+    "price": 45,
+    "stock": 45,
+    "available": 1,
+    "description": "Heavy decadent chocolate fudge ice cream bar with crispy biscuit balls in chocolate shell.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "kulfi-king-classic-pista",
+    "name": "Kulfi King Classic Pista",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "70ml",
+    "price": 35,
+    "stock": 45,
+    "available": 1,
+    "description": "Slow simmered malai kulfi enriched with green pistachio nuts and cardamom.",
+    "image": "/assets/arun-kulfi-maharaj.jpg"
+  },
+  {
+    "id": "kulfi-king-badam",
+    "name": "Kulfi King Badam",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "70ml",
+    "price": 35,
+    "stock": 40,
+    "available": 1,
+    "description": "Traditional royal almond kulfi stick with authentic texture.",
+    "image": "/assets/arun-kulfi-maharaj.jpg"
+  },
+  {
+    "id": "kulfi-king-malai",
+    "name": "Kulfi King Malai",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "70ml",
+    "price": 35,
+    "stock": 40,
+    "available": 1,
+    "description": "Pure thick clotted rabri malai kulfi stick with classic richness.",
+    "image": "/assets/arun-kulfi-maharaj.jpg"
+  },
+  {
+    "id": "likstick-mango-ice-lolly",
+    "name": "Likstick Mango Ice Lolly",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "60ml",
+    "price": 15,
+    "stock": 50,
+    "available": 1,
+    "description": "Refreshing juicy frozen tropical mango water ice lolly.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "likstick-grape-ice-lolly",
+    "name": "Likstick Grape Ice Lolly",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "60ml",
+    "price": 15,
+    "stock": 50,
+    "available": 1,
+    "description": "Sweet and tangy purple concord grape ice candy stick.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "likstick-orange-ice-lolly",
+    "name": "Likstick Orange Ice Lolly",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "60ml",
+    "price": 15,
+    "stock": 50,
+    "available": 1,
+    "description": "Cooling tangy orange fruit juice ice pop.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "yummy-bear-vanilla-stick",
+    "name": "Yummy Bear Vanilla Stick",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "55ml",
+    "price": 20,
+    "stock": 40,
+    "available": 1,
+    "description": "Fun bear-shaped creamy vanilla ice cream pop designed for kids.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "yummy-bear-chocolate-stick",
+    "name": "Yummy Bear Chocolate Stick",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "55ml",
+    "price": 20,
+    "stock": 40,
+    "available": 1,
+    "description": "Playful bear-shaped milk chocolate ice cream bar.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "cotton-candy-stick",
+    "name": "Cotton Candy Stick",
+    "category": "Ice Cream Bars & Sticks",
+    "packSize": "65ml",
+    "price": 30,
+    "stock": 35,
+    "available": 1,
+    "description": "Dual-swirled pink and sky-blue sweet cotton candy flavour ice cream bar.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "classic-vanilla-cup-50ml",
+    "name": "Classic Vanilla Cup (50ml)",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "50ml",
+    "price": 15,
+    "stock": 60,
+    "available": 1,
+    "description": "Pure smooth vanilla cup, convenient mini portion with spoon.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "classic-vanilla-cup-100ml",
+    "name": "Classic Vanilla Cup (100ml)",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "100ml",
+    "price": 25,
+    "stock": 60,
+    "available": 1,
+    "description": "All-time favourite rich dairy vanilla ice cream cup.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "classic-strawberry-cup-50ml",
+    "name": "Classic Strawberry Cup (50ml)",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "50ml",
+    "price": 15,
+    "stock": 50,
+    "available": 1,
+    "description": "Refreshing sweet strawberry ice cream cup in small serving.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "classic-strawberry-cup-100ml",
+    "name": "Classic Strawberry Cup (100ml)",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "100ml",
+    "price": 25,
+    "stock": 50,
+    "available": 1,
+    "description": "Silky smooth strawberry ice cream cup made from real milk.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "classic-chocolate-cup-100ml",
+    "name": "Classic Chocolate Cup (100ml)",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "100ml",
+    "price": 30,
+    "stock": 55,
+    "available": 1,
+    "description": "Creamy cocoa chocolate ice cream cup with rich chocolate taste.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "premium-butterscotch-cup-100ml",
+    "name": "Premium Butterscotch Cup (100ml)",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "100ml",
+    "price": 35,
+    "stock": 45,
+    "available": 1,
+    "description": "Sweet butterscotch ice cream cup loaded with crunchy cashew pralines.",
+    "image": "/assets/arun-butterscotch-tub.jpg"
+  },
+  {
+    "id": "premium-blackcurrant-cup-100ml",
+    "name": "Premium Blackcurrant Cup (100ml)",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "100ml",
+    "price": 35,
+    "stock": 40,
+    "available": 1,
+    "description": "Tangy exotic blackcurrant berry cup with rich fruit flavour.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "premium-kesar-pista-cup-100ml",
+    "name": "Premium Kesar Pista Cup (100ml)",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "100ml",
+    "price": 40,
+    "stock": 40,
+    "available": 1,
+    "description": "Royal saffron kesar ice cream cup with real sliced pistachios.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "duet-vanilla-raspberry",
+    "name": "Duet Vanilla & Raspberry Cup",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "110ml",
+    "price": 40,
+    "stock": 35,
+    "available": 1,
+    "description": "Two-in-one twin dessert cup pairing smooth vanilla with zesty raspberry.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "duet-vanilla-mango",
+    "name": "Duet Vanilla & Mango Cup",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "110ml",
+    "price": 40,
+    "stock": 35,
+    "available": 1,
+    "description": "Harmonious duo of creamy vanilla and tropical sweet Alphonso mango.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "duet-chocolate-mint",
+    "name": "Duet Chocolate & Mint Cup",
+    "category": "Ice Cream Cups & Duets",
+    "packSize": "110ml",
+    "price": 40,
+    "stock": 30,
+    "available": 1,
+    "description": "Refreshing cool green mint ice cream coupled with decadent dark chocolate.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "ice-cream-sandwich-vanilla",
+    "name": "Ice Cream Sandwich Vanilla",
+    "category": "Ice Cream Novelties & Slices",
+    "packSize": "90ml",
+    "price": 35,
+    "stock": 35,
+    "available": 1,
+    "description": "Thick slab of creamy vanilla ice cream between two soft chocolate cookies.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "ice-cream-sandwich-chocolate",
+    "name": "Ice Cream Sandwich Chocolate",
+    "category": "Ice Cream Novelties & Slices",
+    "packSize": "90ml",
+    "price": 40,
+    "stock": 35,
+    "available": 1,
+    "description": "Double chocolate sandwich with chocolate ice cream in chocolate cookie biscuits.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "cassata-premium-slice",
+    "name": "Cassata Premium Slice",
+    "category": "Ice Cream Novelties & Slices",
+    "packSize": "100g",
+    "price": 65,
+    "stock": 40,
+    "available": 1,
+    "description": "Multi-layer sponge cake slice with strawberry, vanilla, and pistachio ice cream garnished with cashew praline.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "cassata-ball",
+    "name": "Cassata Ball",
+    "category": "Ice Cream Novelties & Slices",
+    "packSize": "110ml",
+    "price": 55,
+    "stock": 30,
+    "available": 1,
+    "description": "Spherical ball of three layered ice cream flavours filled with a dry fruit core.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "arun-bites-kesar-peda",
+    "name": "Arun Bites Kesar Peda Fusion Pack",
+    "category": "Ice Cream Novelties & Slices",
+    "packSize": "120ml (6 Pcs)",
+    "price": 75,
+    "stock": 25,
+    "available": 1,
+    "description": "Traditional Indian sweet fusion bite-sized ice cream cubes coated in saffron chocolate.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "arun-bites-motichoor",
+    "name": "Arun Bites Motichoor Fusion Pack",
+    "category": "Ice Cream Novelties & Slices",
+    "packSize": "120ml (6 Pcs)",
+    "price": 75,
+    "stock": 25,
+    "available": 1,
+    "description": "Bite-sized festive ice cream morsels infused with golden motichoor ladoo pearls.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "arun-bites-kaju-katli",
+    "name": "Arun Bites Kaju Katli Fusion Pack",
+    "category": "Ice Cream Novelties & Slices",
+    "packSize": "120ml (6 Pcs)",
+    "price": 85,
+    "stock": 25,
+    "available": 1,
+    "description": "Rich cashew kaju katli fudge blended into gourmet ice cream bite cubes.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "chocolate-fudge-sundae-cup",
+    "name": "Chocolate Fudge Sundae Cup",
+    "category": "Sundaes & In-Store Specials",
+    "packSize": "140ml",
+    "price": 60,
+    "stock": 35,
+    "available": 1,
+    "description": "Rich vanilla ice cream drenched in warm gooey chocolate fudge and roasted peanuts.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "butterscotch-crunch-sundae-cup",
+    "name": "Butterscotch Crunch Sundae Cup",
+    "category": "Sundaes & In-Store Specials",
+    "packSize": "140ml",
+    "price": 60,
+    "stock": 35,
+    "available": 1,
+    "description": "Butterscotch ice cream sundae layered with caramel toffee syrup and golden cashew nut crunch.",
+    "image": "/assets/arun-butterscotch-tub.jpg"
+  },
+  {
+    "id": "mango-jelly-sundae-cup",
+    "name": "Mango Jelly Sundae Cup",
+    "category": "Sundaes & In-Store Specials",
+    "packSize": "140ml",
+    "price": 60,
+    "stock": 30,
+    "available": 1,
+    "description": "Alphonso mango cream layered with chewy mango fruit jelly chunks and puree.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "strawberry-twist-sundae-cup",
+    "name": "Strawberry Twist Sundae Cup",
+    "category": "Sundaes & In-Store Specials",
+    "packSize": "140ml",
+    "price": 60,
+    "stock": 30,
+    "available": 1,
+    "description": "Strawberry ripple sundae topped with berry syrup and white chocolate drops.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "cookie-cream-sundae-cup",
+    "name": "Cookie Cream Sundae Cup",
+    "category": "Sundaes & In-Store Specials",
+    "packSize": "140ml",
+    "price": 65,
+    "stock": 30,
+    "available": 1,
+    "description": "Smooth sweet cream loaded with crushed dark chocolate sandwich cookies and chocolate drizzle.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "classic-vanilla-tub-1l",
+    "name": "Classic Vanilla Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 180,
+    "stock": 25,
+    "available": 1,
+    "description": "Large family party tub of classic pure vanilla cream dessert.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "classic-strawberry-tub-1l",
+    "name": "Classic Strawberry Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 180,
+    "stock": 20,
+    "available": 1,
+    "description": "Creamy refreshing strawberry ice cream family dessert tub.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "classic-chocolate-tub-1l",
+    "name": "Classic Chocolate Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 210,
+    "stock": 25,
+    "available": 1,
+    "description": "Decadent rich milk chocolate family dessert tub.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "premium-butterscotch-tub-1l",
+    "name": "Premium Butterscotch Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 240,
+    "stock": 25,
+    "available": 1,
+    "description": "Creamy rich butterscotch dessert tub packed with roasted cashew nut crunchies.",
+    "image": "/assets/arun-butterscotch-tub.jpg"
+  },
+  {
+    "id": "premium-blackcurrant-tub-1l",
+    "name": "Premium Blackcurrant Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 250,
+    "stock": 20,
+    "available": 1,
+    "description": "Gourmet blackcurrant berry tub with delicious fruit ripples.",
+    "image": "/assets/arun-vanilla-cup.jpg"
+  },
+  {
+    "id": "premium-kesar-pista-tub-1l",
+    "name": "Premium Kesar Pista Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 280,
+    "stock": 20,
+    "available": 1,
+    "description": "Royal saffron kesar ice cream family tub loaded with Iranian pistachios and almonds.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "premium-mango-alfonso-tub-1l",
+    "name": "Premium Mango Alfonso Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 240,
+    "stock": 20,
+    "available": 1,
+    "description": "Luscious tropical Ratnagiri Alphonso mango pulp churned into velvety ice cream.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "exotic-red-velvet-tub-1l",
+    "name": "Exotic Red Velvet Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 320,
+    "stock": 15,
+    "available": 1,
+    "description": "Cream cheese ice cream folded with soft crimson red velvet cake crumbs and chocolate ripples.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "exotic-brownie-banoffee-tub-1l",
+    "name": "Exotic Brownie Banoffee Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 330,
+    "stock": 15,
+    "available": 1,
+    "description": "Banana toffee ice cream mixed with chewy chocolate fudge brownie chunks.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "exotic-salted-caramel-tub-1l",
+    "name": "Exotic Salted Caramel Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 320,
+    "stock": 15,
+    "available": 1,
+    "description": "Sweet and buttery caramelized cream accented with gourmet sea salt crystals.",
+    "image": "/assets/arun-butterscotch-tub.jpg"
+  },
+  {
+    "id": "exotic-jackfruit-tub-1l",
+    "name": "Exotic Jackfruit Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 310,
+    "stock": 15,
+    "available": 1,
+    "description": "Traditional ripe sweet jackfruit (chakka) flavour blended into luscious dairy cream.",
+    "image": "/assets/arun-matka-kulfi.jpg"
+  },
+  {
+    "id": "exotic-blueberry-cheesecake-tub-1l",
+    "name": "Exotic Blueberry Cheesecake Tub (1L)",
+    "category": "Family Tubs & Packs",
+    "packSize": "1 Litre",
+    "price": 340,
+    "stock": 15,
+    "available": 1,
+    "description": "Rich New York style cream cheesecake ice cream swirled with wild Canadian blueberry compote.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "signature-black-forest-cake",
+    "name": "Signature Black Forest Ice Cream Cake",
+    "category": "Ice Cream Cakes",
+    "packSize": "500g",
+    "price": 390,
+    "stock": 15,
+    "available": 1,
+    "description": "Chocolate sponge cake base layered with vanilla ice cream, dark chocolate curls, and red cherry compote.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "signature-butterscotch-delight-cake",
+    "name": "Signature Butterscotch Delight Ice Cream Cake",
+    "category": "Ice Cream Cakes",
+    "packSize": "500g",
+    "price": 390,
+    "stock": 15,
+    "available": 1,
+    "description": "Golden butterscotch cake with butterscotch crunch layers and toffee caramel glaze.",
+    "image": "/assets/arun-butterscotch-tub.jpg"
+  },
+  {
+    "id": "signature-choco-brownie-cake",
+    "name": "Signature Choco-Brownie Ice Cream Cake",
+    "category": "Ice Cream Cakes",
+    "packSize": "550g",
+    "price": 430,
+    "stock": 15,
+    "available": 1,
+    "description": "Fudge brownie base topped with decadent Belgian chocolate ice cream and dark chocolate truffle ganache.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "signature-cassata-celebration-cake",
+    "name": "Signature Cassata Celebration Ice Cream Cake",
+    "category": "Ice Cream Cakes",
+    "packSize": "500g",
+    "price": 420,
+    "stock": 12,
+    "available": 1,
+    "description": "Royal 3-tier celebratory ice cream cake featuring strawberry, pistachio, and vanilla with cashew nuts.",
+    "image": "/assets/arun-cassatta.jpg"
+  },
+  {
+    "id": "signature-mango-magic-cake",
+    "name": "Signature Mango Magic Ice Cream Cake",
+    "category": "Ice Cream Cakes",
+    "packSize": "500g",
+    "price": 410,
+    "stock": 12,
+    "available": 1,
+    "description": "Exotic tropical Alphonso mango ice cream cake with mango glaze and vanilla sponge.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "signature-strawberry-cream-cake",
+    "name": "Signature Strawberry Cream Ice Cream Cake",
+    "category": "Ice Cream Cakes",
+    "packSize": "500g",
+    "price": 390,
+    "stock": 12,
+    "available": 1,
+    "description": "Tender pink strawberry ice cream cake adorned with white chocolate flakes.",
+    "image": "/assets/arun-trio.jpg"
+  },
+  {
+    "id": "ice-cream-cake-mini-log-choco",
+    "name": "Ice Cream Cake Mini Log Chocolate",
+    "category": "Ice Cream Cakes",
+    "packSize": "250g",
+    "price": 220,
+    "stock": 20,
+    "available": 1,
+    "description": "Individual swiss roll style chocolate ice cream dessert log coated in dark chocolate.",
+    "image": "/assets/arun-chocobar.jpg"
+  },
+  {
+    "id": "ice-cream-cake-mini-log-vanilla",
+    "name": "Ice Cream Cake Mini Log Vanilla",
+    "category": "Ice Cream Cakes",
+    "packSize": "250g",
+    "price": 220,
+    "stock": 20,
+    "available": 1,
+    "description": "Delicate vanilla sponge log filled with pure dairy vanilla ice cream and white chocolate drizzle.",
+    "image": "/assets/arun-cassatta.jpg"
   }
 ];
     this.cart = [];
     this.selectedCategory = 'ALL';
     this.searchQuery = '';
-    this.settings = { 
-      shopName: 'Surya Agencies', 
-      tagline: 'Authorized Arun Icecreams Parlour',
-      upiId: 'suryaagencies@upi', 
-      shopPhone: '+91 98765 43210' 
-    };
-    this.customerProfile = { name: '', phone: '' };
-    this.activeTrackedOrderId = null;
+    this.activeTrackedOrder = null;
     this.myOrders = [];
     this.isSubmittingOrder = false;
+    this.currentView = 'catalog'; // 'catalog' | 'tracking' | 'orders'
+
+    this.categories = [
+      { id: 'ALL', name: 'All Products', icon: '🍨' },
+      { id: 'Dairy Products', name: 'Dairy Products', icon: '🥛' },
+      { id: 'Ice Cream Cones', name: 'Ice Cream Cones (iCONE)', icon: '🍦' },
+      { id: 'Ice Cream Bars & Sticks', name: 'Bars & Sticks (iBAR)', icon: '🍫' },
+      { id: 'Ice Cream Cups & Duets', name: 'Cups & Duets', icon: '🍧' },
+      { id: 'Ice Cream Novelties & Slices', name: 'Novelties & Slices', icon: '🍰' },
+      { id: 'Sundaes & In-Store Specials', name: 'Sundaes & Specials', icon: '🍨' },
+      { id: 'Family Tubs & Packs', name: 'Family Tubs (1L)', icon: '📦' },
+      { id: 'Ice Cream Cakes', name: 'Ice Cream Cakes', icon: '🎂' }
+    ];
 
     this.init();
   }
 
   async init() {
-    this.loadCustomerProfile();
     this.loadCartFromStorage();
     this.loadMyOrdersFromStorage();
-    await this.fetchSettings();
     await this.fetchProducts();
-
     this.setupRealtimeListeners();
     this.render();
   }
 
-  // --- PERSISTENCE ---
-
-  loadCustomerProfile() {
-    try {
-      const stored = localStorage.getItem('surya_customer_profile');
-      if (stored) this.customerProfile = JSON.parse(stored);
-    } catch (e) {
-      this.customerProfile = { name: '', phone: '' };
-    }
-  }
-
-  saveCustomerProfile(name, phone) {
-    this.customerProfile = { name: (name || '').trim(), phone: (phone || '').trim() };
-    localStorage.setItem('surya_customer_profile', JSON.stringify(this.customerProfile));
-  }
+  // --- STORAGE & PERSISTENCE ---
 
   loadCartFromStorage() {
     try {
-      const stored = sessionStorage.getItem('surya_customer_cart');
+      const stored = sessionStorage.getItem('surya_cart');
       if (stored) this.cart = JSON.parse(stored);
     } catch (e) {
       this.cart = [];
@@ -182,11 +1096,9 @@ class CustomerApp {
 
   saveCartToStorage() {
     try {
-      sessionStorage.setItem('surya_customer_cart', JSON.stringify(this.cart));
+      sessionStorage.setItem('surya_cart', JSON.stringify(this.cart));
       this.updateCartBadge();
-    } catch (e) {
-      console.error('Error saving cart:', e);
-    }
+    } catch (e) {}
   }
 
   loadMyOrdersFromStorage() {
@@ -198,182 +1110,130 @@ class CustomerApp {
     }
   }
 
-  saveMyOrder(order) {
-    if (!order || !order.id) return;
-    const idx = this.myOrders.findIndex(o => o.id === order.id || o.orderNumber === order.orderNumber);
-    if (idx >= 0) {
-      this.myOrders[idx] = { ...this.myOrders[idx], ...order };
-    } else {
-      this.myOrders.unshift(order);
-    }
-    localStorage.setItem('surya_my_orders', JSON.stringify(this.myOrders));
-    this.updateMyOrdersBadge();
-  }
-
-  // --- DATA FETCHING ---
-
-  async fetchSettings() {
+  saveMyOrdersToStorage() {
     try {
-      const res = await fetch('/api/settings');
-      const data = await res.json();
-      if (data.success && data.settings) {
-        this.settings = { ...this.settings, ...data.settings };
-      }
-    } catch (e) {
-      console.warn('Could not fetch settings:', e);
-    }
-  }
-
-  async fetchProducts() {
-    try {
-      const res = await fetch('/api/products');
-      const data = await res.json();
-      if (data.success) {
-        this.products = data.products || [];
-        this.renderProductGrid();
-        this.renderCategories();
-      }
-    } catch (e) {
-      console.error('Failed to fetch products:', e);
-    }
+      localStorage.setItem('surya_my_orders', JSON.stringify(this.myOrders));
+      this.updateActiveOrdersBadge();
+    } catch (e) {}
   }
 
   // --- REAL-TIME LISTENERS ---
 
   setupRealtimeListeners() {
-    if (!window.realtimeClient) return;
+    if (!window.socketClient) return;
 
-    window.realtimeClient.on('product:created', (product) => {
-      const idx = this.products.findIndex(p => p.id === product.id);
-      if (idx >= 0) this.products[idx] = product;
-      else this.products.push(product);
-      this.renderProductGrid();
-      this.renderCategories();
-    });
+    // Real-Time stock updates when any order is placed or shopkeeper edits stock
+    window.socketClient.on('products:stock_batch_updated', (updatedList) => {
+      if (!Array.isArray(updatedList)) return;
+      let changed = false;
 
-    window.realtimeClient.on('product:updated', (product) => {
-      const idx = this.products.findIndex(p => p.id === product.id);
-      if (idx >= 0) this.products[idx] = product;
-      this.renderProductGrid();
-      this.syncCartWithLiveStock();
-    });
+      updatedList.forEach(updatedProd => {
+        const idx = this.products.findIndex(p => p.id === updatedProd.id);
+        if (idx !== -1) {
+          this.products[idx] = { ...this.products[idx], ...updatedProd };
+          changed = true;
+        }
+      });
 
-    window.realtimeClient.on('product:stock_updated', ({ id, stock }) => {
-      const p = this.products.find(item => item.id === id);
-      if (p) {
-        p.stock = stock;
+      if (changed) {
         this.renderProductGrid();
-        this.syncCartWithLiveStock();
       }
     });
 
-    window.realtimeClient.on('products:stock_batch_updated', (updatedList) => {
-      if (Array.isArray(updatedList)) {
-        updatedList.forEach(up => {
-          const idx = this.products.findIndex(p => p.id === up.id);
-          if (idx >= 0) this.products[idx] = up;
-        });
-        this.renderProductGrid();
-        this.syncCartWithLiveStock();
+    // Real-time product price/stock/availability update
+    window.socketClient.on('product:updated', (updatedProd) => {
+      const idx = this.products.findIndex(p => p.id === updatedProd.id);
+      if (idx !== -1) {
+        this.products[idx] = { ...this.products[idx], ...updatedProd };
+      } else {
+        this.products.push(updatedProd);
       }
-    });
-
-    window.realtimeClient.on('product:deleted', ({ id }) => {
-      this.products = this.products.filter(p => p.id !== id);
-      this.removeFromCart(id);
       this.renderProductGrid();
-      this.renderCategories();
     });
 
-    window.realtimeClient.on('products:reloaded', (productsList) => {
-      this.products = productsList || [];
-      this.renderProductGrid();
-      this.renderCategories();
-      this.syncCartWithLiveStock();
-    });
-
-    window.realtimeClient.on('order:status_updated', (order) => {
-      this.handleOrderStatusChanged(order);
-    });
-
-    window.realtimeClient.on('order:my_status_updated', (order) => {
-      this.handleOrderStatusChanged(order);
-    });
-
-    window.realtimeClient.on('order:payment_updated', (order) => {
-      this.handleOrderStatusChanged(order);
-    });
-
-    window.realtimeClient.on('settings:updated', (settings) => {
-      this.settings = { ...this.settings, ...settings };
-    });
-  }
-
-  handleOrderStatusChanged(order) {
-    if (!order) return;
-    this.saveMyOrder(order);
-
-    if (this.activeTrackedOrderId === order.id || this.activeTrackedOrderId === order.orderNumber) {
-      this.renderLiveOrderTicket(order);
-
-      if (order.orderStatus === 'READY_FOR_PICKUP') {
-        window.appController.playSound('ready');
-        window.appController.showToast(`🎉 Your Arun Icecream Order ${order.orderNumber} is READY for pickup at Surya Agencies counter!`);
-      } else if (order.orderStatus === 'COMPLETED') {
-        window.appController.playSound('completed');
-        window.appController.showToast(`🍦 Order ${order.orderNumber} collected! Enjoy your Arun Icecreams!`);
+    // Real-time status update for active tracked order
+    window.socketClient.on('order:status_updated', (updatedOrder) => {
+      // Update in myOrders list
+      const idx = this.myOrders.findIndex(o => o.id === updatedOrder.id || o.orderNumber === updatedOrder.orderNumber);
+      if (idx !== -1) {
+        this.myOrders[idx] = { ...this.myOrders[idx], ...updatedOrder };
+        this.saveMyOrdersToStorage();
       }
-    }
-  }
 
-  syncCartWithLiveStock() {
-    let modified = false;
-    this.cart.forEach(item => {
-      const liveProd = this.products.find(p => p.id === item.productId);
-      if (liveProd) {
-        if (liveProd.stock < item.quantity) {
-          item.quantity = liveProd.stock;
-          modified = true;
+      // Update in active tracked ticket
+      if (this.activeTrackedOrder && (this.activeTrackedOrder.id === updatedOrder.id || this.activeTrackedOrder.orderNumber === updatedOrder.orderNumber)) {
+        this.activeTrackedOrder = { ...this.activeTrackedOrder, ...updatedOrder };
+        if (window.appController) window.appController.playChime();
+        if (this.currentView === 'tracking') {
+          this.renderTrackingView();
         }
       }
+
+      if (this.currentView === 'orders') {
+        this.renderOrdersView();
+      }
     });
-    this.cart = this.cart.filter(item => item.quantity > 0);
-    if (modified) {
-      this.saveCartToStorage();
-      this.renderCart();
+  }
+
+  // --- DATA FETCHING ---
+
+  async fetchProducts() {
+    try {
+      const res = await fetch('/api/products');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+        this.products = data.products;
+        this.renderProductGrid();
+      }
+    } catch (e) {
+      console.warn('Using offline/local sample catalog');
     }
   }
 
-  // --- CATEGORIES & FILTERS ---
+  async refreshProducts() {
+    await this.fetchProducts();
+  }
 
-  renderCategories() {
-    const container = document.getElementById('customer-category-pills');
-    if (!container) return;
+  // --- RENDERING ---
 
-    const categories = ['ALL', ...new Set(this.products.map(p => p.category).filter(Boolean))];
+  render() {
+    this.renderCategoriesBar();
+    this.renderProductGrid();
+    this.updateCartBadge();
+    this.updateActiveOrdersBadge();
+  }
 
-    container.innerHTML = categories.map(cat => {
-      const isActive = this.selectedCategory === cat;
-      const count = cat === 'ALL' ? this.products.length : this.products.filter(p => p.category === cat).length;
+  renderCategoriesBar() {
+    const bar = document.getElementById('customer-categories-bar');
+    if (!bar) return;
+
+    bar.innerHTML = this.categories.map(cat => {
+      const isSelected = this.selectedCategory === cat.id;
       return `
         <button 
-          type="button"
-          onclick="customerApp.selectCategory('${cat}')"
-          class="flex-shrink-0 px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
-            isActive 
-              ? 'bg-rose-600 text-white shadow-md shadow-rose-500/25 scale-105' 
-              : 'bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 border border-slate-200'
+          type="button" 
+          onclick="customerApp.selectCategory('${cat.id}')"
+          class="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition-all ${
+            isSelected 
+              ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25 scale-[1.02]' 
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
           }"
         >
-          ${cat === 'ALL' ? '🍨 All Arun Flavours' : cat} <span class="ml-1 opacity-80 text-[10px]">(${count})</span>
+          <span>${cat.icon}</span>
+          <span>${cat.name}</span>
         </button>
       `;
     }).join('');
   }
 
-  selectCategory(category) {
-    this.selectedCategory = category;
-    this.renderCategories();
+  selectCategory(categoryId) {
+    this.selectedCategory = categoryId;
+    this.renderCategoriesBar();
+
+    const titleEl = document.getElementById('current-category-title');
+    const cat = this.categories.find(c => c.id === categoryId);
+    if (titleEl) titleEl.textContent = cat ? cat.name : 'All Products';
+
     this.renderProductGrid();
   }
 
@@ -384,26 +1244,27 @@ class CustomerApp {
 
   getFilteredProducts() {
     return this.products.filter(p => {
-      if (!p.available) return false;
-
       const matchesCat = this.selectedCategory === 'ALL' || p.category === this.selectedCategory;
       const matchesSearch = !this.searchQuery || 
-        p.name.toLowerCase().includes(this.searchQuery) || 
-        (p.description && p.description.toLowerCase().includes(this.searchQuery)) ||
+        p.name.toLowerCase().includes(this.searchQuery) ||
+        (p.packSize && p.packSize.toLowerCase().includes(this.searchQuery)) ||
         (p.category && p.category.toLowerCase().includes(this.searchQuery));
 
       return matchesCat && matchesSearch;
     });
   }
 
-  // --- PRODUCT GRID ---
+  // --- PRODUCT GRID (FIXED NON-COLLIDING CARDS) ---
 
   renderProductGrid() {
     const container = document.getElementById('customer-products-grid');
     const emptyState = document.getElementById('customer-empty-products');
+    const countEl = document.getElementById('current-category-count');
     if (!container) return;
 
     const items = this.getFilteredProducts();
+
+    if (countEl) countEl.textContent = `Showing ${items.length} items`;
 
     if (items.length === 0) {
       container.innerHTML = '';
@@ -414,81 +1275,86 @@ class CustomerApp {
     if (emptyState) emptyState.classList.add('hidden');
 
     container.innerHTML = items.map(p => {
-      const isOutOfStock = p.stock <= 0;
-      const isLowStock = p.stock > 0 && p.stock <= 5;
+      const isOutOfStock = p.stock <= 0 || !p.available;
+      const isLowStock = p.stock > 0 && p.stock <= 5 && p.available;
       const cartItem = this.cart.find(c => c.productId === p.id);
       const cartQty = cartItem ? cartItem.quantity : 0;
+      const hasPrice = p.price !== null && p.price !== undefined;
 
       let stockBadge = '';
-      if (isOutOfStock) {
-        stockBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200">✕ Out of Stock</span>`;
+      if (!p.available || p.stock <= 0) {
+        stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200">✕ Out of Stock</span>`;
       } else if (isLowStock) {
-        stockBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">⚡ Only ${p.stock} left!</span>`;
+        stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">⚡ Only ${p.stock} left</span>`;
       } else {
-        stockBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">✓ ${p.stock} in stock</span>`;
+        stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">✓ ${p.stock} in stock</span>`;
       }
 
-      const imageUrl = p.image || 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=600';
+      const imageUrl = p.image || '/assets/arun-vanilla-cup.jpg';
 
       return `
-        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 hover:border-rose-300 hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${isOutOfStock ? 'opacity-70 grayscale-[25%]' : ''}">
+        <div class="product-card ${isOutOfStock ? 'opacity-70 grayscale-[20%]' : ''}">
           <div>
-            <!-- Image View -->
-            <div class="relative h-48 w-full overflow-hidden bg-slate-100 cursor-pointer" onclick="customerApp.openProductModal('${p.id}')">
+            <!-- Rigid Image Box with Object Contain -->
+            <div class="product-image-box cursor-pointer" onclick="customerApp.openProductDetail('${p.id}')">
               <img 
                 src="${imageUrl}" 
                 alt="${p.name}" 
-                class="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                 loading="lazy"
-                onerror="this.src='https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=600'"
+                onerror="this.src='/assets/arun-vanilla-cup.jpg'"
               />
-              <div class="absolute top-3 left-3">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/95 backdrop-blur-md text-slate-800 shadow-sm">
+              <div class="absolute top-2.5 left-2.5">
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/90 backdrop-blur-sm text-slate-800 shadow-sm">
                   ${p.category}
                 </span>
               </div>
-              <div class="absolute top-3 right-3">
+              <div class="absolute top-2.5 right-2.5">
                 ${stockBadge}
               </div>
             </div>
 
-            <!-- Info -->
+            <!-- Product Details -->
             <div class="p-4">
-              <h3 class="font-extrabold text-slate-900 text-base leading-snug cursor-pointer hover:text-rose-600 transition-colors" onclick="customerApp.openProductModal('${p.id}')">
+              <div class="flex items-center justify-between gap-1 mb-1">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-600">
+                  ${p.packSize || 'Standard Pack'}
+                </span>
+              </div>
+              <h4 class="font-extrabold text-slate-900 text-sm leading-snug cursor-pointer hover:text-rose-600 transition-colors line-clamp-2" onclick="customerApp.openProductDetail('${p.id}')">
                 ${p.name}
-              </h3>
-              <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                ${p.description || 'Authentic Arun Icecreams product sold fresh by Surya Agencies.'}
-              </p>
+              </h4>
             </div>
           </div>
 
-          <!-- Bottom Price & Quantity / Add Button -->
+          <!-- Price & Add Button Bar -->
           <div class="p-4 pt-0">
             <div class="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
               <div>
-                <span class="text-[10px] uppercase font-bold text-slate-400 block">Price</span>
-                <span class="text-xl font-black text-slate-900 font-display">₹${p.price}</span>
+                <span class="text-[9px] uppercase font-bold text-slate-400 block">Price</span>
+                ${hasPrice 
+                  ? `<span class="text-lg font-black text-slate-900 font-display">₹${p.price}</span>` 
+                  : `<span class="text-xs font-bold text-amber-600">Price not configured</span>`
+                }
               </div>
 
               <div>
-                ${isOutOfStock 
-                  ? `<button disabled class="px-3.5 py-2 rounded-2xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed">Out of Stock</button>`
+                ${isOutOfStock || !hasPrice
+                  ? `<button disabled class="px-3 py-2 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed">Unavailable</button>`
                   : cartQty > 0
                     ? `
-                      <div class="flex items-center bg-rose-50 border border-rose-200 rounded-2xl p-1 shadow-sm">
-                        <button type="button" onclick="customerApp.decrementCart('${p.id}')" class="w-7 h-7 rounded-xl bg-white text-rose-700 font-extrabold flex items-center justify-center hover:bg-rose-100 shadow-sm">−</button>
-                        <span class="w-7 text-center text-xs font-black text-rose-700">${cartQty}</span>
-                        <button type="button" onclick="customerApp.incrementCart('${p.id}')" class="w-7 h-7 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center hover:bg-rose-700 shadow-sm" ${cartQty >= p.stock ? 'disabled opacity-40' : ''}>+</button>
+                      <div class="flex items-center bg-rose-50 border border-rose-200 rounded-xl p-1 shadow-sm">
+                        <button type="button" onclick="customerApp.decrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-white text-rose-700 font-extrabold flex items-center justify-center hover:bg-rose-100 shadow-sm">−</button>
+                        <span class="w-6 text-center text-xs font-black text-rose-700">${cartQty}</span>
+                        <button type="button" onclick="customerApp.incrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-rose-600 text-white font-extrabold flex items-center justify-center hover:bg-rose-700 shadow-sm" ${cartQty >= p.stock ? 'disabled opacity-40' : ''}>+</button>
                       </div>
                     `
                     : `
                       <button 
                         type="button" 
                         onclick="customerApp.addToCart('${p.id}', 1)"
-                        class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-extrabold shadow-md shadow-rose-500/20 active:scale-95 transition-all flex items-center space-x-1.5"
+                        class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-extrabold shadow-md shadow-rose-500/20 active:scale-95 transition-all flex items-center space-x-1"
                       >
-                        <span>+ Add to Cart</span>
+                        <span>+ Add</span>
                       </button>
                     `
                 }
@@ -500,453 +1366,434 @@ class CustomerApp {
     }).join('');
   }
 
-  // --- PRODUCT DETAILS MODAL ---
+  // --- CART MANAGEMENT ---
 
-  openProductModal(productId) {
-    const p = this.products.find(item => item.id === productId);
-    if (!p) return;
-
-    const modal = document.getElementById('product-detail-modal');
-    if (!modal) return;
-
-    const isOutOfStock = p.stock <= 0;
-    const imageUrl = p.image || 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=600';
-
-    modal.innerHTML = `
-      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="customerApp.closeProductModal(event)">
-        <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
-          <div class="relative h-64 bg-slate-100">
-            <img src="${imageUrl}" alt="${p.name}" class="w-full h-full object-cover" />
-            <button 
-              type="button" 
-              onclick="customerApp.closeProductModal()"
-              class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 text-slate-700 font-bold flex items-center justify-center hover:bg-white shadow-md"
-            >✕</button>
-            <span class="absolute bottom-4 left-4 px-3 py-1 rounded-full text-xs font-extrabold bg-white/95 text-slate-900 shadow-md">
-              Arun Icecreams • ${p.category}
-            </span>
-          </div>
-
-          <div class="p-6">
-            <div class="flex items-start justify-between gap-2">
-              <h2 class="text-xl font-black text-slate-900 font-display leading-tight">${p.name}</h2>
-              <span class="text-2xl font-black text-rose-600 font-display">₹${p.price}</span>
-            </div>
-
-            <p class="text-sm text-slate-600 mt-3 leading-relaxed">
-              ${p.description || 'Authentic Arun Icecreams product sold fresh by Surya Agencies.'}
-            </p>
-
-            <div class="mt-4 p-4 rounded-2xl bg-rose-50/60 border border-rose-100 flex items-center justify-between">
-              <div>
-                <span class="text-xs font-bold text-slate-500 block">Available Online Stock</span>
-                <span class="text-sm font-extrabold ${isOutOfStock ? 'text-rose-600' : 'text-emerald-700'}">
-                  ${isOutOfStock ? 'Out of Stock' : `${p.stock} units ready for home order`}
-                </span>
-              </div>
-              <div class="text-right">
-                <span class="text-[10px] font-semibold text-slate-400">Shop Counter</span>
-                <span class="text-xs font-bold text-slate-800 block">Surya Agencies</span>
-              </div>
-            </div>
-
-            <div class="mt-6">
-              ${isOutOfStock
-                ? `<button disabled class="w-full py-3.5 rounded-2xl bg-slate-200 text-slate-500 font-bold cursor-not-allowed">Item is Out of Stock</button>`
-                : `
-                  <div class="flex items-center gap-3">
-                    <div class="flex items-center bg-slate-100 rounded-2xl p-1 border border-slate-200">
-                      <button type="button" class="w-9 h-9 rounded-xl bg-white text-slate-700 font-bold flex items-center justify-center shadow-sm" onclick="customerApp.adjustModalQty(-1, ${p.stock})">−</button>
-                      <input type="number" id="modal-qty-input" value="1" min="1" max="${p.stock}" readonly class="w-10 text-center font-black bg-transparent text-slate-900 text-sm" />
-                      <button type="button" class="w-9 h-9 rounded-xl bg-white text-slate-700 font-bold flex items-center justify-center shadow-sm" onclick="customerApp.adjustModalQty(1, ${p.stock})">+</button>
-                    </div>
-                    <button 
-                      type="button" 
-                      onclick="customerApp.addModalToCart('${p.id}')"
-                      class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold shadow-lg shadow-rose-500/25 active:scale-[0.98] transition-all flex items-center justify-center space-x-2"
-                    >
-                      <span>Add to Cart</span>
-                    </button>
-                  </div>
-                `
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  adjustModalQty(delta, maxStock) {
-    const input = document.getElementById('modal-qty-input');
-    if (!input) return;
-    let val = parseInt(input.value, 10) || 1;
-    val += delta;
-    if (val < 1) val = 1;
-    if (val > maxStock) val = maxStock;
-    input.value = val;
-  }
-
-  addModalToCart(productId) {
-    const input = document.getElementById('modal-qty-input');
-    const qty = input ? parseInt(input.value, 10) || 1 : 1;
-    this.addToCart(productId, qty);
-    this.closeProductModal();
-  }
-
-  closeProductModal(e) {
-    const modal = document.getElementById('product-detail-modal');
-    if (modal) modal.innerHTML = '';
-  }
-
-  // --- CART OPERATIONS ---
-
-  addToCart(productId, quantity = 1) {
-    const product = this.products.find(p => p.id === productId);
-    if (!product) return;
-
-    if (product.stock <= 0) {
-      window.appController.showToast(`"${product.name}" is Out of Stock!`, 'error');
+  addToCart(productId, qty = 1) {
+    const prod = this.products.find(p => p.id === productId);
+    if (!prod || prod.stock <= 0 || !prod.available) {
+      if (window.appController) window.appController.showToast('Item is out of stock', 'error');
       return;
     }
 
-    const existing = this.cart.find(c => c.productId === productId);
-    const currentQty = existing ? existing.quantity : 0;
-    const requestedTotal = currentQty + quantity;
-
-    if (requestedTotal > product.stock) {
-      window.appController.showToast(`Only ${product.stock} available for "${product.name}".`, 'warning');
-      if (existing) existing.quantity = product.stock;
-      else this.cart.push({ productId: product.id, name: product.name, price: product.price, quantity: product.stock, image: product.image });
-    } else {
-      if (existing) {
-        existing.quantity += quantity;
-      } else {
-        this.cart.push({
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          quantity: quantity,
-          image: product.image
-        });
+    const existingIndex = this.cart.findIndex(c => c.productId === productId);
+    if (existingIndex !== -1) {
+      if (this.cart[existingIndex].quantity + qty > prod.stock) {
+        if (window.appController) window.appController.showToast(`Only ${prod.stock} units available in parlour`, 'error');
+        return;
       }
-      window.appController.showToast(`Added ${quantity} × ${product.name} to Cart`, 'success');
+      this.cart[existingIndex].quantity += qty;
+    } else {
+      this.cart.push({
+        productId: prod.id,
+        name: prod.name,
+        packSize: prod.packSize || '',
+        price: prod.price || 0,
+        image: prod.image,
+        quantity: qty
+      });
     }
 
     this.saveCartToStorage();
     this.renderProductGrid();
-    this.renderCart();
+    if (window.appController) window.appController.showToast(`Added ${prod.name} to cart`, 'success');
   }
 
   incrementCart(productId) {
-    this.addToCart(productId, 1);
+    const prod = this.products.find(p => p.id === productId);
+    const item = this.cart.find(c => c.productId === productId);
+    if (!prod || !item) return;
+
+    if (item.quantity >= prod.stock) {
+      if (window.appController) window.appController.showToast(`Maximum available stock reached (${prod.stock})`, 'error');
+      return;
+    }
+
+    item.quantity += 1;
+    this.saveCartToStorage();
+    this.renderProductGrid();
+    this.renderCartDrawerItems();
   }
 
   decrementCart(productId) {
-    const existing = this.cart.find(c => c.productId === productId);
-    if (!existing) return;
+    const itemIndex = this.cart.findIndex(c => c.productId === productId);
+    if (itemIndex === -1) return;
 
-    existing.quantity -= 1;
-    if (existing.quantity <= 0) {
-      this.cart = this.cart.filter(c => c.productId !== productId);
+    if (this.cart[itemIndex].quantity > 1) {
+      this.cart[itemIndex].quantity -= 1;
+    } else {
+      this.cart.splice(itemIndex, 1);
     }
 
     this.saveCartToStorage();
     this.renderProductGrid();
-    this.renderCart();
+    this.renderCartDrawerItems();
   }
 
-  removeFromCart(productId) {
+  removeCartItem(productId) {
     this.cart = this.cart.filter(c => c.productId !== productId);
     this.saveCartToStorage();
     this.renderProductGrid();
-    this.renderCart();
-  }
-
-  clearCart() {
-    this.cart = [];
-    this.saveCartToStorage();
-    this.renderProductGrid();
-    this.renderCart();
-  }
-
-  getCartTotal() {
-    return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  }
-
-  getCartItemCount() {
-    return this.cart.reduce((sum, item) => sum + item.quantity, 0);
+    this.renderCartDrawerItems();
   }
 
   updateCartBadge() {
-    const count = this.getCartItemCount();
-    const badges = document.querySelectorAll('.cart-badge-count');
-    badges.forEach(b => {
-      b.textContent = count;
-      if (count > 0) b.classList.remove('hidden');
-      else b.classList.add('hidden');
-    });
-
-    const floatingBtn = document.getElementById('customer-floating-cart-bar');
-    if (floatingBtn) {
-      if (count > 0) {
-        floatingBtn.classList.remove('translate-y-32');
-        const priceSpan = document.getElementById('floating-cart-price');
-        const countSpan = document.getElementById('floating-cart-items');
-        if (priceSpan) priceSpan.textContent = `₹${this.getCartTotal()}`;
-        if (countSpan) countSpan.textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
-      } else {
-        floatingBtn.classList.add('translate-y-32');
-      }
-    }
+    const countEl = document.getElementById('cart-badge-count');
+    const totalCount = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+    if (countEl) countEl.textContent = totalCount;
   }
 
-  updateMyOrdersBadge() {
-    const count = this.myOrders.filter(o => o.orderStatus !== 'COMPLETED').length;
-    const badges = document.querySelectorAll('.myorders-badge-count');
-    badges.forEach(b => {
-      b.textContent = count;
-      if (count > 0) b.classList.remove('hidden');
-      else b.classList.add('hidden');
-    });
+  updateActiveOrdersBadge() {
+    const badge = document.getElementById('active-orders-badge');
+    const activeCount = this.myOrders.filter(o => o.orderStatus !== 'COMPLETED' && o.orderStatus !== 'CANCELLED').length;
+    if (badge) {
+      if (activeCount > 0) {
+        badge.textContent = activeCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
   }
 
   // --- CART DRAWER ---
 
   openCartDrawer() {
-    const drawer = document.getElementById('customer-cart-drawer');
-    if (!drawer) return;
-    this.renderCart();
-    drawer.classList.remove('hidden');
-    setTimeout(() => {
-      const panel = document.getElementById('customer-cart-panel');
-      if (panel) panel.classList.remove('translate-x-full');
-    }, 10);
+    const backdrop = document.getElementById('cart-drawer-backdrop');
+    const panel = document.getElementById('cart-drawer-panel');
+    if (backdrop && panel) {
+      backdrop.classList.remove('hidden');
+      setTimeout(() => panel.classList.remove('translate-x-full'), 10);
+      this.renderCartDrawerItems();
+    }
   }
 
-  closeCartDrawer() {
-    const panel = document.getElementById('customer-cart-panel');
+  closeCartDrawer(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const backdrop = document.getElementById('cart-drawer-backdrop');
+    const panel = document.getElementById('cart-drawer-panel');
     if (panel) panel.classList.add('translate-x-full');
     setTimeout(() => {
-      const drawer = document.getElementById('customer-cart-drawer');
-      if (drawer) drawer.classList.add('hidden');
+      if (backdrop) backdrop.classList.add('hidden');
     }, 300);
   }
 
-  renderCart() {
-    const container = document.getElementById('customer-cart-items');
-    const footer = document.getElementById('customer-cart-footer');
-    const emptyState = document.getElementById('customer-cart-empty');
+  renderCartDrawerItems() {
+    const container = document.getElementById('cart-drawer-items');
+    const emptyEl = document.getElementById('cart-drawer-empty');
+    const footerEl = document.getElementById('cart-drawer-footer');
+    const subtotalEl = document.getElementById('cart-drawer-subtotal');
+    const totalEl = document.getElementById('cart-drawer-total');
+
     if (!container) return;
 
     if (this.cart.length === 0) {
       container.innerHTML = '';
-      if (emptyState) emptyState.classList.remove('hidden');
-      if (footer) footer.classList.add('hidden');
+      if (emptyEl) emptyEl.classList.remove('hidden');
+      if (footerEl) footerEl.classList.add('hidden');
       return;
     }
 
-    if (emptyState) emptyState.classList.add('hidden');
-    if (footer) footer.classList.remove('hidden');
+    if (emptyEl) emptyEl.classList.add('hidden');
+    if (footerEl) footerEl.classList.remove('hidden');
+
+    let total = 0;
 
     container.innerHTML = this.cart.map(item => {
-      const liveProd = this.products.find(p => p.id === item.productId);
-      const imageUrl = item.image || 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=600';
+      const itemTotal = item.price * item.quantity;
+      total += itemTotal;
 
       return `
-        <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 gap-3">
-          <img src="${imageUrl}" alt="${item.name}" class="w-14 h-14 rounded-xl object-cover border border-slate-200" />
-          <div class="flex-1 min-w-0">
-            <h4 class="font-bold text-slate-900 text-xs truncate">${item.name}</h4>
-            <div class="flex items-center gap-2 mt-0.5">
-              <span class="text-xs font-black text-rose-600">₹${item.price}</span>
-              ${liveProd && liveProd.stock < 5 ? `<span class="text-[9px] font-bold text-amber-600">(${liveProd.stock} left)</span>` : ''}
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <img src="${item.image || '/assets/arun-vanilla-cup.jpg'}" alt="${item.name}" class="w-12 h-12 object-contain rounded-xl bg-white p-1 border border-slate-100" />
+            <div>
+              <h5 class="font-extrabold text-slate-900 text-xs leading-tight line-clamp-1">${item.name}</h5>
+              <span class="text-[10px] text-slate-500 font-semibold">${item.packSize} • ₹${item.price} each</span>
+              <span class="text-xs font-black text-rose-600 block mt-0.5">₹${itemTotal}</span>
             </div>
           </div>
-          
-          <div class="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-sm">
-            <button type="button" onclick="customerApp.decrementCart('${item.productId}')" class="w-6 h-6 rounded-lg text-slate-600 font-bold flex items-center justify-center hover:bg-slate-100">−</button>
-            <span class="w-6 text-center text-xs font-black text-slate-900">${item.quantity}</span>
-            <button type="button" onclick="customerApp.incrementCart('${item.productId}')" class="w-6 h-6 rounded-lg text-rose-600 font-bold flex items-center justify-center hover:bg-rose-50" ${liveProd && item.quantity >= liveProd.stock ? 'disabled opacity-30' : ''}>+</button>
+
+          <div class="flex items-center space-x-2">
+            <div class="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-sm">
+              <button type="button" onclick="customerApp.decrementCart('${item.productId}')" class="w-6 h-6 rounded-lg text-slate-700 font-bold flex items-center justify-center hover:bg-slate-100">−</button>
+              <span class="w-6 text-center text-xs font-black text-slate-900">${item.quantity}</span>
+              <button type="button" onclick="customerApp.incrementCart('${item.productId}')" class="w-6 h-6 rounded-lg text-slate-700 font-bold flex items-center justify-center hover:bg-slate-100">+</button>
+            </div>
+            <button type="button" onclick="customerApp.removeCartItem('${item.productId}')" class="text-slate-400 hover:text-rose-600 p-1 text-xs">🗑️</button>
           </div>
         </div>
       `;
     }).join('');
 
-    const subtotalEl = document.getElementById('cart-subtotal-price');
-    const totalEl = document.getElementById('cart-total-price');
-    const total = this.getCartTotal();
-
     if (subtotalEl) subtotalEl.textContent = `₹${total}`;
     if (totalEl) totalEl.textContent = `₹${total}`;
   }
 
-  // --- CHECKOUT SCREEN ---
+  // --- CHECKOUT & ORDER CREATION ---
 
   openCheckoutModal() {
-    if (this.cart.length === 0) {
-      window.appController.showToast('Your cart is empty!', 'warning');
-      return;
-    }
-
     this.closeCartDrawer();
-    const modal = document.getElementById('checkout-modal');
-    if (!modal) return;
 
-    const total = this.getCartTotal();
-    const upiId = this.settings.upiId || 'suryaagencies@upi';
-    const upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('SuryaAgencies')}&am=${total}&cu=INR&tn=${encodeURIComponent('Arun Icecreams Order')}`;
+    const container = document.getElementById('checkout-modal-container');
+    if (!container) return;
 
-    modal.innerHTML = `
-      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onclick="customerApp.closeCheckoutModal(event)">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 my-8 animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+    const user = (window.appController && window.appController.customerUser) || { name: '', phone: '', email: '' };
+    const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    container.innerHTML = `
+      <div id="checkout-modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="customerApp.closeCheckoutModal(event)">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-slate-200 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
           <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div class="flex items-center space-x-2.5">
-              <span class="text-2xl">🛍️</span>
-              <div>
-                <h3 class="text-lg font-black text-slate-900 font-display">Surya Agencies Checkout</h3>
-                <p class="text-xs text-slate-500">Pick up freshly packed Arun Icecreams at shop counter</p>
-              </div>
+            <div>
+              <h3 class="text-lg font-black text-slate-900 font-display">Surya Agencies Checkout</h3>
+              <p class="text-xs text-slate-500">Pick up fresh at the parlour counter</p>
             </div>
             <button type="button" onclick="customerApp.closeCheckoutModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
           </div>
 
-          <form id="checkout-form" onsubmit="customerApp.submitOrder(event)" class="mt-5 space-y-4">
-            <!-- Customer Details -->
-            <div class="space-y-3">
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Your Name *</label>
-                <input 
-                  type="text" 
-                  id="checkout-name" 
-                  required 
-                  value="${this.customerProfile.name || ''}"
-                  placeholder="e.g. Ramesh Kumar" 
-                  class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-rose-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Mobile Phone * (For Order Tracking & Pickup)</label>
-                <input 
-                  type="tel" 
-                  id="checkout-phone" 
-                  required
-                  value="${this.customerProfile.phone || ''}"
-                  placeholder="e.g. 9876543210" 
-                  class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-rose-500"
-                />
-              </div>
-            </div>
-
-            <!-- Order Summary -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Arun Icecreams Items (${this.getCartItemCount()})</h4>
-              <div class="space-y-1 max-h-32 overflow-y-auto pr-1">
-                ${this.cart.map(item => `
-                  <div class="flex justify-between text-xs font-medium text-slate-700">
-                    <span>${item.name} × ${item.quantity}</span>
-                    <span class="font-bold text-slate-900">₹${item.price * item.quantity}</span>
-                  </div>
-                `).join('')}
-              </div>
-              <div class="border-t border-slate-200 mt-2 pt-2 flex justify-between items-center text-sm font-black text-slate-900 font-display">
-                <span>Total Amount</span>
-                <span class="text-base text-rose-600 font-mono">₹${total}</span>
-              </div>
-            </div>
-
-            <!-- Payment Method Selection -->
+          <form id="checkout-form" onsubmit="customerApp.submitOrder(event)" class="mt-6 space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Select Payment Method</label>
-              
+              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Customer Name *</label>
+              <input type="text" id="checkout-name" value="${user.name || ''}" required placeholder="Your Full Name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Phone Number (For Order Tracking)</label>
+              <input type="tel" id="checkout-phone" value="${user.phone || ''}" placeholder="98400 12345" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+            </div>
+
+            <!-- Payment Method Choice -->
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-2">Choose Payment Option</label>
               <div class="grid grid-cols-2 gap-3">
-                <label class="relative flex flex-col p-3.5 rounded-2xl border-2 cursor-pointer transition-all border-rose-500 bg-rose-50/50" id="label-pay-upi">
-                  <input type="radio" name="paymentMethod" value="upi" checked onchange="customerApp.togglePaymentMethodView('upi')" class="sr-only" />
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-black text-slate-900">⚡ UPI</span>
-                    <span class="w-4 h-4 rounded-full border-2 border-rose-500 bg-rose-500 flex items-center justify-center text-white text-[9px]">✓</span>
-                  </div>
-                  <span class="text-[11px] text-slate-500 mt-1">GPay / PhonePe / QR</span>
+                <label class="border-2 border-rose-600 bg-rose-50/60 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" name="checkout-payment" value="upi" checked class="text-rose-600 focus:ring-rose-500" />
+                  <span class="text-xs font-extrabold text-slate-800">📱 UPI Payment</span>
                 </label>
-
-                <label class="relative flex flex-col p-3.5 rounded-2xl border-2 cursor-pointer transition-all border-slate-200 hover:border-slate-300 bg-white" id="label-pay-shop">
-                  <input type="radio" name="paymentMethod" value="pay_at_shop" onchange="customerApp.togglePaymentMethodView('pay_at_shop')" class="sr-only" />
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-black text-slate-900">🏪 Pay at Shop</span>
-                    <span class="w-4 h-4 rounded-full border-2 border-slate-300"></span>
-                  </div>
-                  <span class="text-[11px] text-slate-500 mt-1">Cash/UPI at counter</span>
+                <label class="border border-slate-300 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400">
+                  <input type="radio" name="checkout-payment" value="pay_at_shop" class="text-rose-600 focus:ring-rose-500" />
+                  <span class="text-xs font-extrabold text-slate-800">💵 Pay at Shop</span>
                 </label>
-              </div>
-
-              <!-- UPI Details -->
-              <div id="upi-details-container" class="mt-3 p-4 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase">Surya Agencies UPI ID</span>
-                    <p class="text-xs font-black text-slate-900 font-mono">${upiId}</p>
-                  </div>
-                  <span class="px-2.5 py-1 bg-rose-100 text-rose-800 text-[10px] font-bold rounded-lg">Pay ₹${total}</span>
-                </div>
-
-                <div class="mt-3 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-rose-200">
-                  <div id="checkout-upi-qr" class="p-1"></div>
-                  <p class="text-[10px] font-semibold text-slate-500 mt-2 text-center">Scan with GPay / PhonePe / Paytm / BHIM</p>
-                </div>
-
-                <div class="mt-3 flex flex-col gap-2">
-                  <a 
-                    href="${upiString}" 
-                    target="_blank"
-                    class="w-full py-2.5 px-3 rounded-xl bg-slate-900 text-white text-xs font-bold text-center hover:bg-slate-800 transition-colors shadow-sm"
-                  >
-                    Open UPI Payment App
-                  </a>
-                  
-                  <label class="flex items-center gap-2 cursor-pointer mt-1">
-                    <input type="checkbox" id="upi-paid-checkbox" class="w-4 h-4 text-rose-600 rounded border-slate-300 focus:ring-rose-500" />
-                    <span class="text-xs font-bold text-slate-800">I have completed UPI payment of ₹${total}</span>
-                  </label>
-                  <p class="text-[10px] text-slate-400 italic">(Prototype mode: Payment recorded as complete by customer)</p>
-                </div>
-              </div>
-
-              <!-- Pay at Shop Details -->
-              <div id="pay-at-shop-container" class="mt-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 hidden">
-                <div class="flex items-start space-x-2.5">
-                  <span class="text-amber-600 text-base">ℹ️</span>
-                  <div>
-                    <h5 class="text-xs font-extrabold text-amber-900">Payment Status: PENDING</h5>
-                    <p class="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                      Your order ticket will be generated immediately. You can pay ₹${total} at the Surya Agencies shop counter when collecting your ice creams.
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
 
-            <!-- Submit Button -->
-            <div class="pt-2">
-              <button 
-                type="submit" 
-                id="btn-submit-order"
-                class="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-base font-black shadow-xl shadow-rose-500/25 active:scale-[0.99] transition-all flex items-center justify-center space-x-2"
-              >
-                <span>🍨 Place Arun Icecreams Order (₹${total})</span>
-              </button>
+            <!-- Order Summary Box -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div class="flex justify-between text-xs text-slate-600">
+                <span>Items in Order</span>
+                <span class="font-bold">${this.cart.reduce((s, i) => s + i.quantity, 0)} items</span>
+              </div>
+              <div class="flex justify-between text-base font-black text-slate-900 border-t border-slate-200 pt-2">
+                <span>Total Amount</span>
+                <span class="text-rose-600 font-mono">₹${total}</span>
+              </div>
             </div>
+
+            <button 
+              type="submit" 
+              id="submit-order-btn"
+              class="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
+            >
+              <span>Confirm & Place Order →</span>
+            </button>
           </form>
         </div>
       </div>
     `;
+  }
 
+  closeCheckoutModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const container = document.getElementById('checkout-modal-container');
+    if (container) container.innerHTML = '';
+  }
+
+  async submitOrder(event) {
+    event.preventDefault();
+    if (this.isSubmittingOrder) return;
+    this.isSubmittingOrder = true;
+
+    const btn = document.getElementById('submit-order-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>Processing Order...</span>';
+    }
+
+    const customerName = document.getElementById('checkout-name').value.trim();
+    const customerPhone = document.getElementById('checkout-phone').value.trim();
+    const paymentMethod = document.querySelector('input[name="checkout-payment"]:checked').value;
+    const user = (window.appController && window.appController.customerUser) || {};
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: user.id || null,
+          customerName: customerName,
+          customerPhone: customerPhone,
+          customerEmail: user.email || null,
+          items: this.cart,
+          paymentMethod: paymentMethod,
+          paymentStatus: paymentMethod === 'upi' ? 'PENDING' : 'PENDING'
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to place order');
+      }
+
+      const placedOrder = data.order;
+
+      // Add to personal orders
+      this.myOrders.unshift(placedOrder);
+      this.saveMyOrdersToStorage();
+
+      // Clear Cart
+      this.cart = [];
+      this.saveCartToStorage();
+
+      // Subscribe socket to order room
+      if (window.socketClient) {
+        window.socketClient.subscribeToOrder(placedOrder.id);
+        window.socketClient.subscribeToOrder(placedOrder.orderNumber);
+      }
+
+      this.closeCheckoutModal();
+      if (window.appController) window.appController.showToast(`Order ${placedOrder.orderNumber} placed successfully!`, 'success');
+
+      // Switch to Live Tracking View
+      this.showTrackingView(placedOrder);
+
+    } catch (err) {
+      if (window.appController) window.appController.showToast(err.message, 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Confirm & Place Order →</span>';
+      }
+    } finally {
+      this.isSubmittingOrder = false;
+    }
+  }
+
+  // --- LIVE ORDER TRACKING (DIGITAL PICKUP TICKET) ---
+
+  showTrackingView(order) {
+    this.activeTrackedOrder = order;
+    this.currentView = 'tracking';
+
+    document.getElementById('customer-catalog-view').classList.add('hidden');
+    document.getElementById('customer-orders-view').classList.add('hidden');
+    const trackingView = document.getElementById('customer-tracking-view');
+    if (trackingView) trackingView.classList.remove('hidden');
+
+    this.renderTrackingView();
+  }
+
+  renderTrackingView() {
+    const container = document.getElementById('customer-tracking-view');
+    if (!container || !this.activeTrackedOrder) return;
+
+    const order = this.activeTrackedOrder;
+    const statusMap = {
+      'NEW': { text: 'Order Received', color: 'text-blue-700 bg-blue-50 border-blue-200', step: 1 },
+      'ACCEPTED': { text: 'Order Accepted', color: 'text-indigo-700 bg-indigo-50 border-indigo-200', step: 2 },
+      'PREPARING': { text: 'Preparing Items', color: 'text-amber-700 bg-amber-50 border-amber-200', step: 3 },
+      'READY_FOR_PICKUP': { text: 'READY FOR PICKUP', color: 'text-emerald-800 bg-emerald-100 border-emerald-300 font-black animate-pulse', step: 4 },
+      'COMPLETED': { text: 'Order Completed', color: 'text-slate-700 bg-slate-100 border-slate-200', step: 5 },
+      'CANCELLED': { text: 'Order Cancelled', color: 'text-rose-700 bg-rose-50 border-rose-200', step: 0 }
+    };
+
+    const currentStatus = statusMap[order.orderStatus] || statusMap['NEW'];
+
+    container.innerHTML = `
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
+        <!-- Ticket Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">LIVE PICKUP TICKET</span>
+            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 font-display mt-1">${order.orderNumber}</h2>
+          </div>
+          <button type="button" onclick="customerApp.showCatalogView()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+            ← Back to Store
+          </button>
+        </div>
+
+        <!-- Live Status Alert Box -->
+        <div class="p-4 rounded-2xl border ${currentStatus.color} flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase font-black block tracking-wider">Current Status</span>
+            <span class="text-base sm:text-lg font-black">${currentStatus.text}</span>
+          </div>
+          <span class="text-2xl">${order.orderStatus === 'READY_FOR_PICKUP' ? '🎉' : '🍦'}</span>
+        </div>
+
+        <!-- Real-Time Stepper -->
+        ${order.orderStatus !== 'CANCELLED' ? `
+          <div class="py-4">
+            <div class="flex items-center justify-between relative">
+              <div class="stepper-step">
+                <div class="stepper-circle ${currentStatus.step >= 1 ? (currentStatus.step === 1 ? 'active' : 'completed') : ''}">1</div>
+                <span class="text-[10px] font-bold text-slate-600 mt-2">Received</span>
+              </div>
+              <div class="stepper-step">
+                <div class="stepper-circle ${currentStatus.step >= 2 ? (currentStatus.step === 2 ? 'active' : 'completed') : ''}">2</div>
+                <span class="text-[10px] font-bold text-slate-600 mt-2">Accepted</span>
+              </div>
+              <div class="stepper-step">
+                <div class="stepper-circle ${currentStatus.step >= 3 ? (currentStatus.step === 3 ? 'active' : 'completed') : ''}">3</div>
+                <span class="text-[10px] font-bold text-slate-600 mt-2">Preparing</span>
+              </div>
+              <div class="stepper-step">
+                <div class="stepper-circle ${currentStatus.step >= 4 ? (currentStatus.step === 4 ? 'active' : 'completed') : ''}">4</div>
+                <span class="text-[10px] font-bold text-slate-600 mt-2">Ready</span>
+              </div>
+              <div class="stepper-step">
+                <div class="stepper-circle ${currentStatus.step >= 5 ? 'completed' : ''}">5</div>
+                <span class="text-[10px] font-bold text-slate-600 mt-2">Picked Up</span>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- QR Code Display -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 rounded-2xl bg-slate-50 border border-slate-200">
+          <div id="tracking-qrcode-container" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center min-w-[128px] min-h-[128px]"></div>
+          <div class="text-center sm:text-left space-y-1">
+            <span class="text-xs font-bold text-slate-500">Show this QR code at the counter</span>
+            <h4 class="font-extrabold text-slate-900 text-sm">Surya Agencies Counter Pickup</h4>
+            <p class="text-xs text-slate-500">Customer: ${order.customerName} (${order.customerPhone || 'Counter Pickup'})</p>
+            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-slate-200 text-slate-700">Payment: ${order.paymentMethod === 'upi' ? 'UPI' : 'Pay at Shop'} (${order.paymentStatus})</span>
+          </div>
+        </div>
+
+        <!-- Order Items List -->
+        <div class="space-y-2 border-t border-slate-100 pt-4">
+          <h4 class="font-bold text-xs text-slate-400 uppercase">Ordered Items</h4>
+          <div class="space-y-2">
+            ${order.items.map(item => `
+              <div class="flex items-center justify-between text-xs py-1 border-b border-slate-50">
+                <span class="font-semibold text-slate-800">${item.name} (${item.packSize}) × ${item.quantity}</span>
+                <span class="font-mono font-bold text-slate-900">₹${item.itemTotal || (item.price * item.quantity)}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="flex justify-between items-center text-sm font-black text-slate-900 pt-2">
+            <span>Total Payable</span>
+            <span class="text-rose-600 font-mono text-base">₹${order.total}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Render local QRCode
     setTimeout(() => {
-      const qrEl = document.getElementById('checkout-upi-qr');
-      if (qrEl && window.QRCode) {
+      const qrEl = document.getElementById('tracking-qrcode-container');
+      if (qrEl && typeof QRCode !== 'undefined') {
         qrEl.innerHTML = '';
         new QRCode(qrEl, {
-          text: upiString,
+          text: order.orderNumber,
           width: 120,
           height: 120,
           colorDark: '#0f172a',
@@ -957,390 +1804,88 @@ class CustomerApp {
     }, 50);
   }
 
-  togglePaymentMethodView(method) {
-    const upiContainer = document.getElementById('upi-details-container');
-    const shopContainer = document.getElementById('pay-at-shop-container');
-    const labelUpi = document.getElementById('label-pay-upi');
-    const labelShop = document.getElementById('label-pay-shop');
-
-    if (method === 'upi') {
-      if (upiContainer) upiContainer.classList.remove('hidden');
-      if (shopContainer) shopContainer.classList.add('hidden');
-      if (labelUpi) labelUpi.className = 'relative flex flex-col p-3.5 rounded-2xl border-2 cursor-pointer transition-all border-rose-500 bg-rose-50/50';
-      if (labelShop) labelShop.className = 'relative flex flex-col p-3.5 rounded-2xl border-2 cursor-pointer transition-all border-slate-200 hover:border-slate-300 bg-white';
-    } else {
-      if (upiContainer) upiContainer.classList.add('hidden');
-      if (shopContainer) shopContainer.classList.remove('hidden');
-      if (labelShop) labelShop.className = 'relative flex flex-col p-3.5 rounded-2xl border-2 cursor-pointer transition-all border-rose-500 bg-rose-50/50';
-      if (labelUpi) labelUpi.className = 'relative flex flex-col p-3.5 rounded-2xl border-2 cursor-pointer transition-all border-slate-200 hover:border-slate-300 bg-white';
-    }
-  }
-
-  closeCheckoutModal(e) {
-    const modal = document.getElementById('checkout-modal');
-    if (modal) modal.innerHTML = '';
-  }
-
-  // --- SUBMIT ORDER ---
-
-  async submitOrder(e) {
-    e.preventDefault();
-    if (this.isSubmittingOrder) {
-      console.warn('Order submission already in progress.');
-      return;
-    }
-
-    if (this.cart.length === 0) {
-      window.appController.showToast('Your cart is empty!', 'warning');
-      return;
-    }
-
-    this.isSubmittingOrder = true;
-    const btn = document.getElementById('btn-submit-order');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<span>⏳ Verifying Live Stock & Placing Order...</span>`;
-    }
-
-    const nameInput = document.getElementById('checkout-name');
-    const phoneInput = document.getElementById('checkout-phone');
-    const paymentMethodRadio = document.querySelector('input[name="paymentMethod"]:checked');
-
-    const customerName = nameInput ? nameInput.value.trim() : '';
-    const customerPhone = phoneInput ? phoneInput.value.trim() : '';
-    const paymentMethod = paymentMethodRadio ? paymentMethodRadio.value : 'pay_at_shop';
-
-    let paymentStatus = 'PENDING';
-    if (paymentMethod === 'upi') {
-      paymentStatus = 'PAID';
-    }
-
-    this.saveCustomerProfile(customerName, customerPhone);
-
-    const orderPayload = {
-      customerName,
-      customerPhone,
-      items: this.cart,
-      paymentMethod,
-      paymentStatus
-    };
-
-    try {
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to place order.');
-      }
-
-      const createdOrder = data.order;
-
-      this.clearCart();
-      this.closeCheckoutModal();
-      this.saveMyOrder(createdOrder);
-
-      this.activeTrackedOrderId = createdOrder.id;
-      if (window.realtimeClient) {
-        window.realtimeClient.subscribeToOrder(createdOrder.id);
-        window.realtimeClient.subscribeToOrder(createdOrder.orderNumber);
-      }
-
-      this.showOrderTicket(createdOrder.id);
-      window.appController.playSound('order_placed');
-      window.appController.showConfetti();
-      window.appController.showToast(`🎉 Order ${createdOrder.orderNumber} Placed Successfully!`, 'success');
-
-    } catch (err) {
-      console.error('Order submission error:', err);
-      window.appController.showToast(err.message, 'error');
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = `<span>🍨 Place Arun Icecreams Order (₹${this.getCartTotal()})</span>`;
-      }
-    } finally {
-      this.isSubmittingOrder = false;
-    }
-  }
-
-  async showOrderTicket(orderIdOrNumber) {
-    this.activeTrackedOrderId = orderIdOrNumber;
-    if (window.realtimeClient) {
-      window.realtimeClient.subscribeToOrder(orderIdOrNumber);
-    }
-
-    window.appController.showCustomerView('ticket');
-
-    try {
-      const res = await fetch(`/api/orders/${orderIdOrNumber}`);
-      const data = await res.json();
-      if (data.success && data.order) {
-        this.renderLiveOrderTicket(data.order);
-      } else {
-        throw new Error('Order not found');
-      }
-    } catch (e) {
-      console.error('Could not load order ticket:', e);
-    }
-  }
-
-  renderLiveOrderTicket(order) {
-    const container = document.getElementById('customer-order-ticket-view');
-    if (!container) return;
-
-    const statuses = ['NEW', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP', 'COMPLETED', 'CANCELLED'];
-    const currentIdx = statuses.indexOf(order.orderStatus);
-
-    const isReady = order.orderStatus === 'READY_FOR_PICKUP';
-    const isCompleted = order.orderStatus === 'COMPLETED';
-    const isCancelled = order.orderStatus === 'CANCELLED';
-    const formattedDate = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    container.innerHTML = `
-      <div class="max-w-md mx-auto my-4 space-y-4">
-        <!-- Live Alert Banner -->
-        ${isCancelled ? `
-          <div class="p-4 rounded-3xl bg-rose-600 text-white shadow-xl shadow-rose-500/20 flex items-center gap-3 border border-rose-500">
-            <span class="text-3xl">❌</span>
-            <div>
-              <h4 class="font-black text-base">Order Cancelled</h4>
-              <p class="text-xs text-rose-100">This order was cancelled by the shopkeeper. Stock has been returned.</p>
-            </div>
-          </div>
-        ` : isReady ? `
-          <div class="p-4 rounded-3xl bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 animate-bounce-small flex items-center gap-3 border border-emerald-400">
-            <span class="text-3xl">🎉</span>
-            <div>
-              <h4 class="font-black text-base">Your Arun Icecreams are READY!</h4>
-              <p class="text-xs text-emerald-100">Please visit the Surya Agencies counter and show your QR Code.</p>
-            </div>
-          </div>
-        ` : isCompleted ? `
-          <div class="p-4 rounded-3xl bg-blue-600 text-white shadow-xl shadow-blue-500/20 flex items-center gap-3 border border-blue-400">
-            <span class="text-3xl">🍦</span>
-            <div>
-              <h4 class="font-black text-base">Order Collected Successfully</h4>
-              <p class="text-xs text-blue-100">Thank you for ordering with Surya Agencies! Enjoy your Arun Icecreams.</p>
-            </div>
-          </div>
-        ` : `
-          <div class="p-4 rounded-3xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center gap-3">
-            <span class="text-xl animate-spin">⏳</span>
-            <div>
-              <h4 class="font-black text-xs">Surya Agencies is packing your fresh ice creams...</h4>
-              <p class="text-[11px] text-amber-700">Live order status updates will appear here automatically.</p>
-            </div>
-          </div>
-        `}
-
-        <!-- DIGITAL TICKET CARD -->
-        <div class="ticket-container p-6 border border-slate-200">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div class="flex items-center space-x-2.5">
-              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 flex items-center justify-center text-lg text-white shadow-sm font-black">
-                🍨
-              </div>
-              <div>
-                <h3 class="font-black text-slate-900 text-sm font-display leading-tight">SURYA AGENCIES</h3>
-                <p class="text-[10px] font-bold text-rose-600">Arun Icecreams • ${formattedDate}</p>
-              </div>
-            </div>
-            <div class="text-right">
-              <span class="text-[10px] font-bold text-slate-400 block uppercase">Order ID</span>
-              <span class="text-xl font-black text-rose-600 font-mono tracking-tight">${order.orderNumber}</span>
-            </div>
-          </div>
-
-          <!-- Progress Stepper -->
-          <div class="py-5">
-            <div class="relative flex justify-between items-center text-center">
-              <div class="absolute top-1/2 left-0 right-0 h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
-              <div class="absolute top-1/2 left-0 h-1 bg-rose-500 -translate-y-1/2 z-0 transition-all duration-500" style="width: ${(Math.max(0, currentIdx) / (statuses.length - 1)) * 100}%"></div>
-
-              <div class="relative z-10 flex flex-col items-center">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${currentIdx >= 0 ? 'bg-rose-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}">✓</div>
-                <span class="text-[9px] font-bold text-slate-600 mt-1">Placed</span>
-              </div>
-
-              <div class="relative z-10 flex flex-col items-center">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${currentIdx >= 2 ? 'bg-rose-600 text-white shadow-md' : currentIdx === 1 ? 'bg-amber-400 text-amber-900 animate-pulse' : 'bg-slate-200 text-slate-500'}">
-                  ${currentIdx >= 2 ? '✓' : '🥣'}
-                </div>
-                <span class="text-[9px] font-bold text-slate-600 mt-1">Preparing</span>
-              </div>
-
-              <div class="relative z-10 flex flex-col items-center">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${currentIdx >= 3 ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}">
-                  ${currentIdx >= 3 ? '✓' : '📦'}
-                </div>
-                <span class="text-[9px] font-bold text-slate-600 mt-1">Ready</span>
-              </div>
-
-              <div class="relative z-10 flex flex-col items-center">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${currentIdx >= 4 ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-200 text-slate-500'}">
-                  ${currentIdx >= 4 ? '✓' : '🎉'}
-                </div>
-                <span class="text-[9px] font-bold text-slate-600 mt-1">Collected</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- QR Code Area -->
-          <div class="my-3 flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
-            <div id="ticket-qrcode" class="p-2 bg-white rounded-xl shadow-sm border border-slate-200"></div>
-            <p class="text-xs font-black text-slate-800 mt-2 font-mono tracking-wider">${order.orderNumber}</p>
-            <p class="text-[10px] text-slate-500">Show this QR to the Surya Agencies shopkeeper at the counter</p>
-          </div>
-
-          <div class="ticket-perforation"></div>
-
-          <!-- Receipt Details -->
-          <div class="pt-6 mt-4 space-y-2">
-            <div class="flex justify-between text-xs text-slate-500">
-              <span>Customer:</span>
-              <span class="font-bold text-slate-800">${order.customerName}</span>
-            </div>
-
-            <div class="border-t border-slate-100 pt-2">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Ordered Items</span>
-              <div class="space-y-1">
-                ${order.items.map(item => `
-                  <div class="flex justify-between text-xs font-semibold text-slate-700">
-                    <span>${item.name} × ${item.quantity}</span>
-                    <span class="font-bold text-slate-900 font-mono">₹${item.price * item.quantity}</span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <div class="border-t border-slate-100 pt-2 flex justify-between items-center text-sm font-black text-slate-900 font-display">
-              <span>Total Amount</span>
-              <span class="text-base text-rose-600 font-mono">₹${order.total}</span>
-            </div>
-
-            <div class="flex justify-between items-center text-xs pt-1">
-              <span class="text-slate-500">Payment:</span>
-              <div class="flex items-center gap-1.5">
-                <span class="font-bold text-slate-700 uppercase">${order.paymentMethod === 'upi' ? 'UPI' : 'Pay at Shop'}</span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${order.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
-                  ${order.paymentStatus === 'PAID' ? '✓ PAID' : 'PENDING'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Actions -->
-          <div class="mt-6 flex gap-2">
-            <button 
-              type="button" 
-              onclick="window.print()" 
-              class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
-            >
-              🖨️ Print Ticket
-            </button>
-            <button 
-              type="button" 
-              onclick="window.appController.showCustomerView('catalog')" 
-              class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shadow-sm"
-            >
-              🍨 Order More
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    setTimeout(() => {
-      const qrContainer = document.getElementById('ticket-qrcode');
-      if (qrContainer && window.QRCode) {
-        qrContainer.innerHTML = '';
-        new QRCode(qrContainer, {
-          text: JSON.stringify({ orderId: order.id, orderNumber: order.orderNumber, shop: 'Surya Agencies' }),
-          width: 140,
-          height: 140,
-          colorDark: '#0f172a',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H
-        });
-      }
-    }, 50);
-  }
-
   // --- MY ORDERS VIEW ---
 
-  renderMyOrders() {
-    const container = document.getElementById('customer-myorders-list');
-    const emptyState = document.getElementById('customer-myorders-empty');
+  showOrdersView() {
+    this.currentView = 'orders';
+    document.getElementById('customer-catalog-view').classList.add('hidden');
+    document.getElementById('customer-tracking-view').classList.add('hidden');
+    const ordersView = document.getElementById('customer-orders-view');
+    if (ordersView) ordersView.classList.remove('hidden');
+
+    this.renderOrdersView();
+  }
+
+  showCatalogView() {
+    this.currentView = 'catalog';
+    document.getElementById('customer-catalog-view').classList.remove('hidden');
+    document.getElementById('customer-tracking-view').classList.add('hidden');
+    document.getElementById('customer-orders-view').classList.add('hidden');
+  }
+
+  renderOrdersView() {
+    const container = document.getElementById('customer-orders-view');
     if (!container) return;
 
     if (this.myOrders.length === 0) {
-      container.innerHTML = '';
-      if (emptyState) emptyState.classList.remove('hidden');
+      container.innerHTML = `
+        <div class="max-w-2xl mx-auto text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+          <span class="text-4xl block mb-2">📦</span>
+          <h3 class="font-black text-lg text-slate-900 font-display">No Orders Yet</h3>
+          <p class="text-xs text-slate-500 mt-1">Browse our 8 categories and place your first delicious order!</p>
+          <button type="button" onclick="customerApp.showCatalogView()" class="mt-6 px-6 py-3 rounded-2xl bg-rose-600 text-white font-extrabold text-xs shadow-md">Browse Catalog →</button>
+        </div>
+      `;
       return;
     }
 
-    if (emptyState) emptyState.classList.add('hidden');
-
-    container.innerHTML = this.myOrders.map(order => {
-      const isCompleted = order.orderStatus === 'COMPLETED';
-      const isReady = order.orderStatus === 'READY_FOR_PICKUP';
-
-      let statusBadge = '';
-      if (isCompleted) {
-        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-600">✓ Collected</span>`;
-      } else if (isReady) {
-        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 animate-pulse border border-emerald-300">🎉 Ready for Pickup</span>`;
-      } else {
-        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300">🥣 ${order.orderStatus}</span>`;
-      }
-
-      const formattedDate = new Date(order.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-      return `
-        <div class="bg-white rounded-3xl p-5 border border-slate-200 hover:border-rose-300 shadow-sm transition-all">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <span class="text-base font-black text-rose-600 font-mono">${order.orderNumber}</span>
-              <p class="text-[10px] text-slate-400">${formattedDate}</p>
-            </div>
-            <div>
-              ${statusBadge}
-            </div>
+    container.innerHTML = `
+      <div class="max-w-3xl mx-auto space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div>
+            <h3 class="text-xl font-black text-slate-900 font-display">My Orders History</h3>
+            <p class="text-xs text-slate-500 font-semibold">${this.myOrders.length} order(s) placed</p>
           </div>
-
-          <div class="py-3">
-            <p class="text-xs font-semibold text-slate-700">
-              ${(order.items || []).map(i => `${i.name} × ${i.quantity}`).join(', ')}
-            </p>
-            <div class="mt-2 flex items-center justify-between text-xs">
-              <span class="text-slate-500">Total: <strong class="text-slate-900 font-mono">₹${order.total}</strong></span>
-              <span class="text-[10px] font-bold ${order.paymentStatus === 'PAID' ? 'text-emerald-700' : 'text-amber-700'}">
-                ${order.paymentStatus === 'PAID' ? '✓ Paid' : 'Payment Pending'}
-              </span>
-            </div>
-          </div>
-
-          <button 
-            type="button" 
-            onclick="customerApp.showOrderTicket('${order.id}')"
-            class="w-full py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors flex items-center justify-center space-x-1.5"
-          >
-            <span>📱 View QR Pickup Ticket & Live Tracker</span>
+          <button type="button" onclick="customerApp.showCatalogView()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+            ← Back to Store
           </button>
         </div>
-      `;
-    }).join('');
-  }
 
-  render() {
-    this.renderCategories();
-    this.renderProductGrid();
-    this.updateCartBadge();
-    this.updateMyOrdersBadge();
+        <div class="space-y-3">
+          ${this.myOrders.map(order => {
+            const isCompleted = order.orderStatus === 'COMPLETED';
+            const isReady = order.orderStatus === 'READY_FOR_PICKUP';
+
+            return `
+              <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-rose-300 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-black text-slate-900 font-display text-base">${order.orderNumber}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isReady ? 'bg-emerald-100 text-emerald-800 animate-pulse' : isCompleted ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-800'}">
+                      ${order.orderStatus}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-1">
+                    ${order.items.map(i => `${i.name} (${i.quantity})`).join(', ')}
+                  </p>
+                  <span class="text-xs font-black text-rose-600 font-mono mt-1 block">Total: ₹${order.total}</span>
+                </div>
+
+                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                  <button 
+                    type="button" 
+                    onclick='customerApp.showTrackingView(${JSON.stringify(order).replace(/'/g, "&#39;")})' 
+                    class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm"
+                  >
+                    View Ticket
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
   }
 }
 

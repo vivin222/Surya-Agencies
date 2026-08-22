@@ -3,14 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Surya Agencies — Arun Icecreams Ordering System</title>
+  <title>SURYA AGENCIES — Ice Cream & Dairy Ordering Portal</title>
   
-  <!-- PWA Manifest & Meta -->
-  <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#e11d48" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Surya Icecreams" />
+  <meta name="apple-mobile-web-app-title" content="Surya Agencies" />
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -40,12 +37,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Local QRCode.js for 100% Offline & Live Network QR Generation -->
-  <script src="./js/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Google Identity Services (Sign In with Google) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  <!-- Html5-QRCode for Camera QR scanning -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <!-- Local QRCode.js -->
+  <script src="./js/qrcode.min.js"></script>
 
   <!-- Socket.io Client -->
   <script src="./socket.io/socket.io.js"></script>
@@ -56,580 +52,459 @@
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-rose-600 selection:text-white">
 
   <!-- ========================================================================
-       TOP GLOBAL NAVIGATION & PORTAL SWITCHER
+       1. GATEWAY / ROLE SELECTION & LOGIN SCREEN
        ======================================================================== -->
-  <header class="glass-nav sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-sm">
-    <!-- Brand Logo -->
-    <div class="flex items-center space-x-3 cursor-pointer" onclick="appController.switchPortal('customer')">
-      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 flex items-center justify-center text-xl text-white shadow-md shadow-rose-600/20 font-black">
-        🍨
-      </div>
-      <div>
-        <div class="flex items-center gap-1.5">
-          <h1 class="font-black text-slate-900 tracking-tight text-base font-display">SURYA AGENCIES</h1>
-          <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-800 border border-rose-200">ARUN</span>
+  <div id="gateway-portal" class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-rose-50/70 via-slate-50 to-slate-100">
+    <div class="max-w-4xl w-full">
+      <!-- Header Brand -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-tr from-rose-600 to-red-500 text-white text-3xl shadow-xl shadow-rose-600/30 mb-4 font-black">
+          🍨
         </div>
-        <p class="text-[10px] font-bold text-rose-600">Authorized Arun Icecreams Parlour</p>
-      </div>
-    </div>
-
-    <!-- Portal Switcher & Action Buttons -->
-    <div class="flex items-center space-x-2">
-      <!-- Live Connection Status Pill -->
-      <div 
-        id="connection-status-pill" 
-        onclick="appController.retryConnection()" 
-        class="conn-status-pill conn-status-online cursor-pointer" 
-        title="Connected to Surya Agencies backend over local Wi-Fi"
-      >
-        <span class="conn-dot conn-dot-online"></span>
-        <span>Connected (Local Wi-Fi)</span>
-      </div>
-      <!-- Portal Selector Buttons -->
-      <div class="flex items-center bg-slate-200/80 p-1 rounded-2xl border border-slate-300/60 text-xs font-bold shadow-inner">
-        <button 
-          type="button" 
-          id="top-nav-customer" 
-          class="bg-white text-rose-600 shadow-sm px-3.5 py-1.5 rounded-xl transition-all font-black text-xs"
-          onclick="appController.switchPortal('customer')"
-        >
-          <span>📱 Customer Portal</span>
-        </button>
-        <button 
-          type="button" 
-          id="top-nav-shopkeeper" 
-          class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-colors font-bold text-xs flex items-center space-x-1"
-          onclick="appController.switchPortal('shopkeeper')"
-        >
-          <span>🔒 Shopkeeper Login</span>
-        </button>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight font-display">SURYA AGENCIES</h1>
+        <p class="text-base sm:text-lg font-bold text-rose-600 mt-1">Ice Cream & Dairy Ordering Portal</p>
+        <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto mt-2">
+          Authorized Parlour for Hatsun Dairy Products & Arun Icecreams. Order fresh for quick shop pickup.
+        </p>
       </div>
 
-      <!-- Share with Friend's Phone Button -->
-      <button 
-        type="button" 
-        onclick="appController.openSharePhoneModal()"
-        class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-200 text-xs font-bold transition-colors shadow-sm"
-        title="Open on friend's phone over local Wi-Fi"
-      >
-        <span>📱 Open on Phone</span>
-      </button>
-
-      <!-- Install PWA App Button (shown on mobile / Chrome) -->
-      <button 
-        type="button" 
-        id="pwa-install-btn"
-        onclick="appController.promptPwaInstall()"
-        class="hidden px-3 py-1.5 rounded-xl bg-rose-600 text-white hover:bg-rose-700 text-xs font-black transition-colors shadow-sm"
-      >
-        ⬇️ Install App
-      </button>
-    </div>
-  </header>
-
-  <!-- ========================================================================
-       MAIN APPLICATION PORTALS
-       ======================================================================== -->
-  <main class="flex-1 w-full max-w-6xl mx-auto px-4 py-5">
-    
-    <!-- ====================================================================
-         PORTAL 1: CUSTOMER PORTAL (Default)
-         ==================================================================== -->
-    <div id="portal-customer" class="space-y-6">
-      
-      <!-- SUBVIEW A: CATALOGUE & PRODUCT BROWSING -->
-      <div id="customer-catalog-view" class="space-y-6">
-        
-        <!-- Hero Banner -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 text-white p-6 sm:p-8 shadow-xl shadow-rose-600/15">
-          <div class="relative z-10 max-w-xl space-y-2">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-black uppercase tracking-wider text-white">
-              <span>🍨 Surya Agencies</span>
-              <span>•</span>
-              <span>Fresh Arun Icecreams</span>
+      <!-- Two Gateway Options Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <!-- Customer Portal Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xl hover:border-rose-300 transition-all flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-2xl mb-4 font-bold">
+              📱
             </div>
-            <h2 class="text-2xl sm:text-3xl font-black font-display leading-tight">Order Arun Icecreams from Home 🍦</h2>
-            <p class="text-xs sm:text-sm text-rose-100 leading-relaxed">
-              Browse authentic Arun flavours, place order online with live stock reservation, and pick up freshly packed in 5 minutes!
+            <h2 class="text-xl font-extrabold text-slate-900 font-display">Customer Store</h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Browse 75+ dairy and ice cream products, check live stock, and place orders.
             </p>
-          </div>
 
-          <!-- Search Input -->
-          <div class="mt-5 relative max-w-md">
-            <input 
-              type="text" 
-              id="customer-search-input"
-              placeholder="Search Cassatta, Trio, Chocobar, Cones, Tubs..." 
-              oninput="customerApp.setSearchQuery(this.value)"
-              class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/95 text-slate-900 placeholder-slate-400 text-xs font-bold focus:outline-none focus:ring-4 focus:ring-white/30 shadow-lg"
-            />
-            <span class="absolute left-3.5 top-3.5 text-slate-400 text-sm">🔍</span>
-          </div>
-
-          <!-- Background Decorative Elements -->
-          <div class="absolute -right-8 -bottom-10 w-48 h-48 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
-        </div>
-
-        <!-- Flavour Categories Pills (Horizontal scrollable on mobile) -->
-        <div>
-          <div class="flex items-center justify-between mb-2.5">
-            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Explore Arun Categories</h3>
-            <span class="text-[11px] font-bold text-rose-600">Single Shared Live Stock</span>
-          </div>
-          <div id="customer-category-pills" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            <!-- Injected dynamically -->
-          </div>
-        </div>
-
-        <!-- Products Grid -->
-        <div>
-          <div id="customer-products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <!-- Injected dynamically -->
-          </div>
-
-          <!-- Empty search state -->
-          <div id="customer-empty-products" class="hidden p-12 text-center bg-white rounded-3xl border border-slate-200">
-            <span class="text-4xl block mb-2">🍨</span>
-            <h4 class="font-extrabold text-sm text-slate-800">No Arun Icecreams found</h4>
-            <p class="text-xs text-slate-500 mt-1">Try selecting another category or clearing search query</p>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- SUBVIEW B: MY ORDERS LIST -->
-      <div id="customer-myorders-view" class="space-y-4 max-w-xl mx-auto hidden">
-        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-          <div>
-            <h2 class="text-xl font-black text-slate-900 font-display">My Arun Orders</h2>
-            <p class="text-xs text-slate-500">Track current and past pickup tickets at Surya Agencies</p>
-          </div>
-          <button type="button" onclick="appController.showCustomerView('catalog')" class="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-black hover:bg-rose-100 transition-colors">
-            + Order More
-          </button>
-        </div>
-
-        <div id="customer-myorders-list" class="space-y-3">
-          <!-- Injected dynamically -->
-        </div>
-
-        <div id="customer-myorders-empty" class="hidden p-12 text-center bg-white rounded-3xl border border-slate-200">
-          <span class="text-4xl block mb-2">📦</span>
-          <h4 class="font-extrabold text-sm text-slate-800">No active orders</h4>
-          <p class="text-xs text-slate-500 mt-1">Select your favourite Arun Icecream flavour to order online!</p>
-          <button 
-            type="button" 
-            onclick="appController.showCustomerView('catalog')" 
-            class="mt-4 px-5 py-2.5 rounded-2xl bg-rose-600 text-white text-xs font-black shadow-md shadow-rose-600/20"
-          >
-            Browse Arun Menu
-          </button>
-        </div>
-      </div>
-
-      <!-- SUBVIEW C: DIGITAL ORDER TICKET & LIVE TRACKER -->
-      <div id="customer-ticket-view" class="space-y-4 hidden">
-        <div class="flex items-center justify-between max-w-md mx-auto">
-          <button 
-            type="button" 
-            onclick="appController.showCustomerView('catalog')"
-            class="text-xs font-bold text-slate-500 hover:text-rose-600 flex items-center space-x-1"
-          >
-            <span>← Back to Menu</span>
-          </button>
-          <button 
-            type="button" 
-            onclick="appController.showCustomerView('myorders')"
-            class="text-xs font-black text-rose-600 hover:underline"
-          >
-            View All My Orders
-          </button>
-        </div>
-
-        <div id="customer-order-ticket-view">
-          <!-- Injected dynamically -->
-        </div>
-      </div>
-
-      <!-- Floating Cart Bottom Bar (Appears when cart has items) -->
-      <div 
-        id="customer-floating-cart-bar" 
-        class="fixed bottom-6 left-4 right-4 max-w-md mx-auto bg-slate-900 text-white p-3.5 rounded-3xl shadow-2xl flex items-center justify-between transition-all duration-300 transform translate-y-32 cursor-pointer z-30 border border-slate-800"
-        onclick="customerApp.openCartDrawer()"
-      >
-        <div class="flex items-center space-x-3">
-          <span class="text-2xl">🛍️</span>
-          <div>
-            <span id="floating-cart-items" class="text-xs font-bold text-slate-300 block">1 item</span>
-            <span id="floating-cart-price" class="text-base font-black text-rose-400 font-display">₹35</span>
-          </div>
-        </div>
-        <button type="button" class="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-600/25 flex items-center space-x-1">
-          <span>View Cart & Checkout →</span>
-        </button>
-      </div>
-
-    </div>
-
-    <!-- ====================================================================
-         PORTAL 2: SHOPKEEPER PORTAL (Protected by Passcode)
-         ==================================================================== -->
-    <div id="portal-shopkeeper" class="space-y-6 hidden">
-      
-      <!-- AUTHENTICATION GATE (Shown when not logged in) -->
-      <div id="shop-auth-gate" class="max-w-md mx-auto my-12 p-8 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-6 text-center">
-        <div class="w-16 h-16 mx-auto rounded-3xl bg-rose-50 border border-rose-100 flex items-center justify-center text-3xl shadow-inner">
-          🔒
-        </div>
-        
-        <div>
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 uppercase tracking-wider">Protected Access</span>
-          <h2 class="text-2xl font-black text-slate-900 font-display mt-1">Shopkeeper Portal</h2>
-          <p class="text-xs text-slate-500 mt-1">Surya Agencies — Enter shopkeeper PIN to access orders, Arun products & QR scanner.</p>
-        </div>
-
-        <form onsubmit="event.preventDefault(); shopkeeperApp.login(document.getElementById('shop-pin-input').value);" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 text-left">Enter 4-Digit Passcode</label>
-            <input 
-              type="password" 
-              id="shop-pin-input" 
-              maxlength="10"
-              placeholder="••••" 
-              class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-center font-mono text-xl tracking-widest font-black text-slate-900 focus:outline-none focus:border-rose-500 focus:bg-white"
-              autofocus
-            />
-            <p class="text-[11px] text-slate-400 mt-1 text-left">Authorized personnel passcode required</p>
-          </div>
-
-          <button 
-            type="submit" 
-            class="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-sm shadow-lg shadow-rose-600/25 transition-all active:scale-98"
-          >
-            Unlock Shopkeeper Dashboard
-          </button>
-        </form>
-
-        <div class="pt-2 border-t border-slate-100">
-          <button 
-            type="button" 
-            onclick="appController.switchPortal('customer')" 
-            class="text-xs font-bold text-slate-500 hover:text-rose-600"
-          >
-            ← Return to Customer Portal
-          </button>
-        </div>
-      </div>
-
-      <!-- DASHBOARD CONTENT (Shown when authenticated) -->
-      <div id="shop-dashboard-content" class="space-y-6 hidden">
-        
-        <!-- Header & Top Stats -->
-        <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-2xl font-black text-slate-900 font-display">Surya Agencies Dashboard</h2>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800">ARUN</span>
-              </div>
-              <p class="text-xs text-slate-500">Live order processing, product management, online stock & QR verification terminal</p>
-            </div>
-
-            <div class="flex items-center gap-2">
+            <!-- Customer Auth Options -->
+            <div class="mt-6 space-y-3">
+              <!-- Google Login -->
               <button 
                 type="button" 
-                onclick="shopkeeperApp.openQRScannerModal()" 
-                class="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-600/20 flex items-center space-x-1.5 transition-all"
+                onclick="appController.openCustomerAuthModal('google')" 
+                class="w-full py-3.5 px-4 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center space-x-3"
               >
-                <span>📷 Scan Customer QR</span>
+                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>Continue with Google</span>
               </button>
+
+              <!-- Phone / Email Login -->
               <button 
                 type="button" 
-                onclick="shopkeeperApp.openAddProductModal()" 
-                class="px-3.5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm"
+                onclick="appController.openCustomerAuthModal('login')" 
+                class="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-slate-900/10 transition-all flex items-center justify-center space-x-2"
               >
-                <span>+ Add Arun Product</span>
-              </button>
-              <button 
-                type="button" 
-                onclick="shopkeeperApp.logout()" 
-                class="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold transition-colors"
-                title="Logout from Shopkeeper Portal"
-              >
-                Logout
+                <span>👤 Login with Phone / Email</span>
               </button>
             </div>
           </div>
 
-          <!-- Stats Grid -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-1">
-            <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70">
-              <span class="text-[10px] font-bold text-slate-600 block uppercase">Products</span>
-              <span id="stat-total-products" class="text-xl font-black text-slate-900 font-display">0</span>
-            </div>
-
-            <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70">
-              <span class="text-[10px] font-bold text-slate-600 block uppercase">Online Stock</span>
-              <span id="stat-total-stock" class="text-xl font-black text-rose-600 font-display">0</span>
-            </div>
-
-            <div class="p-3.5 bg-blue-50 rounded-2xl border border-blue-200/80">
-              <span class="text-[10px] font-bold text-blue-600 block uppercase">New Orders</span>
-              <span id="stat-new-orders" class="text-xl font-black text-blue-700 font-display">0</span>
-            </div>
-
-            <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-200/80">
-              <span class="text-[10px] font-bold text-amber-600 block uppercase">Preparing</span>
-              <span id="stat-preparing-orders" class="text-xl font-black text-amber-700 font-display">0</span>
-            </div>
-
-            <div class="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200/80">
-              <span class="text-[10px] font-bold text-emerald-600 block uppercase">Ready Pickup</span>
-              <span id="stat-ready-orders" class="text-xl font-black text-emerald-700 font-display">0</span>
-            </div>
-
-            <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70">
-              <span class="text-[10px] font-bold text-slate-600 block uppercase">Completed</span>
-              <span id="stat-completed-orders" class="text-xl font-black text-slate-700 font-display">0</span>
-            </div>
-
-            <div class="p-3.5 bg-purple-50 rounded-2xl border border-purple-200/80">
-              <span class="text-[10px] font-bold text-purple-600 block uppercase">Revenue</span>
-              <span id="stat-total-revenue" class="text-xl font-black text-purple-700 font-display">₹0</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Shopkeeper Navigation Tabs -->
-        <div class="flex items-center space-x-1.5 border-b border-slate-200 pb-2 overflow-x-auto no-scrollbar">
-          <button 
-            type="button" 
-            id="shop-nav-dashboard" 
-            onclick="appController.showShopkeeperSubView('dashboard')"
-            class="px-4 py-2 rounded-2xl bg-rose-600 text-white font-black text-xs shadow-sm flex items-center space-x-1.5"
-          >
-            <span>📋 Live Orders</span>
-            <span id="shop-new-orders-badge" class="px-1.5 py-0.5 rounded-full bg-white text-rose-700 text-[10px] font-black hidden">0</span>
-          </button>
-
-          <button 
-            type="button" 
-            id="shop-nav-products" 
-            onclick="appController.showShopkeeperSubView('products')"
-            class="px-4 py-2 rounded-2xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-bold text-xs transition-colors flex items-center space-x-1.5"
-          >
-            <span>🍨 Arun Products</span>
-          </button>
-
-          <button 
-            type="button" 
-            id="shop-nav-inventory" 
-            onclick="appController.showShopkeeperSubView('inventory')"
-            class="px-4 py-2 rounded-2xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-bold text-xs transition-colors flex items-center space-x-1.5"
-          >
-            <span>📦 Online Stock Adjuster</span>
-          </button>
-
-          <button 
-            type="button" 
-            id="shop-nav-scanner" 
-            onclick="appController.showShopkeeperSubView('scanner')"
-            class="px-4 py-2 rounded-2xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-bold text-xs transition-colors flex items-center space-x-1.5"
-          >
-            <span>📷 QR Scanner</span>
-          </button>
-
-          <button 
-            type="button" 
-            id="shop-nav-settings" 
-            onclick="appController.showShopkeeperSubView('settings')"
-            class="px-4 py-2 rounded-2xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-bold text-xs transition-colors flex items-center space-x-1.5"
-          >
-            <span>⚙️ Shop Settings</span>
-          </button>
-        </div>
-
-        <!-- SECTION 1: LIVE ORDERS DASHBOARD -->
-        <section id="shop-section-dashboard" class="space-y-4">
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <div class="flex items-center gap-1.5 bg-white p-1 rounded-2xl border border-slate-200">
-              <button type="button" id="order-tab-btn-all" onclick="shopkeeperApp.setOrderTab('ALL')" class="px-3.5 py-1.5 rounded-xl bg-rose-600 text-white font-bold text-xs shadow-sm">All</button>
-              <button type="button" id="order-tab-btn-new" onclick="shopkeeperApp.setOrderTab('NEW')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition-colors">New</button>
-              <button type="button" id="order-tab-btn-preparing" onclick="shopkeeperApp.setOrderTab('PREPARING')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition-colors">Preparing</button>
-              <button type="button" id="order-tab-btn-ready_for_pickup" onclick="shopkeeperApp.setOrderTab('READY_FOR_PICKUP')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition-colors">Ready for Pickup</button>
-              <button type="button" id="order-tab-btn-completed" onclick="shopkeeperApp.setOrderTab('COMPLETED')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition-colors">Completed</button>
-              <button type="button" id="order-tab-btn-cancelled" onclick="shopkeeperApp.setOrderTab('CANCELLED')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition-colors">Cancelled</button>
-            </div>
-
-            <span class="text-xs text-slate-500 font-medium">Real-time sync via WebSockets</span>
-          </div>
-
-          <div id="shop-orders-container" class="space-y-3">
-            <!-- Injected dynamically -->
-          </div>
-
-          <div id="shop-orders-empty" class="hidden p-12 text-center bg-white rounded-3xl border border-slate-200">
-            <span class="text-4xl block mb-2">📋</span>
-            <h4 class="font-extrabold text-sm text-slate-800">No Orders in this category</h4>
-            <p class="text-xs text-slate-500 mt-1">When customers place Arun Icecream orders from home, they will appear here live.</p>
-          </div>
-        </section>
-
-        <!-- SECTION 2: PRODUCTS CATALOGUE -->
-        <section id="shop-section-products" class="space-y-4 hidden">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-lg font-black text-slate-900 font-display">Manage Arun Icecreams Lineup</h3>
-              <p class="text-xs text-slate-500"><span id="shop-products-count">0</span> products in Surya Agencies inventory</p>
-            </div>
+          <!-- Quick Guest Access -->
+          <div class="mt-6 pt-4 border-t border-slate-100 text-center">
             <button 
               type="button" 
-              onclick="shopkeeperApp.openAddProductModal()"
-              class="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/20"
+              onclick="appController.continueAsGuest()" 
+              class="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline"
             >
-              + Add Arun Product
+              Or Browse & Order as Guest →
             </button>
           </div>
+        </div>
 
-          <div id="shop-products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <!-- Injected dynamically -->
-          </div>
-        </section>
-
-        <!-- SECTION 3: INVENTORY / ONLINE STOCK ADJUSTER -->
-        <section id="shop-section-inventory" class="space-y-4 hidden">
-          <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-            <div class="p-4 border-b border-slate-100">
-              <h3 class="text-base font-black text-slate-900 font-display">Online Order Stock Controller</h3>
-              <p class="text-xs text-slate-500">Only ONE stock value managed: available online ordering quantity</p>
+        <!-- Shopkeeper Portal Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xl hover:border-slate-400 transition-all flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center text-2xl mb-4 font-bold">
+              🏪
             </div>
+            <h2 class="text-xl font-extrabold text-slate-900 font-display">Shopkeeper Portal</h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Authorized Surya Agencies staff login for order processing & inventory management.
+            </p>
 
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                    <th class="py-3 px-4">Arun Product</th>
-                    <th class="py-3 px-4">Price</th>
-                    <th class="py-3 px-4">Current Stock</th>
-                    <th class="py-3 px-4">Quick Adjust Stock</th>
-                    <th class="py-3 px-4 text-right">Online Status</th>
-                  </tr>
-                </thead>
-                <tbody id="shop-inventory-tbody">
-                  <!-- Injected dynamically -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- SECTION 4: SETTINGS -->
-        <section id="shop-section-settings" class="space-y-4 hidden">
-          <div class="bg-white rounded-3xl border border-slate-200 p-6 max-w-xl">
-            <h3 class="text-lg font-black text-slate-900 font-display border-b border-slate-100 pb-3">Surya Agencies Settings</h3>
-
-            <form onsubmit="shopkeeperApp.saveSettings(event)" class="mt-4 space-y-4">
+            <!-- Shopkeeper Login Form -->
+            <form id="gateway-shopkeeper-form" onsubmit="appController.handleShopkeeperLogin(event)" class="mt-6 space-y-3">
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Shop UPI ID (For customer payments)</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Username</label>
                 <input 
                   type="text" 
-                  id="settings-upi-id" 
+                  id="shop-login-username" 
+                  placeholder="surya_agencies" 
                   required 
-                  placeholder="suryaagencies@upi"
-                  class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 font-mono focus:outline-none focus:border-rose-500"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
                 />
               </div>
 
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Shop Name</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Password</label>
                 <input 
-                  type="text" 
-                  id="settings-shop-name" 
+                  type="password" 
+                  id="shop-login-password" 
+                  placeholder="••••••••••••" 
                   required 
-                  value="Surya Agencies"
-                  class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-rose-500"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
                 />
               </div>
 
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Contact Phone</label>
-                <input 
-                  type="text" 
-                  id="settings-shop-phone" 
-                  placeholder="+91 98765 43210"
-                  class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-rose-500"
-                />
-              </div>
+              <div id="shopkeeper-login-error" class="text-xs text-rose-600 font-bold hidden py-1"></div>
 
-              <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                <button 
-                  type="button" 
-                  onclick="shopkeeperApp.loadSampleProducts()"
-                  class="px-4 py-2.5 rounded-2xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors"
-                >
-                  🔄 Reset & Reload Arun Catalog
-                </button>
-
-                <button 
-                  type="submit" 
-                  class="px-6 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all"
-                >
-                  Save Settings
-                </button>
-              </div>
+              <button 
+                type="submit" 
+                class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition-all flex items-center justify-center space-x-2"
+              >
+                <span>🔑 Enter Shopkeeper Dashboard</span>
+              </button>
             </form>
           </div>
-        </section>
 
+          <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+            <span class="text-[11px] font-bold text-slate-400">Restricted Access • Surya Agencies Staff Only</span>
+          </div>
+        </div>
       </div>
-
     </div>
-
-  </main>
+  </div>
 
   <!-- ========================================================================
-       GLOBAL MODALS & DRAWERS
+       2. CUSTOMER STORE PORTAL
+       ======================================================================== -->
+  <div id="customer-portal" class="hidden flex-1 flex flex-col">
+    <!-- Top Glass Navigation -->
+    <header class="glass-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-sm">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="customerApp.showCatalogView()">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 flex items-center justify-center text-xl text-white shadow-md shadow-rose-600/20 font-black">
+          🍨
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-black text-slate-900 tracking-tight text-base font-display">SURYA AGENCIES</h1>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-800 border border-rose-200">ARUN & HATSUN</span>
+          </div>
+          <p class="text-[10px] font-bold text-rose-600">Ice Cream & Dairy Ordering Portal</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-2">
+        <!-- Live Connection Pill -->
+        <div id="customer-conn-pill" class="conn-status-pill conn-status-online hidden sm:inline-flex" title="Connected to Surya Agencies backend">
+          <span class="conn-dot conn-dot-online"></span>
+          <span>Live Store</span>
+        </div>
+
+        <!-- My Orders Button -->
+        <button 
+          type="button" 
+          onclick="customerApp.showOrdersView()" 
+          class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-sm flex items-center space-x-1.5"
+        >
+          <span>📦 My Orders</span>
+          <span id="active-orders-badge" class="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-extrabold hidden">0</span>
+        </button>
+
+        <!-- Customer Profile / Login Button -->
+        <button 
+          type="button" 
+          id="customer-profile-btn" 
+          onclick="appController.openCustomerAuthModal()" 
+          class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-sm flex items-center space-x-1.5"
+        >
+          <span>👤 Profile</span>
+        </button>
+
+        <!-- Cart Button -->
+        <button 
+          type="button" 
+          onclick="customerApp.openCartDrawer()" 
+          class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 hover:from-rose-700 hover:to-red-700 flex items-center space-x-2"
+        >
+          <span>🛍️ Cart</span>
+          <span id="cart-badge-count" class="px-1.5 py-0.5 rounded-full bg-white text-rose-700 text-[10px] font-black leading-none">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Customer Body -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+      
+      <!-- Catalog View -->
+      <div id="customer-catalog-view" class="space-y-6">
+        <!-- Hero Banner -->
+        <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div class="max-w-xl relative z-10">
+            <span class="px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider">
+              Surya Agencies • Fresh Ice Cream & Dairy
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-black font-display tracking-tight mt-3">
+              Order Fresh Arun Icecreams & Hatsun Dairy
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+              Browse all 8 official categories with real-time parlour stock. Order now and pick up fresh at the counter!
+            </p>
+          </div>
+        </div>
+
+        <!-- Search & Category Filters -->
+        <div class="space-y-4">
+          <!-- Search Bar -->
+          <div class="relative max-w-md w-full">
+            <input 
+              type="text" 
+              id="customer-search-input" 
+              oninput="customerApp.setSearchQuery(this.value)" 
+              placeholder="Search milk, paneer, cones, chocobars, tubs..." 
+              class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm"
+            />
+            <span class="absolute left-3.5 top-3.5 text-slate-400">🔍</span>
+          </div>
+
+          <!-- Category Pills (Horizontal Scrollable) -->
+          <div id="customer-categories-bar" class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <!-- Rendered Dynamically -->
+          </div>
+        </div>
+
+        <!-- Section Title -->
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div>
+            <h3 id="current-category-title" class="text-xl font-black text-slate-900 font-display">All Products</h3>
+            <p id="current-category-count" class="text-xs text-slate-500 font-semibold">Loading products...</p>
+          </div>
+        </div>
+
+        <!-- Products Grid (Rigid Card Layout - Zero Overlap) -->
+        <div id="customer-products-grid" class="product-grid">
+          <!-- Injected Dynamically -->
+        </div>
+
+        <!-- Empty Products State -->
+        <div id="customer-empty-products" class="hidden text-center py-16 bg-white rounded-3xl border border-slate-200 p-8">
+          <span class="text-4xl block mb-2">🍨</span>
+          <h4 class="font-extrabold text-base text-slate-800">No products found</h4>
+          <p class="text-xs text-slate-500 mt-1">Try adjusting your search query or selecting a different category.</p>
+        </div>
+      </div>
+
+      <!-- Order Tracking View (Live Digital Ticket) -->
+      <div id="customer-tracking-view" class="hidden max-w-2xl mx-auto space-y-6">
+        <!-- Rendered Dynamically -->
+      </div>
+
+      <!-- My Orders View (Personal History) -->
+      <div id="customer-orders-view" class="hidden space-y-6">
+        <!-- Rendered Dynamically -->
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       3. SHOPKEEPER DASHBOARD
+       ======================================================================== -->
+  <div id="shopkeeper-portal" class="hidden flex-1 flex flex-col">
+    <!-- Top Header -->
+    <header class="glass-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-sm bg-slate-900 text-white">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-rose-600 flex items-center justify-center text-xl text-white font-black">
+          🏪
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-black text-white tracking-tight text-base font-display">SURYA AGENCIES</h1>
+            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/30">SHOPKEEPER PORTAL</span>
+          </div>
+          <p class="text-[10px] font-bold text-slate-400">Live Inventory & Order Fulfillment System</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <div id="shop-conn-pill" class="conn-status-pill conn-status-online hidden sm:inline-flex">
+          <span class="conn-dot conn-dot-online"></span>
+          <span>Live Backend</span>
+        </div>
+
+        <button 
+          type="button" 
+          onclick="appController.showCustomerStore()" 
+          class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700"
+        >
+          📱 Customer Store
+        </button>
+
+        <button 
+          type="button" 
+          onclick="appController.logoutShopkeeper()" 
+          class="px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-bold border border-rose-500/30"
+        >
+          🚪 Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- Shopkeeper Main Dashboard Body -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+      
+      <!-- KPI Stats Grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold uppercase text-slate-400 block">Today's Orders</span>
+          <span id="shop-kpi-orders" class="text-2xl sm:text-3xl font-black text-slate-900 font-display mt-1 block">0</span>
+          <span class="text-[11px] font-semibold text-emerald-600 mt-1 block">✓ Real-time sync</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold uppercase text-slate-400 block">Pending / Preparing</span>
+          <span id="shop-kpi-pending" class="text-2xl sm:text-3xl font-black text-rose-600 font-display mt-1 block">0</span>
+          <span class="text-[11px] font-semibold text-rose-500 mt-1 block">⚡ Needs action</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold uppercase text-slate-400 block">Completed Sales</span>
+          <span id="shop-kpi-revenue" class="text-2xl sm:text-3xl font-black text-slate-900 font-display mt-1 block">₹0</span>
+          <span class="text-[11px] font-semibold text-slate-400 mt-1 block">Cash + UPI</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold uppercase text-slate-400 block">Low / Out of Stock</span>
+          <span id="shop-kpi-stock" class="text-2xl sm:text-3xl font-black text-amber-600 font-display mt-1 block">0</span>
+          <span class="text-[11px] font-semibold text-amber-600 mt-1 block">Items below 5 units</span>
+        </div>
+      </div>
+
+      <!-- Shopkeeper Navigation Tabs -->
+      <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <button 
+          type="button" 
+          id="shop-tab-orders" 
+          onclick="shopkeeperApp.switchTab('orders')" 
+          class="px-4 py-2 rounded-2xl bg-slate-900 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-2"
+        >
+          <span>📥 Live Customer Orders</span>
+          <span id="shop-active-orders-count" class="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black">0</span>
+        </button>
+
+        <button 
+          type="button" 
+          id="shop-tab-products" 
+          onclick="shopkeeperApp.switchTab('products')" 
+          class="px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-2"
+        >
+          <span>📦 Product & Price Management</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Live Orders View -->
+      <div id="shop-view-orders" class="space-y-4">
+        <!-- Order Filter Pills -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <button type="button" onclick="shopkeeperApp.filterOrders('ALL')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white">All Orders</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('NEW')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">New</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('PREPARING')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">Preparing</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('READY_FOR_PICKUP')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">Ready for Pickup</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('COMPLETED')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">Completed</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('CANCELLED')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">Cancelled</button>
+        </div>
+
+        <!-- Orders List Container -->
+        <div id="shopkeeper-orders-list" class="space-y-3">
+          <!-- Injected Dynamically -->
+        </div>
+
+        <div id="shopkeeper-orders-empty" class="hidden text-center py-12 bg-white rounded-3xl border border-slate-200 p-8">
+          <span class="text-3xl block mb-2">📥</span>
+          <h4 class="font-extrabold text-slate-800 text-sm">No incoming orders</h4>
+          <p class="text-xs text-slate-500 mt-1">Orders placed by customers will appear here in real time with an audio alert.</p>
+        </div>
+      </div>
+
+      <!-- Tab 2: Product & Price Management View -->
+      <div id="shop-view-products" class="hidden space-y-4">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center gap-3">
+            <input 
+              type="text" 
+              id="shop-product-search" 
+              oninput="shopkeeperApp.searchProducts(this.value)" 
+              placeholder="Search products to edit price/stock..." 
+              class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 w-64"
+            />
+            <select 
+              id="shop-product-cat-filter" 
+              onchange="shopkeeperApp.filterProductCategory(this.value)" 
+              class="px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="ALL">All Categories</option>
+              <option value="Dairy Products">Dairy Products</option>
+              <option value="Ice Cream Cones">Ice Cream Cones</option>
+              <option value="Ice Cream Bars & Sticks">Ice Cream Bars & Sticks</option>
+              <option value="Ice Cream Cups & Duets">Ice Cream Cups & Duets</option>
+              <option value="Ice Cream Novelties & Slices">Ice Cream Novelties & Slices</option>
+              <option value="Sundaes & In-Store Specials">Sundaes & In-Store Specials</option>
+              <option value="Family Tubs & Packs">Family Tubs & Packs</option>
+              <option value="Ice Cream Cakes">Ice Cream Cakes</option>
+            </select>
+          </div>
+          <span class="text-xs font-bold text-slate-500">Edit price or stock below & click Save</span>
+        </div>
+
+        <!-- Product Table / Cards for Management -->
+        <div id="shopkeeper-products-table" class="space-y-3">
+          <!-- Injected Dynamically -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       4. MODALS & DRAWERS
        ======================================================================== -->
   
-  <!-- 1. Product Details Modal -->
-  <div id="product-detail-modal"></div>
-
-  <!-- 2. Customer Cart Drawer -->
-  <div id="customer-cart-drawer" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-end hidden">
+  <!-- Slide-out Cart Drawer -->
+  <div id="cart-drawer-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden" onclick="customerApp.closeCartDrawer(event)">
     <div 
-      id="customer-cart-panel" 
-      class="bg-white w-full max-w-md h-full flex flex-col justify-between p-6 shadow-2xl transition-transform duration-300 transform translate-x-full"
+      id="cart-drawer-panel" 
+      class="bg-white w-full max-w-md h-full ml-auto flex flex-col justify-between p-6 shadow-2xl transition-transform duration-300 transform translate-x-full" 
+      onclick="event.stopPropagation()"
     >
       <div class="flex items-center justify-between border-b border-slate-100 pb-4">
         <div class="flex items-center space-x-2">
           <span class="text-2xl">🛍️</span>
           <div>
-            <h3 class="text-lg font-black text-slate-900 font-display">Your Arun Cart</h3>
+            <h3 class="text-lg font-black text-slate-900 font-display">Your Surya Cart</h3>
             <p class="text-xs text-slate-500">Pick up fresh at Surya Agencies</p>
           </div>
         </div>
         <button type="button" onclick="customerApp.closeCartDrawer()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
       </div>
 
-      <div id="customer-cart-items" class="flex-1 overflow-y-auto py-4 space-y-3">
+      <div id="cart-drawer-items" class="flex-1 overflow-y-auto py-4 space-y-3">
         <!-- Injected dynamically -->
       </div>
 
-      <div id="customer-cart-empty" class="flex-1 flex flex-col items-center justify-center text-center p-6 hidden">
+      <div id="cart-drawer-empty" class="flex-1 flex flex-col items-center justify-center text-center p-6 hidden">
         <span class="text-4xl block mb-2">🍨</span>
         <h4 class="font-extrabold text-sm text-slate-800">Your Cart is Empty</h4>
-        <p class="text-xs text-slate-500 mt-1">Select your favourite Arun Icecreams flavours!</p>
+        <p class="text-xs text-slate-500 mt-1">Select your favourite ice cream & dairy items!</p>
       </div>
 
-      <div id="customer-cart-footer" class="border-t border-slate-100 pt-4 space-y-3">
+      <div id="cart-drawer-footer" class="border-t border-slate-100 pt-4 space-y-3">
         <div class="space-y-1 text-xs">
           <div class="flex justify-between text-slate-500">
             <span>Subtotal</span>
-            <span id="cart-subtotal-price" class="font-bold text-slate-800 font-mono">₹0</span>
+            <span id="cart-drawer-subtotal" class="font-bold text-slate-800 font-mono">₹0</span>
           </div>
           <div class="flex justify-between items-center text-base font-black text-slate-900 font-display pt-1 border-t border-slate-100">
             <span>Total Payable</span>
-            <span id="cart-total-price" class="text-lg text-rose-600 font-mono">₹0</span>
+            <span id="cart-drawer-total" class="text-lg text-rose-600 font-mono">₹0</span>
           </div>
         </div>
 
@@ -638,34 +513,88 @@
           onclick="customerApp.openCheckoutModal()"
           class="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
         >
-          <span>Proceed to Checkout →</span>
+          <span>Proceed to Order Checkout →</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 3. Checkout Modal -->
-  <div id="checkout-modal"></div>
+  <!-- Customer Auth Modal -->
+  <div id="customer-auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="appController.closeCustomerAuthModal(event)">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+          <h3 class="text-lg font-black text-slate-900 font-display">Customer Account</h3>
+          <p class="text-xs text-slate-500">Sign in to track orders & save your favourites</p>
+        </div>
+        <button type="button" onclick="appController.closeCustomerAuthModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
+      </div>
 
-  <!-- 4. Shopkeeper Add/Edit Product Modal -->
-  <div id="shop-product-modal"></div>
+      <div class="mt-6 space-y-4">
+        <!-- Google Sign-In button -->
+        <button 
+          type="button" 
+          onclick="appController.triggerGoogleSignIn()" 
+          class="w-full py-3.5 px-4 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center space-x-3"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Sign In with Google</span>
+        </button>
 
-  <!-- 5. Shopkeeper QR Scanner Modal -->
-  <div id="shop-qr-scanner-modal"></div>
+        <div class="flex items-center my-3">
+          <div class="flex-1 border-t border-slate-200"></div>
+          <span class="px-3 text-[11px] font-bold text-slate-400 uppercase">Or Phone / Email</span>
+          <div class="flex-1 border-t border-slate-200"></div>
+        </div>
 
-  <!-- 6. Share with Friend's Phone Modal -->
-  <div id="share-phone-modal"></div>
+        <form id="customer-quick-login-form" onsubmit="appController.handleCustomerQuickLogin(event)" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Your Full Name</label>
+            <input type="text" id="cust-modal-name" placeholder="e.g. Sundar Pichai" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+          </div>
 
-  <!-- 7. Global Toast Container -->
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Mobile Phone Number</label>
+            <input type="tel" id="cust-modal-phone" placeholder="98400 12345" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Email Address (Optional)</label>
+            <input type="email" id="cust-modal-email" placeholder="you@example.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+          </div>
+
+          <button 
+            type="submit" 
+            class="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all"
+          >
+            Save & Continue
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Modal Container -->
+  <div id="checkout-modal-container"></div>
+
+  <!-- Product Detail Modal Container -->
+  <div id="product-detail-modal-container"></div>
+
+  <!-- Global Toast Notification Container -->
   <div id="global-toast-container" class="fixed top-16 right-4 z-50 max-w-sm space-y-2 pointer-events-auto"></div>
 
-  <!-- Footer -->
-  <footer class="mt-auto py-6 border-t border-slate-200 text-center text-xs text-slate-500">
-    <p class="font-bold text-slate-700">Surya Agencies — Authorized Arun Icecreams Parlour</p>
-    <p class="text-[11px] text-slate-400 mt-0.5">Shared Real-Time Ordering & Pickup Inventory System</p>
+  <!-- Global Footer -->
+  <footer class="mt-auto py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+    <p class="font-extrabold text-slate-800">SURYA AGENCIES</p>
+    <p class="text-[11px] text-slate-400 mt-0.5">Ice Cream & Dairy Ordering Portal • Shared Real-Time System</p>
   </footer>
 
-  <!-- Scripts -->
+  <!-- Core Scripts -->
   <script src="./js/socket-client.js"></script>
   <script src="./js/app.js"></script>
   <script src="./js/customer-app.js"></script>

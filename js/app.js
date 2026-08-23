@@ -52,7 +52,7 @@ class AppController {
     }
   }
 
-  // --- ANDROID PWA INSTALLATION ---
+    // --- ANDROID & IOS PWA INSTALLATION ---
 
   initPWA() {
     // Register Service Worker
@@ -71,14 +71,33 @@ class AppController {
       if (navBtn) navBtn.classList.remove('hidden');
       if (gatewayBtn) gatewayBtn.classList.remove('hidden');
     });
+
+    // Handle installed event
+    window.addEventListener('appinstalled', () => {
+      this.showToast('✓ Surya Agencies App installed successfully!', 'success');
+      this.deferredPrompt = null;
+    });
   }
 
-  
   promptInstallPWA() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    // If native prompt is ready on Android/Desktop, trigger it directly
+    if (!isIOS && this.deferredPrompt) {
+      this.deferredPrompt.prompt();
+      this.deferredPrompt.userChoice.then((choice) => {
+        if (choice.outcome === 'accepted') {
+          this.showToast('Thank you for installing Surya Agencies App!', 'success');
+        }
+        this.deferredPrompt = null;
+      });
+      return;
+    }
+
+    // Otherwise open the responsive platform guide modal
     const modal = document.getElementById('install-app-modal');
     if (modal) {
       modal.classList.remove('hidden');
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       this.switchInstallGuide(isIOS ? 'iphone' : 'android');
     }
   }
@@ -118,20 +137,6 @@ class AppController {
         if (choice.outcome === 'accepted') {
           this.showToast('Thank you for installing Surya Agencies App!', 'success');
           this.closeInstallModal();
-        }
-        this.deferredPrompt = null;
-      });
-    } else {
-      this.showToast('Tap your browser menu (⋮) in the top right and choose "Install App" or "Add to Home Screen".', 'info');
-    }
-  }
-
-  _oldPromptInstallPWA() {
-    if (this.deferredPrompt) {
-      this.deferredPrompt.prompt();
-      this.deferredPrompt.userChoice.then((choice) => {
-        if (choice.outcome === 'accepted') {
-          this.showToast('Thank you for installing Surya Agencies App!', 'success');
         }
         this.deferredPrompt = null;
       });

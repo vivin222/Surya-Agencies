@@ -66,11 +66,7 @@
     <div class="max-w-4xl w-full">
       <!-- Top Theme Switcher & PWA on Gateway -->
       <div class="flex items-center justify-end gap-2 mb-3">
-        <button 
-          type="button" 
-          id="pwa-install-btn-gateway" 
-          onclick="appController.promptInstallPWA()" 
-          class="hidden px-3 py-1.5 rounded-full bg-rose-600 text-white text-xs font-extrabold shadow-sm hover:bg-rose-700 transition-all flex items-center space-x-1"
+        <button type="button" id="pwa-install-btn-gateway" onclick="appController.promptInstallPWA()" class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-700 hover:to-amber-600 text-white text-xs font-extrabold shadow-sm transition-all flex items-center space-x-1.5"
         >
           <span>📲 Install App</span>
         </button>
@@ -94,6 +90,19 @@
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1.5 sm:mt-2 px-2">
           Authorized Parlour for Hatsun Dairy Products & Arun Icecreams. Choose your portal below:
         </p>
+      </div>
+
+      <!-- Gateway Install App Action -->
+      <div class="flex items-center justify-center mb-6">
+        <button 
+          type="button" 
+          onclick="appController.promptInstallPWA()" 
+          class="inline-flex items-center space-x-2 px-4 py-2 rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold shadow-xs hover:border-rose-300 hover:bg-white dark:hover:bg-slate-800 transition-all active:scale-98"
+        >
+          <span class="text-base">📲</span>
+          <span>Install Surya Agencies App (Android & iOS)</span>
+          <span class="text-rose-600 dark:text-rose-400 font-extrabold">→</span>
+        </button>
       </div>
 
       <!-- Two Gateway Options Grid -->
@@ -846,7 +855,7 @@
     </div>
   </div>
 
-  <!-- Modal: 📲 Install PWA App Guide -->
+    <!-- Modal: 📲 Install PWA App Guide (Android & iOS) -->
   <div id="install-app-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="appController.closeInstallModal(event)">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -861,31 +870,48 @@
       </div>
 
       <div class="mt-4 space-y-4">
+        <!-- Platform Selection Tabs -->
         <div class="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
           <button type="button" id="tab-guide-android" onclick="appController.switchInstallGuide('android')" class="py-2 rounded-xl text-xs font-black bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm flex items-center justify-center space-x-1">
             <span>🤖 Android</span>
           </button>
           <button type="button" id="tab-guide-iphone" onclick="appController.switchInstallGuide('iphone')" class="py-2 rounded-xl text-xs font-black text-slate-600 dark:text-slate-400 flex items-center justify-center space-x-1">
-            <span>🍏 iPhone</span>
+            <span>🍏 iPhone / iPad</span>
           </button>
         </div>
 
+        <!-- Android Guide -->
         <div id="guide-content-android" class="space-y-3">
-          <p class="text-xs text-slate-600 dark:text-slate-300">Tap below to add the official Surya Agencies app to your phone:</p>
-          <button type="button" onclick="appController.triggerNativeInstallPrompt()" class="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md flex items-center justify-center space-x-2">
+          <p class="text-xs text-slate-600 dark:text-slate-300">Tap below to add the official Surya Agencies app to your home screen:</p>
+          <button type="button" onclick="appController.triggerNativeInstallPrompt()" class="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs sm:text-sm shadow-md flex items-center justify-center space-x-2 active:scale-98 transition-all">
             <span>📲 Install Surya Agencies App</span>
           </button>
+          <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
+            <p><strong>Alternative:</strong> Tap the Chrome menu (<strong>⋮</strong>) in the top right and choose <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</p>
+          </div>
         </div>
 
+        <!-- iPhone / iOS Guide -->
         <div id="guide-content-iphone" class="hidden space-y-3">
-          <ol class="text-xs text-slate-600 dark:text-slate-300 space-y-2 list-decimal list-inside bg-slate-50 dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <li>Tap the <strong>Share</strong> icon in Safari bottom bar.</li>
-            <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
-            <li>Tap <strong>Add</strong> in top right corner.</li>
+          <p class="text-xs text-slate-600 dark:text-slate-300">Follow these 3 quick steps in <strong>Safari</strong>:</p>
+          <ol class="text-xs text-slate-700 dark:text-slate-300 space-y-2.5 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <li class="flex items-start space-x-2">
+              <span class="w-5 h-5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+              <span>Tap the <strong>Share button</strong> <span class="font-mono text-sm px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded">⎋</span> at the bottom of Safari.</span>
+            </li>
+            <li class="flex items-start space-x-2">
+              <span class="w-5 h-5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+              <span>Scroll down and tap <strong>"Add to Home Screen"</strong> <span class="font-mono text-sm px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded">➕</span>.</span>
+            </li>
+            <li class="flex items-start space-x-2">
+              <span class="w-5 h-5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+              <span>Tap <strong>Add</strong> in the top right corner to finish!</span>
+            </li>
           </ol>
         </div>
       </div>
     </div>
+  </div>
   </div>
 
     <!-- Modal: 📷 Live Camera QR Scanner (Shopkeeper) -->

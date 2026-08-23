@@ -1,16 +1,19 @@
 /**
  * Shopkeeper Portal Logic — Surya Agencies
- * Live Orders Feed, Status Steppers, KPI Analytics, Product Manager with Add Product & Image Upload, and Revenue/Profit Reports
+ * Live Orders Feed, Notification Bell & History, Stock Availability Filters, KPI Analytics, Add Product with Image Upload, and Revenue/Profit Reports
  */
 
 class ShopkeeperApp {
   constructor() {
     this.orders = [];
     this.products = [];
+    this.notifications = [];
+    this.unreadNotificationsCount = 0;
     this.activeFilter = 'ALL';
     this.activeTab = 'orders'; // 'orders' | 'products' | 'reports' | 'settings'
     this.productSearchQuery = '';
     this.productCategoryFilter = 'ALL';
+    this.productStockFilter = 'ALL'; // 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK'
     this.reportsData = null;
     this.settings = {
       upiId: 'suryaagencies@upi',
@@ -33,15 +36,30 @@ class ShopkeeperApp {
     this.render();
   }
 
+  // --- REALTIME SOCKET.IO EVENT LISTENERS ---
+
   setupRealtimeListeners() {
     if (!window.socketClient) return;
 
+    // 1. New Order Placed
     window.socketClient.on('order:created', (newOrder) => {
       this.orders.unshift(newOrder);
+      
+      const notif = {
+        id: 'notif-' + Date.now(),
+        type: 'ORDER_NEW',
+        icon: '🛒',
+        title: `New Order ${newOrder.orderNumber}`,
+        message: `Placed by ${newOrder.customerName} (₹${newOrder.total} • ${newOrder.paymentMethod === 'upi' ? 'UPI' : 'Cash'})`,
+        timestamp: new Date()
+      };
+      this.addNotification(notif);
+
       if (window.appController) {
         window.appController.playChime();
         window.appController.showToast(`🔔 Incoming Order ${newOrder.orderNumber} by ${newOrder.customerName} (₹${newOrder.total})`, 'info');
       }
+      
       this.fetchDashboardStats();
       this.renderOrders();
       if (this.activeTab === 'reports') {
@@ -49,18 +67,50 @@ class ShopkeeperApp {
       }
     });
 
+    // 2. Order Status Updated
     window.socketClient.on('order:status_updated', (updatedOrder) => {
       const idx = this.orders.findIndex(o => o.id === updatedOrder.id || o.orderNumber === updatedOrder.orderNumber);
       if (idx !== -1) {
         this.orders[idx] = { ...this.orders[idx], ...updatedOrder };
         this.renderOrders();
       }
+
+      if (updatedOrder.orderStatus === 'READY_FOR_PICKUP') {
+        this.addNotification({
+          id: 'notif-' + Date.now(),
+          type: 'ORDER_READY',
+          icon: '🔔',
+          title: `Order ${updatedOrder.orderNumber} Ready`,
+          message: 'Marked ready for customer counter pickup',
+          timestamp: new Date()
+        });
+      } else if (updatedOrder.orderStatus === 'COMPLETED') {
+        this.addNotification({
+          id: 'notif-' + Date.now(),
+          type: 'ORDER_COMPLETED',
+          icon: '✅',
+          title: `Order ${updatedOrder.orderNumber} Completed`,
+          message: `Handed to customer • Payment: ₹${updatedOrder.total}`,
+          timestamp: new Date()
+        });
+      } else if (updatedOrder.orderStatus === 'CANCELLED') {
+        this.addNotification({
+          id: 'notif-' + Date.now(),
+          type: 'ORDER_CANCELLED',
+          icon: '❌',
+          title: `Order ${updatedOrder.orderNumber} Cancelled`,
+          message: 'Order was rejected or cancelled',
+          timestamp: new Date()
+        });
+      }
+
       this.fetchDashboardStats();
       if (this.activeTab === 'reports') {
         this.fetchRevenueReports();
       }
     });
 
+    // 3. New Product Created
     window.socketClient.on('product:created', (newProd) => {
       if (!newProd) return;
       const idx = this.products.findIndex(p => p.id === newProd.id);
@@ -75,6 +125,7 @@ class ShopkeeperApp {
       }
     });
 
+    // 4. Product Updated
     window.socketClient.on('product:updated', (updatedProd) => {
       if (!updatedProd) return;
       const idx = this.products.findIndex(p => p.id === updatedProd.id);
@@ -87,6 +138,7 @@ class ShopkeeperApp {
       }
     });
 
+    // 5. Stock Batch Updated (With Low-Stock & Out-of-Stock Alerts)
     window.socketClient.on('products:stock_batch_updated', (updatedList) => {
       if (!Array.isArray(updatedList)) return;
       updatedList.forEach(updatedProd => {
@@ -94,19 +146,142 @@ class ShopkeeperApp {
         if (idx !== -1) {
           this.products[idx] = { ...this.products[idx], ...updatedProd };
         }
+
+        const stock = Math.max(0, parseInt(updatedProd.stock, 10) || 0);
+        if (stock === 0) {
+          this.addNotification({
+            id: 'notif-out-' + updatedProd.id + '-' + Date.now(),
+            type: 'STOCK_OUT',
+            icon: '🔴',
+            title: 'Out of Stock Alert',
+            message: `"${updatedProd.name}" is now out of stock (0 units)!`,
+            timestamp: new Date()
+          });
+        } else if (stock > 0 && stock <= 5) {
+          this.addNotification({
+            id: 'notif-low-' + updatedProd.id + '-' + Date.now(),
+            type: 'STOCK_LOW',
+            icon: '📦',
+            title: 'Low Stock Warning',
+            message: `"${updatedProd.name}" has only ${stock} unit(s) left!`,
+            timestamp: new Date()
+          });
+        }
       });
+
       this.fetchDashboardStats();
       if (this.activeTab === 'products') {
         this.renderProductsTable();
       }
     });
 
+    // 6. Settings Updated
     window.socketClient.on('settings:updated', (newSettings) => {
       if (newSettings) {
         this.settings = { ...this.settings, ...newSettings };
         this.populateSettingsForm();
       }
     });
+  }
+
+  // --- NOTIFICATION SYSTEM ENGINE ---
+
+  addNotification(notif) {
+    // Avoid duplicate notifications for same title & message within 5 seconds
+    const isDuplicate = this.notifications.some(n => 
+      n.title === notif.title && 
+      n.message === notif.message && 
+      (Date.now() - new Date(n.timestamp).getTime()) < 5000
+    );
+
+    if (!isDuplicate) {
+      this.notifications.unshift(notif);
+      this.unreadNotificationsCount += 1;
+      this.updateNotificationsBadge();
+      this.updateRecentActivity(notif);
+    }
+  }
+
+  updateNotificationsBadge() {
+    const badge = document.getElementById('shop-bell-badge');
+    if (badge) {
+      if (this.unreadNotificationsCount > 0) {
+        badge.textContent = this.unreadNotificationsCount > 9 ? '9+' : this.unreadNotificationsCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+  }
+
+  updateRecentActivity(notif) {
+    const textEl = document.getElementById('shop-recent-activity-text');
+    if (textEl && notif) {
+      textEl.textContent = `${notif.icon} ${notif.title}: ${notif.message}`;
+    }
+  }
+
+  toggleNotificationsModal() {
+    const modal = document.getElementById('shop-notifications-modal');
+    if (modal) {
+      if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        this.renderNotifications();
+        this.unreadNotificationsCount = 0;
+        this.updateNotificationsBadge();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+  }
+
+  closeNotificationsModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('shop-notifications-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  renderNotifications() {
+    const container = document.getElementById('shop-notifications-list');
+    if (!container) return;
+
+    if (this.notifications.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+          <span class="text-2xl block mb-1.5">🔔</span>
+          No new alerts. Incoming orders and stock warnings will appear here!
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = this.notifications.map(n => `
+      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3 text-xs">
+        <span class="text-lg flex-shrink-0">${n.icon}</span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-1">
+            <h5 class="font-extrabold text-slate-900 dark:text-white truncate">${n.title}</h5>
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">${new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <p class="text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">${n.message}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  markAllNotificationsRead() {
+    this.unreadNotificationsCount = 0;
+    this.updateNotificationsBadge();
+    if (window.appController) {
+      window.appController.showToast('✓ All notifications marked as read', 'success');
+    }
+  }
+
+  clearNotifications() {
+    this.notifications = [];
+    this.unreadNotificationsCount = 0;
+    this.updateNotificationsBadge();
+    this.renderNotifications();
   }
 
   // --- API CALLS ---
@@ -214,10 +389,10 @@ class ShopkeeperApp {
       const view = document.getElementById(`shop-view-${t}`);
 
       if (t === tab) {
-        if (btn) btn.className = 'px-3.5 sm:px-4 py-2 rounded-2xl bg-slate-900 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-1.5 whitespace-nowrap';
+        if (btn) btn.className = 'px-3.5 sm:px-4 py-2 rounded-2xl bg-slate-900 dark:bg-rose-600 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-1.5 whitespace-nowrap';
         if (view) view.classList.remove('hidden');
       } else {
-        if (btn) btn.className = 'px-3.5 sm:px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-1.5 whitespace-nowrap';
+        if (btn) btn.className = 'px-3.5 sm:px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-extrabold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center space-x-1.5 whitespace-nowrap';
         if (view) view.classList.add('hidden');
       }
     });
@@ -237,7 +412,7 @@ class ShopkeeperApp {
       if (btn.textContent.trim().toUpperCase().includes(filter.replace('_', ' '))) {
         btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white whitespace-nowrap';
       } else {
-        btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap';
+        btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap';
       }
     });
     this.renderOrders();
@@ -281,40 +456,40 @@ class ShopkeeperApp {
       const isCancelled = order.orderStatus === 'CANCELLED';
 
       return `
-        <div class="bg-white p-4 sm:p-6 rounded-3xl border ${isNew ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-200'} shadow-sm space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-3xl border ${isNew ? 'border-rose-400 ring-2 ring-rose-100 dark:ring-rose-950' : 'border-slate-200 dark:border-slate-700'} shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
             <div>
               <div class="flex items-center space-x-2">
-                <span class="font-black text-slate-900 font-display text-base sm:text-lg">${order.orderNumber}</span>
+                <span class="font-black text-slate-900 dark:text-white font-display text-base sm:text-lg">${order.orderNumber}</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isReady ? 'bg-emerald-100 text-emerald-800 animate-pulse' :
-                  isCompleted ? 'bg-slate-100 text-slate-700' :
-                  isCancelled ? 'bg-red-100 text-red-800' :
-                  'bg-rose-100 text-rose-800'
+                  isReady ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 animate-pulse' :
+                  isCompleted ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200' :
+                  isCancelled ? 'bg-red-100 dark:bg-red-950/80 text-red-800 dark:text-red-300' :
+                  'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
                 }">
                   ${order.orderStatus.replace(/_/g, ' ')}
                 </span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.paymentMethod === 'upi' ? 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'}">
                   ${order.paymentMethod === 'upi' ? '📱 UPI' : '💵 Pay at Shop'}
                 </span>
               </div>
-              <p class="text-xs text-slate-500 mt-0.5 font-medium">
-                Customer: <strong class="text-slate-800">${order.customerName}</strong> • Phone: ${order.customerPhone || 'N/A'} • ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                Customer: <strong class="text-slate-800 dark:text-slate-200">${order.customerName}</strong> • Phone: ${order.customerPhone || 'N/A'} • ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
 
             <div class="text-left sm:text-right">
-              <span class="text-lg font-black text-rose-600 font-mono">₹${order.total}</span>
+              <span class="text-lg font-black text-rose-600 dark:text-rose-400 font-mono">₹${order.total}</span>
               <span class="text-[10px] text-slate-400 block font-semibold">${parsedItems.length} unique item(s)</span>
             </div>
           </div>
 
           <!-- Items Ordered Breakdown -->
-          <div class="space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+          <div class="space-y-1.5 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
             ${parsedItems.map(item => `
               <div class="flex justify-between text-xs">
-                <span class="font-bold text-slate-800">${item.name} <span class="text-slate-400 font-normal">(${item.packSize || 'Single'})</span></span>
-                <span class="font-mono text-slate-700"><strong>${item.quantity}</strong> × ₹${item.price} = ₹${item.itemTotal || (item.price * item.quantity)}</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">${item.name} <span class="text-slate-400 font-normal">(${item.packSize || 'Single'})</span></span>
+                <span class="font-mono text-slate-700 dark:text-slate-300"><strong>${item.quantity}</strong> × ₹${item.price} = ₹${item.itemTotal || (item.price * item.quantity)}</span>
               </div>
             `).join('')}
           </div>
@@ -322,10 +497,10 @@ class ShopkeeperApp {
           <!-- Action Stepper Buttons -->
           <div class="flex flex-wrap items-center gap-2 pt-1">
             ${isNew ? `
-              <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'ACCEPTED')" class="px-3.5 py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs shadow-sm hover:bg-slate-800 flex items-center space-x-1">
+              <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'ACCEPTED')" class="px-3.5 py-1.5 rounded-xl bg-slate-900 dark:bg-rose-600 text-white font-bold text-xs shadow-sm hover:bg-slate-800 flex items-center space-x-1">
                 <span>✓ Accept Order</span>
               </button>
-              <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'CANCELLED')" class="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 font-bold text-xs hover:bg-red-100">
+              <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'CANCELLED')" class="px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 font-bold text-xs hover:bg-red-100">
                 <span>✕ Reject / Cancel</span>
               </button>
             ` : ''}
@@ -349,13 +524,13 @@ class ShopkeeperApp {
             ` : ''}
 
             ${isCompleted ? `
-              <span class="text-xs font-bold text-emerald-700 flex items-center gap-1">
+              <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                 <span>✓ Completed & Picked Up</span>
               </span>
             ` : ''}
 
             ${isCancelled ? `
-              <span class="text-xs font-bold text-red-600">✕ Cancelled Order</span>
+              <span class="text-xs font-bold text-red-600 dark:text-red-400">✕ Cancelled Order</span>
             ` : ''}
           </div>
         </div>
@@ -407,6 +582,13 @@ class ShopkeeperApp {
     this.renderProductsTable();
   }
 
+  filterProductStock(status) {
+    this.productStockFilter = status;
+    const filterSelect = document.getElementById('shop-product-stock-filter');
+    if (filterSelect) filterSelect.value = status;
+    this.renderProductsTable();
+  }
+
   renderProductsTable() {
     const container = document.getElementById('shopkeeper-products-table');
     if (!container) return;
@@ -419,65 +601,79 @@ class ShopkeeperApp {
       list = list.filter(p => p.category === this.productCategoryFilter);
     }
 
+    if (this.productStockFilter === 'IN_STOCK') {
+      list = list.filter(p => p.stock > 0);
+    } else if (this.productStockFilter === 'LOW_STOCK') {
+      list = list.filter(p => p.stock > 0 && p.stock <= 5);
+    } else if (this.productStockFilter === 'OUT_OF_STOCK') {
+      list = list.filter(p => p.stock === 0);
+    }
+
     if (list.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-12 bg-white rounded-3xl border border-slate-200 p-8">
+        <div class="text-center py-12 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-8">
           <span class="text-3xl block mb-2">📦</span>
-          <h4 class="font-extrabold text-slate-800 text-sm">No products found</h4>
-          <p class="text-xs text-slate-500 mt-1">Try adjusting your filters or click "➕ Add New Product".</p>
+          <h4 class="font-extrabold text-slate-800 dark:text-slate-200 text-sm">No products found</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Try adjusting your category/stock filter or click "➕ Add New Product".</p>
         </div>
       `;
       return;
     }
 
     container.innerHTML = list.map(prod => {
-      const isLowStock = prod.stock <= 5;
-      const isOut = prod.stock <= 0;
+      const stockInt = Math.max(0, parseInt(prod.stock, 10) || 0);
+      const isOut = stockInt === 0;
+      const isLowStock = stockInt > 0 && stockInt <= 5;
 
       return `
-        <div class="bg-white p-3.5 sm:p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3.5 hover:border-slate-300 transition-all">
+        <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-all">
           <div class="flex items-center space-x-3 flex-1 min-w-0">
             <div class="relative group cursor-pointer flex-shrink-0" onclick="shopkeeperApp.openEditImageModal('${prod.id}')" title="Click to change image">
-              <img src="${prod.image || '/assets/arun-vanilla-cup.jpg'}" alt="${prod.name}" class="w-14 h-14 object-contain rounded-2xl bg-slate-50 p-1 border border-slate-200" />
-              <div class="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
+              <img src="${prod.image || '/assets/arun-vanilla-cup.jpg'}" alt="${prod.name}" class="w-14 h-14 object-contain rounded-2xl bg-slate-50 dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-700" />
+              <div class="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
                 📷
               </div>
             </div>
 
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <h4 class="font-extrabold text-slate-900 text-xs sm:text-sm truncate">${prod.name}</h4>
-                <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600">${prod.category}</span>
-                ${isOut ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-black bg-red-100 text-red-800">OUT OF STOCK</span>' : isLowStock ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-100 text-amber-800">LOW STOCK</span>' : ''}
+                <h4 class="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm truncate">${prod.name}</h4>
+                <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${prod.category}</span>
+                ${isOut 
+                  ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">🔴 OUT OF STOCK</span>' 
+                  : isLowStock 
+                    ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">⚡ LOW STOCK (${stockInt} left)</span>`
+                    : `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">🟢 IN STOCK (${stockInt} units)</span>`
+                }
               </div>
               <span class="text-[11px] text-slate-400 font-semibold block mt-0.5">${prod.packSize || 'Standard Pack'}</span>
             </div>
           </div>
 
-          <!-- Price & Stock Inline Editor -->
+          <!-- Price, Cost, and Stock Whole Integer Editor -->
           <div class="flex items-center gap-2 sm:gap-3 flex-wrap md:flex-nowrap justify-between md:justify-end">
             <!-- Selling Price Input -->
             <div class="w-24">
               <label class="text-[9px] font-bold text-slate-400 uppercase block">Selling Price</label>
-              <div class="flex items-center rounded-xl border border-slate-300 px-2 py-1 bg-white focus-within:ring-2 focus-within:ring-rose-500">
+              <div class="flex items-center rounded-xl border border-slate-300 dark:border-slate-600 px-2 py-1 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-rose-500">
                 <span class="text-xs text-slate-400 font-bold mr-1">₹</span>
-                <input type="number" id="prod-price-${prod.id}" value="${prod.price || 0}" min="0" step="0.5" class="w-full text-xs font-black text-slate-900 focus:outline-none" />
+                <input type="number" id="prod-price-${prod.id}" value="${prod.price || 0}" min="0" step="0.5" class="w-full text-xs font-black text-slate-900 dark:text-white bg-transparent focus:outline-none" />
               </div>
             </div>
 
-            <!-- Cost Price Input (For Profit Engine) -->
+            <!-- Cost Price Input -->
             <div class="w-24">
               <label class="text-[9px] font-bold text-slate-400 uppercase block" title="Used for net profit calculations">Cost Price</label>
-              <div class="flex items-center rounded-xl border border-slate-300 px-2 py-1 bg-white focus-within:ring-2 focus-within:ring-rose-500">
+              <div class="flex items-center rounded-xl border border-slate-300 dark:border-slate-600 px-2 py-1 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-rose-500">
                 <span class="text-xs text-slate-400 font-bold mr-1">₹</span>
-                <input type="number" id="prod-cost-${prod.id}" value="${prod.costPrice !== null && prod.costPrice !== undefined ? prod.costPrice : ''}" placeholder="None" min="0" step="0.5" class="w-full text-xs font-medium text-slate-700 focus:outline-none" />
+                <input type="number" id="prod-cost-${prod.id}" value="${prod.costPrice !== null && prod.costPrice !== undefined ? prod.costPrice : ''}" placeholder="None" min="0" step="0.5" class="w-full text-xs font-medium text-slate-700 dark:text-slate-200 bg-transparent focus:outline-none" />
               </div>
             </div>
 
-            <!-- Stock Input -->
+            <!-- Stock Integer Input -->
             <div class="w-20">
               <label class="text-[9px] font-bold text-slate-400 uppercase block">Units</label>
-              <input type="number" id="prod-stock-${prod.id}" value="${prod.stock}" min="0" class="w-full px-2 py-1 rounded-xl border border-slate-300 text-xs font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" />
+              <input type="number" id="prod-stock-${prod.id}" value="${stockInt}" min="0" step="1" class="w-full px-2 py-1 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" />
             </div>
 
             <!-- Action Buttons -->
@@ -485,7 +681,7 @@ class ShopkeeperApp {
               <button 
                 type="button" 
                 onclick="shopkeeperApp.saveProductChanges('${prod.id}')" 
-                class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-sm"
+                class="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 text-white font-extrabold text-xs shadow-sm"
                 title="Save Price, Cost, and Stock"
               >
                 Save
@@ -494,7 +690,7 @@ class ShopkeeperApp {
               <button 
                 type="button" 
                 onclick="shopkeeperApp.openEditImageModal('${prod.id}')" 
-                class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+                class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs"
                 title="Update product photo"
               >
                 🖼️ Image
@@ -513,7 +709,7 @@ class ShopkeeperApp {
 
     const newPrice = priceInput ? Number(priceInput.value) : null;
     const newCost = costInput && costInput.value.trim() !== '' ? Number(costInput.value) : null;
-    const newStock = stockInput ? parseInt(stockInput.value, 10) : 0;
+    const newStock = stockInput ? Math.max(0, parseInt(stockInput.value, 10) || 0) : 0;
 
     try {
       const token = sessionStorage.getItem('surya_shopkeeper_token');
@@ -538,7 +734,7 @@ class ShopkeeperApp {
           this.products[idx] = data.product;
         }
         if (window.appController) {
-          window.appController.showToast(`✅ Updated ${data.product.name}`, 'success');
+          window.appController.showToast(`✅ Updated ${data.product.name} (Stock: ${data.product.stock})`, 'success');
         }
         this.fetchDashboardStats();
       } else {
@@ -593,13 +789,12 @@ class ShopkeeperApp {
     const packSize = document.getElementById('new-prod-packsize').value.trim() || 'Standard Pack';
     const price = document.getElementById('new-prod-price').value;
     const costPrice = document.getElementById('new-prod-cost').value;
-    const stock = document.getElementById('new-prod-stock').value;
+    const stock = Math.max(0, parseInt(document.getElementById('new-prod-stock').value, 10) || 0);
     const description = document.getElementById('new-prod-desc').value.trim();
     const fileInput = document.getElementById('new-prod-image-file');
 
     let imageUrl = '/assets/arun-vanilla-cup.jpg';
 
-    // Check if category has a standard fallback image
     if (category === 'Dairy Products') imageUrl = '/assets/arokya-milk.jpg';
     else if (category === 'Ice Cream Cones') imageUrl = '/assets/arun-cone.jpg';
     else if (category === 'Ice Cream Bars & Sticks') imageUrl = '/assets/arun-chocobar.jpg';
@@ -610,7 +805,6 @@ class ShopkeeperApp {
     try {
       const token = sessionStorage.getItem('surya_shopkeeper_token');
 
-      // Upload image first if user picked a file
       if (fileInput && fileInput.files && fileInput.files[0]) {
         const formData = new FormData();
         formData.append('image', fileInput.files[0]);
@@ -629,7 +823,6 @@ class ShopkeeperApp {
         }
       }
 
-      // Create Product in DB
       const res = await fetch('/api/products', {
         method: 'POST',
         headers: {
@@ -643,8 +836,8 @@ class ShopkeeperApp {
           packSize,
           price: Number(price),
           costPrice: costPrice.trim() !== '' ? Number(costPrice) : null,
-          stock: parseInt(stock, 10) || 0,
-          available: true,
+          stock: stock,
+          available: stock > 0,
           description,
           image: imageUrl
         })
@@ -733,7 +926,6 @@ class ShopkeeperApp {
       const formData = new FormData();
       formData.append('image', fileInput.files[0]);
 
-      // 1. Upload File
       const uploadRes = await fetch('/api/upload/image', {
         method: 'POST',
         headers: {
@@ -747,7 +939,6 @@ class ShopkeeperApp {
         throw new Error(uploadData.error || 'Failed to upload image file');
       }
 
-      // 2. Patch Product Record
       const patchRes = await fetch(`/api/products/${productId}`, {
         method: 'PATCH',
         headers: {
@@ -783,7 +974,7 @@ class ShopkeeperApp {
     }
   }
 
-  // --- TAB 3: REVENUE & REPORTS RENDERING ---
+  // --- TAB 3: REVENUE & REPORTS RENDERING (DARK CONTRAST FIX) ---
 
   renderRevenueReports() {
     if (!this.reportsData) return;
@@ -818,10 +1009,10 @@ class ShopkeeperApp {
       const p = r.allTime.totalProfit;
       if (p >= 0) {
         totalProfit.textContent = `+₹${p}`;
-        totalProfit.className = 'text-xl sm:text-3xl font-black text-emerald-700 font-display mt-1 block';
+        totalProfit.className = 'text-xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 font-display mt-1 block';
       } else {
         totalProfit.textContent = `-₹${Math.abs(p)}`;
-        totalProfit.className = 'text-xl sm:text-3xl font-black text-red-600 font-display mt-1 block';
+        totalProfit.className = 'text-xl sm:text-3xl font-black text-red-600 dark:text-red-400 font-display mt-1 block';
       }
     }
 
@@ -840,7 +1031,7 @@ class ShopkeeperApp {
     if (tableContainer) {
       if (!r.products || r.products.length === 0) {
         tableContainer.innerHTML = `
-          <div class="text-center py-8 text-slate-400 text-xs font-semibold">
+          <div class="text-center py-8 text-slate-400 dark:text-slate-500 text-xs font-semibold">
             No product sales recorded yet. Completed orders will appear here automatically.
           </div>
         `;
@@ -848,8 +1039,8 @@ class ShopkeeperApp {
       }
 
       tableContainer.innerHTML = `
-        <div class="min-w-[600px]">
-          <div class="grid grid-cols-12 gap-2 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 px-2">
+        <div class="min-w-[580px]">
+          <div class="grid grid-cols-12 gap-2 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-700 pb-2 px-2">
             <span class="col-span-5">Product & Category</span>
             <span class="col-span-2 text-center">Units Sold</span>
             <span class="col-span-2 text-right">Revenue (₹)</span>
@@ -858,32 +1049,32 @@ class ShopkeeperApp {
 
           <div class="space-y-1.5 pt-2">
             ${r.products.map((p, idx) => `
-              <div class="grid grid-cols-12 gap-2 items-center p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all text-xs">
+              <div class="grid grid-cols-12 gap-2 items-center p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-xs border border-slate-100 dark:border-slate-700/60">
                 <div class="col-span-5 flex items-center space-x-2.5 min-w-0">
-                  <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-black flex items-center justify-center flex-shrink-0">${idx + 1}</span>
-                  <img src="${p.image || '/assets/arun-vanilla-cup.jpg'}" alt="${p.name}" class="w-8 h-8 object-contain rounded-lg bg-white p-0.5 border border-slate-200 flex-shrink-0" />
+                  <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-black flex items-center justify-center flex-shrink-0">${idx + 1}</span>
+                  <img src="${p.image || '/assets/arun-vanilla-cup.jpg'}" alt="${p.name}" class="w-8 h-8 object-contain rounded-lg bg-white dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700 flex-shrink-0" />
                   <div class="min-w-0 flex-1">
-                    <span class="font-extrabold text-slate-900 truncate block text-xs">${p.name}</span>
-                    <span class="text-[10px] text-slate-400 block">${p.category}</span>
+                    <span class="font-extrabold text-slate-900 dark:text-white truncate block text-xs">${p.name}</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-400 block">${p.category}</span>
                   </div>
                 </div>
 
-                <div class="col-span-2 text-center font-black text-slate-800">
+                <div class="col-span-2 text-center font-black text-slate-800 dark:text-slate-200">
                   ${p.totalQuantitySold}
                 </div>
 
-                <div class="col-span-2 text-right font-black text-rose-600 font-mono">
+                <div class="col-span-2 text-right font-black text-rose-600 dark:text-rose-400 font-mono">
                   ₹${p.totalRevenue}
                 </div>
 
                 <div class="col-span-3 text-right">
                   ${p.hasCostPrice ? `
-                    <span class="font-black ${p.totalProfit >= 0 ? 'text-emerald-700' : 'text-red-600'} font-mono">
+                    <span class="font-black ${p.totalProfit >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'} font-mono">
                       ${p.totalProfit >= 0 ? '+' : ''}₹${p.totalProfit}
                     </span>
                     <span class="text-[9px] text-slate-400 block">Cost: ₹${p.costPrice}/u</span>
                   ` : `
-                    <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">No Cost Set</span>
+                    <span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">No Cost Set</span>
                   `}
                 </div>
               </div>

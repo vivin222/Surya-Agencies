@@ -192,7 +192,8 @@ class DatabaseService {
 
   
   // Create New Product
-  async createProduct({ name, category, packSize, price, costPrice, stock, available = true, description = '', image = '' }) {
+    // Create New Product (Automatic Availability based on stock > 0)
+  async createProduct({ name, category, packSize, price, costPrice, stock, description = '', image = '' }) {
     if (this.ready) await this.ready;
     if (!name || !name.trim()) throw new Error('Product name is required');
     if (!category) throw new Error('Product category is required');
@@ -200,44 +201,49 @@ class DatabaseService {
     const id = 'prod-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
     const numPrice = price !== null && price !== undefined && price !== '' ? Number(price) : null;
     const numCost = costPrice !== null && costPrice !== undefined && costPrice !== '' ? Number(costPrice) : null;
-    const numStock = parseInt(stock, 10) || 0;
-    const avail = available ? 1 : 0;
+    const numStock = Math.max(0, parseInt(stock, 10) || 0);
+    const avail = numStock > 0 ? 1 : 0;
     const img = image || '/assets/arun-vanilla-cup.jpg';
 
     await this.run(
-      `INSERT INTO products (id, name, category, packSize, price, costPrice, stock, available, description, image, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      `INSERT INTO products (id, name, category, packSize, price, costPrice, stock, available, description, image, createdAt, updatedAt)` +
+      ` VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [id, name.trim(), category, packSize || 'Standard Pack', numPrice, numCost, numStock, avail, description || '', img]
     );
 
     return this.getProductById(id);
   }
 
-  async getProducts() {
+    async getProducts() {
     if (this.ready) await this.ready;
     const rows = await this.all(`SELECT * FROM products ORDER BY category ASC, name ASC`);
-    return rows.map(r => ({
-      ...r,
-      available: Boolean(r.available),
-      price: r.price !== null && r.price !== undefined ? Number(r.price) : null,
-      costPrice: r.costPrice !== null && r.costPrice !== undefined ? Number(r.costPrice) : null,
-      stock: Number(r.stock)
-    }));
+    return rows.map(r => {
+      const stockInt = Math.max(0, parseInt(r.stock, 10) || 0);
+      return {
+        ...r,
+        stock: stockInt,
+        available: stockInt > 0,
+        price: r.price !== null && r.price !== undefined ? Number(r.price) : null,
+        costPrice: r.costPrice !== null && r.costPrice !== undefined ? Number(r.costPrice) : null
+      };
+    });
   }
 
   async getProductById(id) {
     if (this.ready) await this.ready;
     const r = await this.get(`SELECT * FROM products WHERE id = ?`, [id]);
     if (!r) return null;
+    const stockInt = Math.max(0, parseInt(r.stock, 10) || 0);
     return {
       ...r,
-      available: Boolean(r.available),
+      stock: stockInt,
+      available: stockInt > 0,
       price: r.price !== null && r.price !== undefined ? Number(r.price) : null,
-      stock: Number(r.stock)
+      costPrice: r.costPrice !== null && r.costPrice !== undefined ? Number(r.costPrice) : null
     };
   }
 
-    async updateProduct(id, updateData) {
+      async updateProduct(id, updateData) {
     if (this.ready) await this.ready;
     const existing = await this.getProductById(id);
     if (!existing) throw new Error(`Product not found: ${id}`);
@@ -247,8 +253,10 @@ class DatabaseService {
     const packSize = updateData.packSize !== undefined ? updateData.packSize : existing.packSize;
     const price = updateData.price !== undefined ? (updateData.price === null || updateData.price === '' ? null : Number(updateData.price)) : existing.price;
     const costPrice = updateData.costPrice !== undefined ? (updateData.costPrice === null || updateData.costPrice === '' ? null : Number(updateData.costPrice)) : existing.costPrice;
-    const stock = updateData.stock !== undefined ? parseInt(updateData.stock, 10) : existing.stock;
-    const available = updateData.available !== undefined ? (updateData.available ? 1 : 0) : (existing.available ? 1 : 0);
+    
+    // Whole integer stock, never negative
+    const stock = updateData.stock !== undefined ? Math.max(0, parseInt(updateData.stock, 10) || 0) : Math.max(0, existing.stock);
+    const available = stock > 0 ? 1 : 0;
     const description = updateData.description !== undefined ? updateData.description : existing.description;
     const image = updateData.image !== undefined ? updateData.image : existing.image;
 
@@ -340,9 +348,9 @@ class DatabaseService {
       for (const item of verifiedItems) {
         await this.run(
           `UPDATE products 
-           SET stock = stock - ?, updatedAt = CURRENT_TIMESTAMP 
+           SET stock = MAX(0, stock - ?), available = CASE WHEN (stock - ?) > 0 THEN 1 ELSE 0 END, updatedAt = CURRENT_TIMESTAMP 
            WHERE id = ?`,
-          [item.quantity, item.productId]
+          [item.quantity, item.quantity, item.productId]
         );
 
         const updatedProd = await this.get(`SELECT * FROM products WHERE id = ?`, [item.productId]);

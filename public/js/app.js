@@ -1,6 +1,6 @@
 /**
  * Main App Controller — Surya Agencies
- * Manages Gateway routing, role switching, customer auth, and toast alerts.
+ * Gateway routing, role switching, Dark/Light theme, Android PWA install, and Phone OTP auth.
  */
 
 class AppController {
@@ -9,18 +9,87 @@ class AppController {
     this.isShopkeeperAuthenticated = false;
     this.shopkeeperToken = null;
     this.customerUser = null;
+    this.deferredPrompt = null;
+    this.currentTheme = 'light';
+    this.pendingPhoneAuth = { name: '', phone: '' };
+
     this.init();
   }
 
   async init() {
+    this.initTheme();
+    this.initPWA();
     this.loadSessions();
     this.setupConnectionMonitor();
     this.handleRouteFromHash();
     window.addEventListener('hashchange', () => this.handleRouteFromHash());
   }
 
+  // --- THEME MANAGEMENT (DARK / LIGHT) ---
+
+  initTheme() {
+    const savedTheme = localStorage.getItem('surya_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    this.applyTheme(savedTheme);
+  }
+
+  toggleTheme() {
+    const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+    this.applyTheme(newTheme);
+  }
+
+  applyTheme(theme) {
+    this.currentTheme = theme;
+    localStorage.setItem('surya_theme', theme);
+    const html = document.documentElement;
+    const indicators = document.querySelectorAll('.theme-icon-indicator');
+
+    if (theme === 'dark') {
+      html.classList.add('dark');
+      indicators.forEach(i => i.textContent = '☀️');
+    } else {
+      html.classList.remove('dark');
+      indicators.forEach(i => i.textContent = '🌙');
+    }
+  }
+
+  // --- ANDROID PWA INSTALLATION ---
+
+  initPWA() {
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(() => {
+        console.log('📱 Service Worker registered for Surya Agencies PWA');
+      }).catch((e) => console.log('SW registration note:', e.message));
+    }
+
+    // Capture install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+      const navBtn = document.getElementById('pwa-install-btn-nav');
+      const gatewayBtn = document.getElementById('pwa-install-btn-gateway');
+      if (navBtn) navBtn.classList.remove('hidden');
+      if (gatewayBtn) gatewayBtn.classList.remove('hidden');
+    });
+  }
+
+  promptInstallPWA() {
+    if (this.deferredPrompt) {
+      this.deferredPrompt.prompt();
+      this.deferredPrompt.userChoice.then((choice) => {
+        if (choice.outcome === 'accepted') {
+          this.showToast('Thank you for installing Surya Agencies App!', 'success');
+        }
+        this.deferredPrompt = null;
+      });
+    } else {
+      this.showToast('To install: Tap your browser menu (⋮) and choose "Install App" or "Add to Home screen".', 'info');
+    }
+  }
+
+  // --- SESSIONS & ROUTING ---
+
   loadSessions() {
-    // Load Customer Session
     try {
       const storedCust = localStorage.getItem('surya_customer_user');
       if (storedCust) {
@@ -31,7 +100,6 @@ class AppController {
       this.customerUser = null;
     }
 
-    // Load Shopkeeper Session
     try {
       const token = sessionStorage.getItem('surya_shopkeeper_token');
       if (token) {
@@ -57,15 +125,13 @@ class AppController {
       this.showCustomerStore();
       if (window.customerApp) window.customerApp.showOrdersView();
     } else {
-      if (this.customerUser) {
+      if (this.customerUser && !this.customerUser.isGuest) {
         this.showCustomerStore();
       } else {
         this.showGateway();
       }
     }
   }
-
-  // --- ROUTING / VIEW SWITCHING ---
 
   showGateway(focusRole = null) {
     this.currentPortal = 'gateway';
@@ -122,14 +188,12 @@ class AppController {
 
     if (errorEl) errorEl.classList.add('hidden');
 
-    // Local client-side pre-validation fallback for extra resilience
     if (username === 'surya_agencies' && password === 'suryaiceavi23') {
       const sessionToken = 'sk_token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       this.isShopkeeperAuthenticated = true;
       this.shopkeeperToken = sessionToken;
       sessionStorage.setItem('surya_shopkeeper_token', sessionToken);
       
-      // Also notify backend
       try {
         fetch('/api/auth/shopkeeper/login', {
           method: 'POST',
@@ -186,19 +250,18 @@ class AppController {
     this.showGateway();
   }
 
-  // --- CUSTOMER AUTHENTICATION ---
+  // --- CUSTOMER AUTHENTICATION (GOOGLE & PHONE OTP) ---
 
-  openCustomerAuthModal() {
+  openCustomerAuthModal(preferredTab = 'google') {
     const modal = document.getElementById('customer-auth-modal');
     if (modal) {
       modal.classList.remove('hidden');
-      if (this.customerUser) {
+      this.resetPhoneAuth();
+      if (this.customerUser && !this.customerUser.isGuest) {
         const nameInput = document.getElementById('cust-modal-name');
         const phoneInput = document.getElementById('cust-modal-phone');
-        const emailInput = document.getElementById('cust-modal-email');
         if (nameInput) nameInput.value = this.customerUser.name || '';
         if (phoneInput) phoneInput.value = this.customerUser.phone || '';
-        if (emailInput) emailInput.value = this.customerUser.email || '';
       }
     }
   }
@@ -213,7 +276,7 @@ class AppController {
     const enteredName = prompt('Enter your Full Name to sign in:');
     if (!enteredName || !enteredName.trim()) return;
 
-    const enteredPhone = prompt('Enter your Mobile Phone Number (for order updates):') || '';
+    const enteredPhone = prompt('Enter your Mobile Phone Number (for order tracking):') || '';
     const cleanName = enteredName.trim();
     const cleanPhone = enteredPhone.trim();
     const email = cleanName.toLowerCase().replace(/\s+/g, '.') + '@gmail.com';
@@ -227,25 +290,85 @@ class AppController {
     });
   }
 
-  async handleCustomerQuickLogin(event) {
-    event.preventDefault();
-    const name = document.getElementById('cust-modal-name').value.trim();
-    const phone = document.getElementById('cust-modal-phone').value.trim();
-    const email = document.getElementById('cust-modal-email').value.trim();
+  async requestPhoneOTP() {
+    const nameInput = document.getElementById('cust-modal-name');
+    const phoneInput = document.getElementById('cust-modal-phone');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+
+    if (!name) {
+      this.showToast('Please enter your full name', 'error');
+      return;
+    }
+
+    if (!phone || phone.length < 10) {
+      this.showToast('Please enter a valid 10-digit mobile number', 'error');
+      return;
+    }
+
+    this.pendingPhoneAuth = { name, phone };
 
     try {
-      const res = await fetch('/api/auth/customer/login', {
+      const res = await fetch('/api/auth/customer/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, email })
+        body: JSON.stringify({ phone, name })
       });
       const data = await res.json();
-      if (data.success && data.customer) {
-        this.saveCustomerAuth(data.customer);
+      if (!data.success) throw new Error(data.error || 'Failed to send OTP');
+
+      // Switch to Step 2
+      document.getElementById('auth-phone-step-1').classList.add('hidden');
+      document.getElementById('auth-phone-step-2').classList.remove('hidden');
+
+      const otpInput = document.getElementById('cust-modal-otp');
+      if (otpInput) {
+        otpInput.value = data.otpPreview || '';
+        otpInput.focus();
       }
-    } catch (e) {
-      this.saveCustomerAuth({ name, phone, email, authProvider: 'local' });
+
+      this.showToast(`📲 OTP sent! Code is: ${data.otpPreview}`, 'info');
+
+    } catch (err) {
+      this.showToast(err.message, 'error');
     }
+  }
+
+  async verifyPhoneOTP() {
+    const otpInput = document.getElementById('cust-modal-otp');
+    const otp = otpInput ? otpInput.value.trim() : '';
+
+    if (!otp || otp.length !== 4) {
+      this.showToast('Please enter the 4-digit OTP', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/customer/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: this.pendingPhoneAuth.phone,
+          name: this.pendingPhoneAuth.name,
+          otp: otp
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Invalid OTP code');
+
+      this.saveCustomerAuth(data.customer);
+
+    } catch (err) {
+      this.showToast(err.message, 'error');
+    }
+  }
+
+  resetPhoneAuth() {
+    const step1 = document.getElementById('auth-phone-step-1');
+    const step2 = document.getElementById('auth-phone-step-2');
+    if (step1) step1.classList.remove('hidden');
+    if (step2) step2.classList.add('hidden');
   }
 
   continueAsGuest() {

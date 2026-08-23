@@ -373,6 +373,87 @@ app.post('/api/orders/:id/pickup', requireShopkeeperAuth, async (req, res) => {
 // SETTINGS & STATS API
 // -------------------------------------------------------------
 
+
+// Customer Phone OTP Request API
+app.post('/api/auth/customer/send-otp', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone || phone.trim().length < 10) {
+      return res.status(400).json({ success: false, error: 'Valid 10-digit mobile number required' });
+    }
+    const cleanPhone = phone.trim();
+    // Generate secure 4-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    phoneOtpStore.set(cleanPhone, { otp, expires: Date.now() + 5 * 60 * 1000 });
+
+    console.log(`📱 OTP generated for ${cleanPhone}: ${otp}`);
+
+    res.json({
+      success: true,
+      message: `OTP sent to ${cleanPhone}`,
+      otpPreview: otp // Sent for simulation/instant user login experience
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Customer Phone OTP Verify API
+app.post('/api/auth/customer/verify-otp', async (req, res) => {
+  try {
+    const { phone, otp, name } = req.body;
+    const cleanPhone = (phone || '').trim();
+    const cleanOtp = (otp || '').trim();
+
+    const record = phoneOtpStore.get(cleanPhone);
+    if (!record || record.otp !== cleanOtp) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired OTP. Please try again.' });
+    }
+
+    // OTP is valid
+    phoneOtpStore.delete(cleanPhone);
+
+    const customer = await db.findOrCreateCustomer({
+      name: name || ('Customer ' + cleanPhone.slice(-4)),
+      phone: cleanPhone,
+      email: cleanPhone + '@phone.surya',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+      authProvider: 'phone'
+    });
+
+    const token = 'cust_p_' + customer.id + '_' + Date.now();
+    res.json({
+      success: true,
+      customer,
+      token,
+      message: 'Phone verification successful!'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update Shop Settings & UPI ID (Shopkeeper Only - Real-Time Broadcast)
+app.patch('/api/settings', requireShopkeeperAuth, async (req, res) => {
+  try {
+    const updatedSettings = await db.updateSettingsBatch(req.body);
+    const safeSettings = { ...updatedSettings };
+    delete safeSettings.shopkeeperPassword;
+
+    // Broadcast updated settings (especially UPI ID & parlour phone) to all connected devices in real time
+    io.emit('settings:updated', safeSettings);
+    console.log('🔄 Shop Settings & UPI ID updated and broadcasted:', safeSettings.upiId);
+
+    res.json({
+      success: true,
+      settings: safeSettings,
+      message: 'Shop settings updated and synchronized across all devices!'
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/settings', async (req, res) => {
   try {
     const settings = await db.getSettings();

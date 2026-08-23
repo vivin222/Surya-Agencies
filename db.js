@@ -572,6 +572,20 @@ class DatabaseService {
     );
   }
 
+  
+  async updateSettingsBatch(newSettings) {
+    if (this.ready) await this.ready;
+    for (const [key, value] of Object.entries(newSettings)) {
+      if (key !== 'shopkeeperPassword') { // Prevent accidental overwrite
+        await this.run(
+          `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+          [key, String(value)]
+        );
+      }
+    }
+    return this.getSettings();
+  }
+
   async resetAllData() {
     if (this.ready) await this.ready;
     await this.run('DELETE FROM orders');

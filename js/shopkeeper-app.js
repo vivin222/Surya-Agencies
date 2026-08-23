@@ -1,6 +1,6 @@
 /**
  * Shopkeeper Portal Logic — Surya Agencies
- * Live Orders Feed, Status Steppers, KPI Analytics, and Product Price/Stock Manager
+ * Live Orders Feed, Status Steppers, KPI Analytics, Product Manager, and Live UPI Settings Editor
  */
 
 class ShopkeeperApp {
@@ -8,9 +8,14 @@ class ShopkeeperApp {
     this.orders = [];
     this.products = [];
     this.activeFilter = 'ALL';
-    this.activeTab = 'orders'; // 'orders' | 'products'
+    this.activeTab = 'orders'; // 'orders' | 'products' | 'settings'
     this.productSearchQuery = '';
     this.productCategoryFilter = 'ALL';
+    this.settings = {
+      upiId: 'suryaagencies@upi',
+      shopPhone: '+91 98400 12345',
+      shopAddress: 'Surya Agencies, Main Road, Ice Cream & Dairy Junction'
+    };
 
     this.init();
   }
@@ -23,13 +28,13 @@ class ShopkeeperApp {
     await this.fetchDashboardStats();
     await this.fetchOrders();
     await this.fetchProducts();
+    await this.fetchSettings();
     this.render();
   }
 
   setupRealtimeListeners() {
     if (!window.socketClient) return;
 
-    // Incoming customer order in real-time
     window.socketClient.on('order:created', (newOrder) => {
       this.orders.unshift(newOrder);
       if (window.appController) {
@@ -40,7 +45,6 @@ class ShopkeeperApp {
       this.renderOrders();
     });
 
-    // Real-time status update
     window.socketClient.on('order:status_updated', (updatedOrder) => {
       const idx = this.orders.findIndex(o => o.id === updatedOrder.id || o.orderNumber === updatedOrder.orderNumber);
       if (idx !== -1) {
@@ -50,7 +54,6 @@ class ShopkeeperApp {
       this.fetchDashboardStats();
     });
 
-    // Real-time stock / product updates
     window.socketClient.on('products:stock_batch_updated', (updatedList) => {
       if (!Array.isArray(updatedList)) return;
       updatedList.forEach(updatedProd => {
@@ -62,6 +65,13 @@ class ShopkeeperApp {
       this.fetchDashboardStats();
       if (this.activeTab === 'products') {
         this.renderProductsTable();
+      }
+    });
+
+    window.socketClient.on('settings:updated', (newSettings) => {
+      if (newSettings) {
+        this.settings = { ...this.settings, ...newSettings };
+        this.populateSettingsForm();
       }
     });
   }
@@ -86,7 +96,6 @@ class ShopkeeperApp {
         if (kpiPending) kpiPending.textContent = s.newOrders + s.ordersPreparing + s.ordersReady;
         if (kpiRevenue) kpiRevenue.textContent = `₹${s.totalRevenue}`;
         
-        // Count low stock items from products
         const lowStockCount = this.products.filter(p => p.stock <= 5).length;
         if (kpiStock) kpiStock.textContent = lowStockCount;
       }
@@ -124,27 +133,119 @@ class ShopkeeperApp {
     }
   }
 
+  async fetchSettings() {
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if (data.success && data.settings) {
+        this.settings = { ...this.settings, ...data.settings };
+        this.populateSettingsForm();
+      }
+    } catch (e) {}
+  }
+
+  populateSettingsForm() {
+    const upiInput = document.getElementById('settings-upi-id');
+    const phoneInput = document.getElementById('settings-shop-phone');
+    const addressInput = document.getElementById('settings-shop-address');
+
+    if (upiInput && this.settings.upiId) upiInput.value = this.settings.upiId;
+    if (phoneInput && this.settings.shopPhone) phoneInput.value = this.settings.shopPhone;
+    if (addressInput && this.settings.shopAddress) addressInput.value = this.settings.shopAddress;
+  }
+
+  async saveShopSettings(event) {
+    event.preventDefault();
+    const upiInput = document.getElementById('settings-upi-id');
+    const phoneInput = document.getElementById('settings-shop-phone');
+    const addressInput = document.getElementById('settings-shop-address');
+    const btn = document.getElementById('save-settings-btn');
+
+    const newUpiId = upiInput ? upiInput.value.trim() : '';
+    const newPhone = phoneInput ? phoneInput.value.trim() : '';
+    const newAddress = addressInput ? addressInput.value.trim() : '';
+
+    if (!newUpiId) {
+      if (window.appController) window.appController.showToast('UPI ID cannot be empty', 'error');
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>Saving & Broadcasting...</span>';
+    }
+
+    try {
+      const token = sessionStorage.getItem('surya_shopkeeper_token');
+      const res = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'x-shopkeeper-verified': 'true'
+        },
+        body: JSON.stringify({
+          upiId: newUpiId,
+          shopPhone: newPhone,
+          shopAddress: newAddress
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to update settings');
+
+      this.settings = { ...this.settings, ...data.settings };
+      if (window.appController) window.appController.showToast('✓ UPI ID updated and synchronized with all customer QR codes!', 'success');
+
+    } catch (err) {
+      if (window.appController) window.appController.showToast(err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾 Save & Broadcast Settings</span>';
+      }
+    }
+  }
+
   // --- TAB SWITCHING ---
 
   switchTab(tab) {
     this.activeTab = tab;
     const tabOrders = document.getElementById('shop-tab-orders');
     const tabProducts = document.getElementById('shop-tab-products');
+    const tabSettings = document.getElementById('shop-tab-settings');
+
     const viewOrders = document.getElementById('shop-view-orders');
     const viewProducts = document.getElementById('shop-view-products');
+    const viewSettings = document.getElementById('shop-view-settings');
+
+    const activeClasses = 'px-4 py-2 rounded-2xl bg-slate-900 dark:bg-rose-600 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-2 whitespace-nowrap';
+    const inactiveClasses = 'px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-extrabold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center space-x-2 whitespace-nowrap';
 
     if (tab === 'orders') {
-      tabOrders.className = 'px-4 py-2 rounded-2xl bg-slate-900 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-2';
-      tabProducts.className = 'px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-2';
+      tabOrders.className = activeClasses;
+      tabProducts.className = inactiveClasses;
+      if (tabSettings) tabSettings.className = inactiveClasses;
       viewOrders.classList.remove('hidden');
       viewProducts.classList.add('hidden');
+      if (viewSettings) viewSettings.classList.add('hidden');
       this.renderOrders();
-    } else {
-      tabOrders.className = 'px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-2';
-      tabProducts.className = 'px-4 py-2 rounded-2xl bg-slate-900 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-2';
+    } else if (tab === 'products') {
+      tabOrders.className = inactiveClasses;
+      tabProducts.className = activeClasses;
+      if (tabSettings) tabSettings.className = inactiveClasses;
       viewOrders.classList.add('hidden');
       viewProducts.classList.remove('hidden');
+      if (viewSettings) viewSettings.classList.add('hidden');
       this.renderProductsTable();
+    } else if (tab === 'settings') {
+      tabOrders.className = inactiveClasses;
+      tabProducts.className = inactiveClasses;
+      if (tabSettings) tabSettings.className = activeClasses;
+      viewOrders.classList.add('hidden');
+      viewProducts.classList.add('hidden');
+      if (viewSettings) viewSettings.classList.remove('hidden');
+      this.populateSettingsForm();
     }
   }
 
@@ -153,9 +254,9 @@ class ShopkeeperApp {
     const buttons = document.querySelectorAll('.shop-filter-btn');
     buttons.forEach(btn => {
       if (btn.textContent.trim().toUpperCase() === status.replace(/_/g, ' ') || (status === 'ALL' && btn.textContent.trim() === 'All Orders')) {
-        btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white';
+        btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 dark:bg-rose-600 text-white';
       } else {
-        btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200';
+        btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700';
       }
     });
     this.renderOrders();
@@ -166,6 +267,7 @@ class ShopkeeperApp {
   render() {
     this.renderOrders();
     this.renderProductsTable();
+    this.populateSettingsForm();
   }
 
   renderOrders() {
@@ -203,11 +305,11 @@ class ShopkeeperApp {
       const badgeColor = statusBadgeColors[order.orderStatus] || 'bg-slate-100 text-slate-700';
 
       return `
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all space-y-4">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:border-slate-300 transition-all space-y-4">
           <!-- Order Top Header -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
             <div class="flex items-center gap-3">
-              <span class="font-black text-lg text-slate-900 font-display">${order.orderNumber}</span>
+              <span class="font-black text-lg text-slate-900 dark:text-white font-display">${order.orderNumber}</span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${badgeColor}">
                 ${order.orderStatus}
               </span>
@@ -218,7 +320,7 @@ class ShopkeeperApp {
 
             <div class="text-right">
               <span class="text-xs font-bold text-slate-500">Customer:</span>
-              <span class="text-xs font-black text-slate-900 ml-1">${order.customerName}</span>
+              <span class="text-xs font-black text-slate-900 dark:text-white ml-1">${order.customerName}</span>
               ${order.customerPhone ? `<span class="text-xs text-slate-500 ml-1">(${order.customerPhone})</span>` : ''}
             </div>
           </div>
@@ -226,21 +328,21 @@ class ShopkeeperApp {
           <!-- Items Ordered -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             ${order.items.map(item => `
-              <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl">
-                <span class="font-medium text-slate-800">${item.name} (${item.packSize}) × ${item.quantity}</span>
-                <span class="font-mono font-bold text-slate-900">₹${item.itemTotal || (item.price * item.quantity)}</span>
+              <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                <span class="font-medium text-slate-800 dark:text-slate-200">${item.name} (${item.packSize}) × ${item.quantity}</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white">₹${item.itemTotal || (item.price * item.quantity)}</span>
               </div>
             `).join('')}
           </div>
 
           <!-- Order Footer & Action Controls -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-700 pt-3">
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold text-slate-500">Payment:</span>
               <span class="px-2 py-0.5 rounded text-[10px] font-black ${order.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'}">
                 ${order.paymentMethod === 'upi' ? 'UPI Payment' : 'Pay at Shop'} (${order.paymentStatus})
               </span>
-              <span class="text-base font-black text-slate-900 font-mono ml-2">Total: ₹${order.total}</span>
+              <span class="text-base font-black text-slate-900 dark:text-white font-mono ml-2">Total: ₹${order.total}</span>
             </div>
 
             <!-- Status Control Buttons -->
@@ -264,13 +366,13 @@ class ShopkeeperApp {
               ` : ''}
 
               ${order.orderStatus === 'READY_FOR_PICKUP' ? `
-                <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'COMPLETED')" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-sm">
+                <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'COMPLETED')" class="px-3.5 py-1.5 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 text-white font-black text-xs shadow-sm">
                   ✓ Complete Pickup
                 </button>
               ` : ''}
 
               ${order.orderStatus !== 'COMPLETED' && order.orderStatus !== 'CANCELLED' ? `
-                <button type="button" onclick="shopkeeperApp.cancelOrder('${order.id}')" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200">
+                <button type="button" onclick="shopkeeperApp.cancelOrder('${order.id}')" class="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800">
                   Cancel
                 </button>
               ` : ''}
@@ -341,7 +443,7 @@ class ShopkeeperApp {
 
     if (filtered.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-12 bg-white rounded-3xl border border-slate-200 p-6">
+        <div class="text-center py-12 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6">
           <p class="text-xs text-slate-500 font-bold">No products match your filter.</p>
         </div>
       `;
@@ -350,14 +452,14 @@ class ShopkeeperApp {
 
     container.innerHTML = filtered.map(p => {
       return `
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <!-- Product Info -->
           <div class="flex items-center space-x-3 w-full md:w-1/3">
-            <img src="${p.image || '/assets/arun-vanilla-cup.jpg'}" alt="${p.name}" class="w-12 h-12 object-contain bg-slate-50 rounded-xl p-1 border border-slate-100" />
+            <img src="${p.image || '/assets/arun-vanilla-cup.jpg'}" alt="${p.name}" class="w-12 h-12 object-contain bg-slate-50 dark:bg-slate-900 rounded-xl p-1 border border-slate-100 dark:border-slate-700" />
             <div>
-              <h5 class="font-extrabold text-slate-900 text-xs leading-tight line-clamp-1">${p.name}</h5>
+              <h5 class="font-extrabold text-slate-900 dark:text-white text-xs leading-tight line-clamp-1">${p.name}</h5>
               <div class="flex items-center gap-1 mt-0.5">
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-100 text-slate-600">${p.packSize || 'Pack'}</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${p.packSize || 'Pack'}</span>
                 <span class="text-[10px] text-slate-400 font-semibold">${p.category}</span>
               </div>
             </div>
@@ -372,7 +474,7 @@ class ShopkeeperApp {
                 id="edit-price-${p.id}" 
                 value="${p.price !== null ? p.price : ''}" 
                 placeholder="Not set" 
-                class="w-24 px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-black text-slate-900 focus:ring-2 focus:ring-rose-500"
+                class="w-24 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
@@ -383,13 +485,13 @@ class ShopkeeperApp {
                 id="edit-stock-${p.id}" 
                 value="${p.stock}" 
                 min="0" 
-                class="w-20 px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-black text-slate-900 focus:ring-2 focus:ring-rose-500"
+                class="w-20 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
               <label class="block text-[9px] uppercase font-bold text-slate-400">Status</label>
-              <select id="edit-avail-${p.id}" class="px-2 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700">
+              <select id="edit-avail-${p.id}" class="px-2 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200">
                 <option value="1" ${p.available ? 'selected' : ''}>Available</option>
                 <option value="0" ${!p.available ? 'selected' : ''}>Unavailable</option>
               </select>
@@ -401,7 +503,7 @@ class ShopkeeperApp {
             <button 
               type="button" 
               onclick="shopkeeperApp.saveProductChanges('${p.id}')"
-              class="w-full md:w-auto px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-sm"
+              class="w-full md:w-auto px-4 py-2 rounded-xl bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 text-white font-extrabold text-xs shadow-sm"
             >
               Save
             </button>

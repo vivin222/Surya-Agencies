@@ -1,22 +1,24 @@
 {
-  "short_name": "Surya Icecreams",
-  "name": "Surya Agencies — Arun Icecreams Ordering",
-  "description": "Order delicious Arun Icecreams online from Surya Agencies. Pick up fresh at counter with instant QR ticket.",
+  "name": "Surya Agencies — Ice Cream & Dairy Portal",
+  "short_name": "Surya Agencies",
+  "description": "Order Arun Icecreams & Hatsun Dairy products fresh for parlour pickup.",
+  "start_url": "/#customer",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e11d48",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/assets/icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "/assets/arun-vanilla-cup.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     },
     {
-      "src": "/assets/icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/assets/arun-vanilla-cup.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     }
-  ],
-  "start_url": "/#customer",
-  "background_color": "#fff1f2",
-  "theme_color": "#e11d48",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }

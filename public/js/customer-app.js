@@ -1,6 +1,6 @@
 /**
  * Customer Portal Logic — Surya Agencies
- * 8 Official Categories, Fixed Product Cards, Cart, Dynamic UPI QR Code, Live Tracking & My Orders
+ * 8 Official Categories, Fixed Product Cards, Cart, Dynamic Live UPI QR Code, Print Receipt & Real-time Settings Sync
  */
 
 class CustomerApp {
@@ -1058,7 +1058,7 @@ class CustomerApp {
     this.activeTrackedOrder = null;
     this.myOrders = [];
     this.isSubmittingOrder = false;
-    this.currentView = 'catalog'; // 'catalog' | 'tracking' | 'orders'
+    this.currentView = 'catalog';
     this.upiId = 'suryaagencies@upi';
 
     this.categories = [
@@ -1080,8 +1080,19 @@ class CustomerApp {
     this.loadCartFromStorage();
     this.loadMyOrdersFromStorage();
     await this.fetchProducts();
+    await this.fetchSettings();
     this.setupRealtimeListeners();
     this.render();
+  }
+
+  async fetchSettings() {
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if (data.success && data.settings && data.settings.upiId) {
+        this.upiId = data.settings.upiId;
+      }
+    } catch (e) {}
   }
 
   // --- STORAGE & PERSISTENCE ---
@@ -1123,6 +1134,7 @@ class CustomerApp {
   setupRealtimeListeners() {
     if (!window.socketClient) return;
 
+    // Real-Time Stock Updates
     window.socketClient.on('products:stock_batch_updated', (updatedList) => {
       if (!Array.isArray(updatedList)) return;
       let changed = false;
@@ -1148,6 +1160,20 @@ class CustomerApp {
         this.products.push(updatedProd);
       }
       this.renderProductGrid();
+    });
+
+    // Real-Time Shop Settings & UPI ID Update Broadcast
+    window.socketClient.on('settings:updated', (newSettings) => {
+      if (newSettings && newSettings.upiId) {
+        this.upiId = newSettings.upiId;
+        console.log('⚡ Dynamic UPI ID synchronized in real time:', this.upiId);
+        // If checkout modal is open, re-render QR code
+        const qrContainer = document.getElementById('checkout-upi-qrcode');
+        if (qrContainer) {
+          const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          this.renderCheckoutUPIQR(total);
+        }
+      }
     });
 
     window.socketClient.on('order:status_updated', (updatedOrder) => {
@@ -1212,7 +1238,7 @@ class CustomerApp {
           class="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition-all ${
             isSelected 
               ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25 scale-[1.02]' 
-              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
           }"
         >
           <span>${cat.icon}</span>
@@ -1250,7 +1276,7 @@ class CustomerApp {
     });
   }
 
-  // --- PRODUCT GRID (FIXED NON-COLLIDING CARDS) ---
+  // --- PRODUCT GRID ---
 
   renderProductGrid() {
     const container = document.getElementById('customer-products-grid');
@@ -1291,8 +1317,7 @@ class CustomerApp {
       return `
         <div class="product-card ${isOutOfStock ? 'opacity-70 grayscale-[20%]' : ''}">
           <div>
-            <!-- Rigid Image Box with Object Contain -->
-            <div class="product-image-box cursor-pointer" onclick="customerApp.openProductDetail('${p.id}')">
+            <div class="product-image-box">
               <img 
                 src="${imageUrl}" 
                 alt="${p.name}" 
@@ -1300,7 +1325,7 @@ class CustomerApp {
                 onerror="this.src='/assets/arun-vanilla-cup.jpg'"
               />
               <div class="absolute top-2.5 left-2.5">
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/90 backdrop-blur-sm text-slate-800 shadow-sm">
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 shadow-sm">
                   ${p.category}
                 </span>
               </div>
@@ -1309,26 +1334,24 @@ class CustomerApp {
               </div>
             </div>
 
-            <!-- Product Details -->
             <div class="p-4">
               <div class="flex items-center justify-between gap-1 mb-1">
-                <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 text-slate-600">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                   ${p.packSize || 'Standard Pack'}
                 </span>
               </div>
-              <h4 class="font-extrabold text-slate-900 text-sm leading-snug cursor-pointer hover:text-rose-600 transition-colors line-clamp-2" onclick="customerApp.openProductDetail('${p.id}')">
+              <h4 class="font-extrabold text-slate-900 dark:text-slate-100 text-sm leading-snug hover:text-rose-600 transition-colors line-clamp-2">
                 ${p.name}
               </h4>
             </div>
           </div>
 
-          <!-- Price & Add Button Bar -->
           <div class="p-4 pt-0">
-            <div class="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
+            <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
               <div>
                 <span class="text-[9px] uppercase font-bold text-slate-400 block">Price</span>
                 ${hasPrice 
-                  ? `<span class="text-lg font-black text-slate-900 font-display">₹${p.price}</span>` 
+                  ? `<span class="text-lg font-black text-slate-900 dark:text-white font-display">₹${p.price}</span>` 
                   : `<span class="text-xs font-bold text-amber-600">Price not configured</span>`
                 }
               </div>
@@ -1499,21 +1522,21 @@ class CustomerApp {
       total += itemTotal;
 
       return `
-        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3">
+        <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 flex items-center justify-between gap-3">
           <div class="flex items-center space-x-3">
             <img src="${item.image || '/assets/arun-vanilla-cup.jpg'}" alt="${item.name}" class="w-12 h-12 object-contain rounded-xl bg-white p-1 border border-slate-100" />
             <div>
-              <h5 class="font-extrabold text-slate-900 text-xs leading-tight line-clamp-1">${item.name}</h5>
+              <h5 class="font-extrabold text-slate-900 dark:text-slate-100 text-xs leading-tight line-clamp-1">${item.name}</h5>
               <span class="text-[10px] text-slate-500 font-semibold">${item.packSize} • ₹${item.price} each</span>
               <span class="text-xs font-black text-rose-600 block mt-0.5">₹${itemTotal}</span>
             </div>
           </div>
 
           <div class="flex items-center space-x-2">
-            <div class="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-sm">
-              <button type="button" onclick="customerApp.decrementCart('${item.productId}')" class="w-6 h-6 rounded-lg text-slate-700 font-bold flex items-center justify-center hover:bg-slate-100">−</button>
-              <span class="w-6 text-center text-xs font-black text-slate-900">${item.quantity}</span>
-              <button type="button" onclick="customerApp.incrementCart('${item.productId}')" class="w-6 h-6 rounded-lg text-slate-700 font-bold flex items-center justify-center hover:bg-slate-100">+</button>
+            <div class="flex items-center bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl p-0.5 shadow-sm">
+              <button type="button" onclick="customerApp.decrementCart('${item.productId}')" class="w-6 h-6 rounded-lg text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600">−</button>
+              <span class="w-6 text-center text-xs font-black text-slate-900 dark:text-white">${item.quantity}</span>
+              <button type="button" onclick="customerApp.incrementCart('${item.productId}')" class="w-6 h-6 rounded-lg text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600">+</button>
             </div>
             <button type="button" onclick="customerApp.removeCartItem('${item.productId}')" class="text-slate-400 hover:text-rose-600 p-1 text-xs">🗑️</button>
           </div>
@@ -1533,18 +1556,21 @@ class CustomerApp {
     const container = document.getElementById('checkout-modal-container');
     if (!container) return;
 
-    const user = (window.appController && window.appController.customerUser && !window.appController.customerUser.isGuest) ? window.appController.customerUser : { name: '', phone: '', email: '' };
+    const user = (window.appController && window.appController.customerUser && !window.appController.customerUser.isGuest) 
+      ? window.appController.customerUser 
+      : { name: '', phone: '', email: '' };
+      
     const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     container.innerHTML = `
       <div id="checkout-modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="customerApp.closeCheckoutModal(event)">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-slate-200 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <h3 class="text-lg font-black text-slate-900 font-display">Surya Agencies Checkout</h3>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white font-display">Surya Agencies Checkout</h3>
               <p class="text-xs text-slate-500">Pick up fresh at the parlour counter</p>
             </div>
-            <button type="button" onclick="customerApp.closeCheckoutModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
+            <button type="button" onclick="customerApp.closeCheckoutModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
           </div>
 
           <form id="checkout-form" onsubmit="customerApp.submitOrder(event)" class="mt-6 space-y-4">
@@ -1554,32 +1580,32 @@ class CustomerApp {
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Phone Number (For Order Tracking)</label>
-              <input type="tel" id="checkout-phone" value="${user.phone || ''}" placeholder="Enter 10-digit Mobile Number" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+              <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Mobile Phone Number (For Order Tracking) *</label>
+              <input type="tel" id="checkout-phone" value="${user.phone || ''}" required placeholder="Enter 10-digit Mobile Number" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
             </div>
 
             <!-- Payment Method Choice -->
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 mb-2">Choose Payment Option</label>
               <div class="grid grid-cols-2 gap-3">
-                <label id="payment-upi-label" class="border-2 border-rose-600 bg-rose-50/60 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all">
+                <label id="payment-upi-label" class="border-2 border-rose-600 bg-rose-50/60 dark:bg-rose-950/40 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all">
                   <input type="radio" name="checkout-payment" value="upi" checked onchange="customerApp.togglePaymentMethod('upi')" class="text-rose-600 focus:ring-rose-500" />
-                  <span class="text-xs font-extrabold text-slate-800">📱 UPI Payment</span>
+                  <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">📱 UPI Payment</span>
                 </label>
-                <label id="payment-cash-label" class="border border-slate-300 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all">
+                <label id="payment-cash-label" class="border border-slate-300 dark:border-slate-700 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all">
                   <input type="radio" name="checkout-payment" value="pay_at_shop" onchange="customerApp.togglePaymentMethod('pay_at_shop')" class="text-rose-600 focus:ring-rose-500" />
-                  <span class="text-xs font-extrabold text-slate-800">💵 Pay at Shop</span>
+                  <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">💵 Pay at Shop</span>
                 </label>
               </div>
             </div>
 
             <!-- DYNAMIC UPI QR CODE SECTION -->
-            <div id="checkout-upi-box" class="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-slate-50 to-pink-50 border border-purple-200/80 space-y-3">
+            <div id="checkout-upi-box" class="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-slate-50 to-pink-50 dark:from-slate-800 dark:to-slate-900 border border-purple-200/80 dark:border-purple-900/50 space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                   <span class="text-xl">📱</span>
                   <div>
-                    <h5 class="text-xs font-black text-slate-900">Scan & Pay ₹${total} with any UPI App</h5>
+                    <h5 class="text-xs font-black text-slate-900 dark:text-white">Scan & Pay ₹${total} with any UPI App</h5>
                     <p class="text-[10px] text-slate-500 font-semibold">GPay, PhonePe, Paytm, BHIM</p>
                   </div>
                 </div>
@@ -1592,12 +1618,11 @@ class CustomerApp {
                   <div id="checkout-upi-qrcode"></div>
                 </div>
                 <div class="text-center sm:text-left space-y-1.5 flex-1">
-                  <div class="p-2 rounded-xl bg-white border border-slate-200/80 shadow-xs">
+                  <div class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-xs">
                     <span class="text-[9px] uppercase font-bold text-slate-400 block">Surya Agencies UPI ID</span>
-                    <span class="font-mono text-xs font-extrabold text-slate-800 select-all">${this.upiId}</span>
+                    <span class="font-mono text-xs font-extrabold text-slate-800 dark:text-slate-200 select-all">${this.upiId}</span>
                   </div>
 
-                  <!-- Direct UPI Intent Link for Mobile Users -->
                   <a 
                     href="upi://pay?pa=${this.upiId}&pn=Surya%20Agencies&am=${total}&cu=INR&tn=Surya%20Agencies%20Order" 
                     class="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition-all space-x-1.5 sm:hidden"
@@ -1610,12 +1635,12 @@ class CustomerApp {
             </div>
 
             <!-- Order Summary Box -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-              <div class="flex justify-between text-xs text-slate-600">
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2">
+              <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300">
                 <span>Items in Order</span>
                 <span class="font-bold">${this.cart.reduce((s, i) => s + i.quantity, 0)} items</span>
               </div>
-              <div class="flex justify-between text-base font-black text-slate-900 border-t border-slate-200 pt-2">
+              <div class="flex justify-between text-base font-black text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-700 pt-2">
                 <span>Total Amount</span>
                 <span class="text-rose-600 font-mono">₹${total}</span>
               </div>
@@ -1633,7 +1658,6 @@ class CustomerApp {
       </div>
     `;
 
-    // Render Dynamic UPI QR Code
     this.renderCheckoutUPIQR(total);
   }
 
@@ -1644,12 +1668,12 @@ class CustomerApp {
 
     if (method === 'upi') {
       if (upiBox) upiBox.classList.remove('hidden');
-      if (upiLabel) upiLabel.className = 'border-2 border-rose-600 bg-rose-50/60 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all';
-      if (cashLabel) cashLabel.className = 'border border-slate-300 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all';
+      if (upiLabel) upiLabel.className = 'border-2 border-rose-600 bg-rose-50/60 dark:bg-rose-950/40 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all';
+      if (cashLabel) cashLabel.className = 'border border-slate-300 dark:border-slate-700 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all';
     } else {
       if (upiBox) upiBox.classList.add('hidden');
-      if (upiLabel) upiLabel.className = 'border border-slate-300 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all';
-      if (cashLabel) cashLabel.className = 'border-2 border-rose-600 bg-rose-50/60 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all';
+      if (upiLabel) upiLabel.className = 'border border-slate-300 dark:border-slate-700 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all';
+      if (cashLabel) cashLabel.className = 'border-2 border-rose-600 bg-rose-50/60 dark:bg-rose-950/40 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all';
     }
   }
 
@@ -1718,15 +1742,12 @@ class CustomerApp {
 
       const placedOrder = data.order;
 
-      // Add to personal orders
       this.myOrders.unshift(placedOrder);
       this.saveMyOrdersToStorage();
 
-      // Clear Cart
       this.cart = [];
       this.saveCartToStorage();
 
-      // Subscribe socket to order room
       if (window.socketClient) {
         window.socketClient.subscribeToOrder(placedOrder.id);
         window.socketClient.subscribeToOrder(placedOrder.orderNumber);
@@ -1735,7 +1756,6 @@ class CustomerApp {
       this.closeCheckoutModal();
       if (window.appController) window.appController.showToast(`Order ${placedOrder.orderNumber} placed successfully!`, 'success');
 
-      // Switch to Live Tracking View
       this.showTrackingView(placedOrder);
 
     } catch (err) {
@@ -1749,7 +1769,7 @@ class CustomerApp {
     }
   }
 
-  // --- LIVE ORDER TRACKING (DIGITAL PICKUP TICKET) ---
+  // --- LIVE ORDER TRACKING (DIGITAL PICKUP TICKET & PRINT RECEIPT) ---
 
   showTrackingView(order) {
     this.activeTrackedOrder = order;
@@ -1780,16 +1800,21 @@ class CustomerApp {
     const currentStatus = statusMap[order.orderStatus] || statusMap['NEW'];
 
     container.innerHTML = `
-      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
+      <div id="printable-receipt" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
         <!-- Ticket Header -->
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">LIVE PICKUP TICKET</span>
-            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 font-display mt-1">${order.orderNumber}</h2>
+            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-1">${order.orderNumber}</h2>
           </div>
-          <button type="button" onclick="customerApp.showCatalogView()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
-            ← Back to Store
-          </button>
+          <div class="flex items-center space-x-2 no-print">
+            <button type="button" onclick="window.print()" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs shadow-sm flex items-center space-x-1">
+              <span>🖨️ Print Bill</span>
+            </button>
+            <button type="button" onclick="customerApp.showCatalogView()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs">
+              ← Store
+            </button>
+          </div>
         </div>
 
         <!-- Live Status Alert Box -->
@@ -1803,40 +1828,40 @@ class CustomerApp {
 
         <!-- Real-Time Stepper -->
         ${order.orderStatus !== 'CANCELLED' ? `
-          <div class="py-4">
+          <div class="py-4 no-print">
             <div class="flex items-center justify-between relative">
               <div class="stepper-step">
                 <div class="stepper-circle ${currentStatus.step >= 1 ? (currentStatus.step === 1 ? 'active' : 'completed') : ''}">1</div>
-                <span class="text-[10px] font-bold text-slate-600 mt-2">Received</span>
+                <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-2">Received</span>
               </div>
               <div class="stepper-step">
                 <div class="stepper-circle ${currentStatus.step >= 2 ? (currentStatus.step === 2 ? 'active' : 'completed') : ''}">2</div>
-                <span class="text-[10px] font-bold text-slate-600 mt-2">Accepted</span>
+                <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-2">Accepted</span>
               </div>
               <div class="stepper-step">
                 <div class="stepper-circle ${currentStatus.step >= 3 ? (currentStatus.step === 3 ? 'active' : 'completed') : ''}">3</div>
-                <span class="text-[10px] font-bold text-slate-600 mt-2">Preparing</span>
+                <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-2">Preparing</span>
               </div>
               <div class="stepper-step">
                 <div class="stepper-circle ${currentStatus.step >= 4 ? (currentStatus.step === 4 ? 'active' : 'completed') : ''}">4</div>
-                <span class="text-[10px] font-bold text-slate-600 mt-2">Ready</span>
+                <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-2">Ready</span>
               </div>
               <div class="stepper-step">
                 <div class="stepper-circle ${currentStatus.step >= 5 ? 'completed' : ''}">5</div>
-                <span class="text-[10px] font-bold text-slate-600 mt-2">Picked Up</span>
+                <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-2">Picked Up</span>
               </div>
             </div>
           </div>
         ` : ''}
 
         <!-- QR Code & Counter Instructions -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 rounded-2xl bg-slate-50 border border-slate-200">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
           <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center min-w-[130px] min-h-[130px]">
             <div id="tracking-qrcode-container"></div>
           </div>
           <div class="text-center sm:text-left space-y-1">
             <span class="text-xs font-bold text-slate-500">Show this QR code at Surya Agencies counter</span>
-            <h4 class="font-extrabold text-slate-900 text-sm">Surya Agencies Counter Pickup</h4>
+            <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Surya Agencies Counter Pickup</h4>
             <p class="text-xs text-slate-500">Customer: ${order.customerName} (${order.customerPhone || 'Counter Pickup'})</p>
             <div class="pt-1">
               <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-black ${order.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'}">Payment: ${order.paymentMethod === 'upi' ? 'UPI Online' : 'Pay at Shop'} (${order.paymentStatus})</span>
@@ -1845,17 +1870,17 @@ class CustomerApp {
         </div>
 
         <!-- Order Items List -->
-        <div class="space-y-2 border-t border-slate-100 pt-4">
+        <div class="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-4">
           <h4 class="font-bold text-xs text-slate-400 uppercase">Ordered Items</h4>
           <div class="space-y-2">
             ${order.items.map(item => `
-              <div class="flex items-center justify-between text-xs py-1 border-b border-slate-50">
-                <span class="font-semibold text-slate-800">${item.name} (${item.packSize}) × ${item.quantity}</span>
-                <span class="font-mono font-bold text-slate-900">₹${item.itemTotal || (item.price * item.quantity)}</span>
+              <div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-800">
+                <span class="font-semibold text-slate-800 dark:text-slate-200">${item.name} (${item.packSize}) × ${item.quantity}</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white">₹${item.itemTotal || (item.price * item.quantity)}</span>
               </div>
             `).join('')}
           </div>
-          <div class="flex justify-between items-center text-sm font-black text-slate-900 pt-2">
+          <div class="flex justify-between items-center text-sm font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700">
             <span>Total Amount</span>
             <span class="text-rose-600 font-mono text-base">₹${order.total}</span>
           </div>
@@ -1863,7 +1888,6 @@ class CustomerApp {
       </div>
     `;
 
-    // Render local QRCode
     setTimeout(() => {
       const qrEl = document.getElementById('tracking-qrcode-container');
       if (qrEl && typeof QRCode !== 'undefined') {
@@ -1905,9 +1929,9 @@ class CustomerApp {
 
     if (this.myOrders.length === 0) {
       container.innerHTML = `
-        <div class="max-w-2xl mx-auto text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+        <div class="max-w-2xl mx-auto text-center py-16 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-8 shadow-sm">
           <span class="text-4xl block mb-2">📦</span>
-          <h3 class="font-black text-lg text-slate-900 font-display">No Orders Yet</h3>
+          <h3 class="font-black text-lg text-slate-900 dark:text-white font-display">No Orders Yet</h3>
           <p class="text-xs text-slate-500 mt-1">Browse our 8 categories and place your first delicious order!</p>
           <button type="button" onclick="customerApp.showCatalogView()" class="mt-6 px-6 py-3 rounded-2xl bg-rose-600 text-white font-extrabold text-xs shadow-md">Browse Catalog →</button>
         </div>
@@ -1917,12 +1941,12 @@ class CustomerApp {
 
     container.innerHTML = `
       <div class="max-w-3xl mx-auto space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
           <div>
-            <h3 class="text-xl font-black text-slate-900 font-display">My Orders History</h3>
+            <h3 class="text-xl font-black text-slate-900 dark:text-white font-display">My Orders History</h3>
             <p class="text-xs text-slate-500 font-semibold">${this.myOrders.length} order(s) placed</p>
           </div>
-          <button type="button" onclick="customerApp.showCatalogView()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+          <button type="button" onclick="customerApp.showCatalogView()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs">
             ← Back to Store
           </button>
         </div>
@@ -1933,10 +1957,10 @@ class CustomerApp {
             const isReady = order.orderStatus === 'READY_FOR_PICKUP';
 
             return `
-              <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-rose-300 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:border-rose-300 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <div class="flex items-center gap-2">
-                    <span class="font-black text-slate-900 font-display text-base">${order.orderNumber}</span>
+                    <span class="font-black text-slate-900 dark:text-white font-display text-base">${order.orderNumber}</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isReady ? 'bg-emerald-100 text-emerald-800 animate-pulse' : isCompleted ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-800'}">
                       ${order.orderStatus}
                     </span>
@@ -1951,7 +1975,7 @@ class CustomerApp {
                   <button 
                     type="button" 
                     onclick='customerApp.showTrackingView(${JSON.stringify(order).replace(/'/g, "&#39;")})' 
-                    class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm"
+                    class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-900 dark:bg-rose-600 text-white text-xs font-bold shadow-sm"
                   >
                     View Ticket
                   </button>

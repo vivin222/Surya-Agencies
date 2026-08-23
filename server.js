@@ -44,6 +44,9 @@ function getLocalIpAddress() {
 // Active Shopkeeper Sessions Store (in-memory for secure prototype session management)
 const activeShopkeeperSessions = new Set();
 
+// Active Customer Phone OTP Store (in-memory with 5-minute expiry)
+const phoneOtpStore = new Map();
+
 // Middleware
 app.use(cors());
 app.use(express.json());

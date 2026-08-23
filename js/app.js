@@ -73,7 +73,60 @@ class AppController {
     });
   }
 
+  
   promptInstallPWA() {
+    const modal = document.getElementById('install-app-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      this.switchInstallGuide(isIOS ? 'iphone' : 'android');
+    }
+  }
+
+  closeInstallModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('install-app-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  switchInstallGuide(platform) {
+    const tabIphone = document.getElementById('tab-guide-iphone');
+    const tabAndroid = document.getElementById('tab-guide-android');
+    const contentIphone = document.getElementById('guide-content-iphone');
+    const contentAndroid = document.getElementById('guide-content-android');
+
+    const activeTab = 'py-2 rounded-xl text-xs font-black bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all flex items-center justify-center space-x-1.5';
+    const inactiveTab = 'py-2 rounded-xl text-xs font-black text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all flex items-center justify-center space-x-1.5';
+
+    if (platform === 'iphone') {
+      if (tabIphone) tabIphone.className = activeTab;
+      if (tabAndroid) tabAndroid.className = inactiveTab;
+      if (contentIphone) contentIphone.classList.remove('hidden');
+      if (contentAndroid) contentAndroid.classList.add('hidden');
+    } else {
+      if (tabIphone) tabIphone.className = inactiveTab;
+      if (tabAndroid) tabAndroid.className = activeTab;
+      if (contentIphone) contentIphone.classList.add('hidden');
+      if (contentAndroid) contentAndroid.classList.remove('hidden');
+    }
+  }
+
+  triggerNativeInstallPrompt() {
+    if (this.deferredPrompt) {
+      this.deferredPrompt.prompt();
+      this.deferredPrompt.userChoice.then((choice) => {
+        if (choice.outcome === 'accepted') {
+          this.showToast('Thank you for installing Surya Agencies App!', 'success');
+          this.closeInstallModal();
+        }
+        this.deferredPrompt = null;
+      });
+    } else {
+      this.showToast('Tap your browser menu (⋮) in the top right and choose "Install App" or "Add to Home Screen".', 'info');
+    }
+  }
+
+  _oldPromptInstallPWA() {
     if (this.deferredPrompt) {
       this.deferredPrompt.prompt();
       this.deferredPrompt.userChoice.then((choice) => {

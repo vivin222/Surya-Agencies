@@ -10,6 +10,8 @@
   --text-muted: #64748b;
   --border-color: #e2e8f0;
   --header-bg: rgba(255, 255, 255, 0.95);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 /* Dark Theme Variables */
@@ -80,7 +82,8 @@ html.dark select {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 body {
@@ -88,6 +91,7 @@ body {
   background-color: var(--bg-page);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(var(--safe-bottom) + 20px);
 }
 
 .font-display {
@@ -95,62 +99,76 @@ body {
 }
 
 /* -------------------------------------------------------------
-   PRODUCT CARD & IMAGE CONTAINER (FIXED NON-COLLIDING LAYOUT)
+   MOBILE OPTIMIZED PRODUCT GRID (2 COLUMNS ON IPHONE / ANDROID)
    ------------------------------------------------------------- */
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
 @media (min-width: 640px) {
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
   }
 }
 
 @media (min-width: 1024px) {
   .product-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
   }
 }
 
 @media (min-width: 1280px) {
   .product-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
   }
 }
 
 .product-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all 0.25s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
   height: 100%;
 }
 
-.product-card:hover {
-  border-color: #f43f5e;
-  box-shadow: 0 12px 24px -8px rgba(225, 29, 72, 0.15);
-  transform: translateY(-2px);
+@media (min-width: 640px) {
+  .product-card {
+    border-radius: 1.25rem;
+  }
+}
+
+.product-card:active {
+  transform: scale(0.98);
 }
 
 .product-image-box {
   width: 100%;
-  height: 160px;
+  height: 130px;
   background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem;
+  padding: 0.5rem;
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid #f1f5f9;
+}
+
+@media (min-width: 640px) {
+  .product-image-box {
+    height: 160px;
+    padding: 0.75rem;
+  }
 }
 
 .product-image-box img {
@@ -159,12 +177,39 @@ body {
   width: auto;
   height: auto;
   object-fit: contain;
-  transition: transform 0.3s ease;
   display: block;
 }
 
-.product-card:hover .product-image-box img {
-  transform: scale(1.04);
+/* -------------------------------------------------------------
+   MOBILE QUICK CART FLOATING BAR (ONE-THUMB EASY CHECKOUT)
+   ------------------------------------------------------------- */
+
+.mobile-cart-bar {
+  position: fixed;
+  bottom: calc(var(--safe-bottom) + 0.75rem);
+  left: 0.75rem;
+  right: 0.75rem;
+  z-index: 45;
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  color: white;
+  border-radius: 1.25rem;
+  padding: 0.875rem 1.25rem;
+  box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.4), 0 8px 10px -6px rgba(225, 29, 72, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (min-width: 768px) {
+  .mobile-cart-bar {
+    display: none !important;
+  }
 }
 
 /* -------------------------------------------------------------
@@ -301,12 +346,13 @@ html.dark .stepper-line {
   background: #10b981;
 }
 
-/* Glass Header */
+/* Glass Header with iOS notch support */
 .glass-header {
   background: var(--header-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
+  padding-top: max(0.75rem, var(--safe-top));
 }
 
 /* Print Receipt Styles */

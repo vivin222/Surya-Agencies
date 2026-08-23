@@ -1458,7 +1458,25 @@ class CustomerApp {
   updateCartBadge() {
     const countEl = document.getElementById('cart-badge-count');
     const totalCount = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     if (countEl) countEl.textContent = totalCount;
+
+    // Update Mobile Floating Quick Cart Bar
+    const mobileBar = document.getElementById('mobile-floating-cart-bar');
+    const mobileItems = document.getElementById('mobile-cart-items-count');
+    const mobileTotal = document.getElementById('mobile-cart-total-amount');
+
+    if (mobileBar && this.currentView === 'catalog') {
+      if (totalCount > 0) {
+        mobileBar.classList.remove('hidden');
+        if (mobileItems) mobileItems.textContent = `${totalCount} Item${totalCount > 1 ? 's' : ''}`;
+        if (mobileTotal) mobileTotal.textContent = `₹${totalPrice}`;
+      } else {
+        mobileBar.classList.add('hidden');
+      }
+    } else if (mobileBar) {
+      mobileBar.classList.add('hidden');
+    }
   }
 
   updateActiveOrdersBadge() {

@@ -2,11 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>SURYA AGENCIES — Ice Cream & Dairy Ordering Portal</title>
   
   <meta name="theme-color" content="#e11d48" />
+  
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Surya Agencies" />
+  <link rel="apple-touch-icon" href="/assets/arun-vanilla-cup.jpg" />
+
   <meta name="apple-mobile-web-app-title" content="Surya Agencies" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
@@ -357,7 +362,22 @@
       <div id="customer-orders-view" class="hidden space-y-6">
         <!-- Rendered Dynamically -->
       </div>
+    
+      <!-- Mobile Quick Floating Cart Bar (iPhone / Android Bottom Pill) -->
+      <div id="mobile-floating-cart-bar" class="mobile-cart-bar hidden cursor-pointer" onclick="customerApp.openCartDrawer()">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🛍️</span>
+          <div>
+            <span id="mobile-cart-items-count" class="font-extrabold text-xs block leading-none">0 Items</span>
+            <span id="mobile-cart-total-amount" class="text-sm font-black font-mono leading-none">₹0</span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1.5 font-black text-xs bg-white text-rose-600 px-3.5 py-1.5 rounded-xl shadow-sm">
+          <span>View Cart & Pay →</span>
+        </div>
+      </div>
     </main>
+
   </div>
 
   <!-- ========================================================================
@@ -734,6 +754,84 @@
           >
             ← Change Phone Number
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- Install App Modal (iPhone & Android Guides) -->
+  <div id="install-app-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="appController.closeInstallModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">📲</span>
+          <div>
+            <h3 class="text-lg font-black text-slate-900 dark:text-white font-display">Install Surya Agencies App</h3>
+            <p class="text-xs text-slate-500">Fast 1-tap ordering on your phone</p>
+          </div>
+        </div>
+        <button type="button" onclick="appController.closeInstallModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <!-- Device Tab Switcher -->
+        <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+          <button type="button" id="tab-guide-iphone" onclick="appController.switchInstallGuide('iphone')" class="py-2 rounded-xl text-xs font-black bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all flex items-center justify-center space-x-1.5">
+            <span>🍎 iPhone / iPad</span>
+          </button>
+          <button type="button" id="tab-guide-android" onclick="appController.switchInstallGuide('android')" class="py-2 rounded-xl text-xs font-black text-slate-600 dark:text-slate-400 hover:text-slate-900 transition-all flex items-center justify-center space-x-1.5">
+            <span>🤖 Android</span>
+          </button>
+        </div>
+
+        <!-- iPhone Safari Guide -->
+        <div id="guide-content-iphone" class="space-y-3 py-2">
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
+            <span class="w-7 h-7 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">1</span>
+            <div>
+              <h5 class="text-xs font-extrabold text-slate-900 dark:text-white">Open in Safari & Tap Share</h5>
+              <p class="text-[11px] text-slate-500 mt-0.5">At the bottom of your Safari screen, tap the <strong>Share</strong> button (the square with an arrow pointing up <span class="text-base">📤</span>).</p>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
+            <span class="w-7 h-7 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">2</span>
+            <div>
+              <h5 class="text-xs font-extrabold text-slate-900 dark:text-white">Tap "Add to Home Screen"</h5>
+              <p class="text-[11px] text-slate-500 mt-0.5">Scroll down the share menu and tap <strong>"Add to Home Screen" ➕</strong>.</p>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
+            <span class="w-7 h-7 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">3</span>
+            <div>
+              <h5 class="text-xs font-extrabold text-slate-900 dark:text-white">Tap "Add" in Top Right</h5>
+              <p class="text-[11px] text-slate-500 mt-0.5">Surya Agencies app icon will appear directly on your iPhone home screen!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Android Guide -->
+        <div id="guide-content-android" class="space-y-3 py-2 hidden">
+          <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-center">
+            <button 
+              type="button" 
+              onclick="appController.triggerNativeInstallPrompt()" 
+              class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white font-black text-xs shadow-md shadow-rose-600/25 flex items-center justify-center space-x-2"
+            >
+              <span>📲 1-Tap Install App on Android</span>
+            </button>
+            <span class="text-[10px] text-rose-700 dark:text-rose-300 font-bold block mt-2">Or tap Chrome menu (⋮) → "Install app"</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
+            <span class="w-7 h-7 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center flex-shrink-0">✓</span>
+            <div>
+              <h5 class="text-xs font-extrabold text-slate-900 dark:text-white">Full Screen & Lightning Fast</h5>
+              <p class="text-[11px] text-slate-500 mt-0.5">Runs offline with instant notifications and real-time UPI payments.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 /**
  * Customer Store Application — Surya Agencies
  * 95+ Product Catalog, Automatic Stock Availability, Cart Persistence,
- * Large UPI Payment QR, Digital Order Ticket QR & 5-Step Live Order Timeline
+ * Large High-Contrast UPI Payment QR, Digital Order Ticket QR & 5-Step Live Order Timeline
  */
 
 class CustomerApp {
@@ -22,10 +22,42 @@ class CustomerApp {
 
   async init() {
     this.setupRealtimeListeners();
+    this.setupHashRouting();
     await this.fetchProducts();
     await this.fetchSettings();
     this.render();
     this.updateCartBadge();
+  }
+
+  // --- HASH ROUTING FOR DIRECT QR TICKET SCANNING ---
+
+  setupHashRouting() {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#order/')) {
+        const orderNum = hash.replace('#order/', '').trim();
+        this.fetchAndDisplayOrder(orderNum);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHash);
+    if (window.location.hash.startsWith('#order/')) {
+      setTimeout(handleHash, 200);
+    }
+  }
+
+  async fetchAndDisplayOrder(orderNum) {
+    try {
+      const res = await fetch(`/api/orders/lookup/${encodeURIComponent(orderNum)}`);
+      const data = await res.json();
+      if (data.success && data.order) {
+        this.activeOrder = data.order;
+        if (window.appController) window.appController.showCustomerPortal();
+        this.showTrackingView();
+      }
+    } catch (e) {
+      console.warn('Could not fetch direct order from hash:', e);
+    }
   }
 
   // --- CART PERSISTENCE (LOCALSTORAGE) ---
@@ -193,8 +225,8 @@ class CustomerApp {
 
     const allPill = `
       <button 
-        type="button"
-        onclick="customerApp.setCategory('ALL')"
+        type="button" 
+        onclick="customerApp.setCategory('ALL')" 
         class="cat-pill ${this.selectedCategory === 'ALL' ? 'cat-pill-active' : 'cat-pill-inactive'}"
       >
         <span>🍨 All Products (${this.products.length})</span>
@@ -206,8 +238,8 @@ class CustomerApp {
       const isActive = this.selectedCategory === cat;
       return `
         <button 
-          type="button"
-          onclick="customerApp.setCategory('${cat}')"
+          type="button" 
+          onclick="customerApp.setCategory('${cat}')" 
           class="cat-pill ${isActive ? 'cat-pill-active' : 'cat-pill-inactive'}"
         >
           <span>${cat} (${count})</span>
@@ -274,7 +306,7 @@ class CustomerApp {
                 onerror="this.src='/assets/arun-vanilla-cup.jpg'"
               />
               <div class="absolute top-2.5 left-2.5">
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 shadow-sm">
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 shadow-xs">
                   ${p.category}
                 </span>
               </div>
@@ -310,10 +342,10 @@ class CustomerApp {
                   ? `<button disabled class="px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-black cursor-not-allowed">${isManuallyOff ? '🔴 Not Available' : '🔴 Out of Stock'}</button>`
                   : cartQty > 0
                     ? `
-                      <div class="flex items-center bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl p-0.5 sm:p-1 shadow-sm">
-                        <button type="button" onclick="customerApp.decrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-300 font-extrabold flex items-center justify-center hover:bg-rose-100 shadow-sm">−</button>
+                      <div class="flex items-center bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl p-0.5 sm:p-1 shadow-xs">
+                        <button type="button" onclick="customerApp.decrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-300 font-extrabold flex items-center justify-center hover:bg-rose-100 shadow-xs">−</button>
                         <span class="w-6 text-center text-xs font-black text-rose-700 dark:text-rose-300">${cartQty}</span>
-                        <button type="button" onclick="customerApp.incrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-rose-600 text-white font-extrabold flex items-center justify-center hover:bg-rose-700 shadow-sm" ${cartQty >= stockInt ? 'disabled opacity-40' : ''}>+</button>
+                        <button type="button" onclick="customerApp.incrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-rose-600 text-white font-extrabold flex items-center justify-center hover:bg-rose-700 shadow-xs" ${cartQty >= stockInt ? 'disabled opacity-40' : ''}>+</button>
                       </div>
                     `
                     : `
@@ -494,7 +526,7 @@ class CustomerApp {
     `).join('');
   }
 
-  // --- CHECKOUT & SCANNABLE UPI QR ---
+  // --- CHECKOUT & SCANNABLE UPI QR CODE ---
 
   openCheckoutModal() {
     if (this.cart.length === 0) {
@@ -512,8 +544,9 @@ class CustomerApp {
     const defaultPhone = user.phone && !user.phone.includes('@') ? user.phone : '';
 
     modalContainer.innerHTML = `
-      <div id="checkout-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onclick="customerApp.closeCheckoutModal(event)">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div id="checkout-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onclick="customerApp.closeCheckoutModal(event)">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
+          
           <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <div class="flex items-center space-x-2">
               <span class="text-2xl">🛍️</span>
@@ -526,17 +559,18 @@ class CustomerApp {
           </div>
 
           <form id="checkout-form" onsubmit="customerApp.submitOrder(event)" class="mt-4 space-y-4">
+            
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Your Full Name *</label>
-              <input type="text" id="checkout-name" value="${defaultName}" required placeholder="Enter Your Name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500" />
+              <input type="text" id="checkout-name" value="${defaultName}" required placeholder="Enter Your Name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:text-white" />
             </div>
 
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Mobile Number (For pickup SMS) *</label>
-              <input type="tel" id="checkout-phone" value="${defaultPhone}" required placeholder="10-digit mobile number" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500" />
+              <input type="tel" id="checkout-phone" value="${defaultPhone}" required placeholder="10-digit mobile number" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:text-white" />
             </div>
 
-            <!-- Payment Method Selection -->
+            <!-- Payment Mode -->
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Payment Method</label>
               <div class="grid grid-cols-2 gap-2">
@@ -546,13 +580,13 @@ class CustomerApp {
                 </label>
                 <label class="p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center space-x-2 cursor-pointer">
                   <input type="radio" name="checkout-payment" value="pay_at_shop" onchange="customerApp.togglePaymentMethodUI('pay_at_shop')" class="text-rose-600 focus:ring-rose-500" />
-                  <span class="text-xs font-black text-slate-900 dark:text-white">💵 Pay at Shop</span>
+                  <span class="text-xs font-black text-slate-900 dark:text-white">💵 Pay at Counter</span>
                 </label>
               </div>
             </div>
 
-            <!-- DYNAMIC LARGE UPI QR CODE PRESENTATION (NO RAW PLAIN TEXT UPI ID) -->
-            <div id="checkout-upi-box" class="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-slate-50 to-pink-50 dark:from-slate-800 dark:to-slate-900 border border-purple-200/80 dark:border-purple-900/50 space-y-3">
+            <!-- GENUINE SCANNABLE UPI QR PRESENTATION (HIGH-CONTRAST WITH WHITE MARGIN) -->
+            <div id="checkout-upi-box" class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-50 via-slate-50 to-pink-50 dark:from-slate-800 dark:to-slate-900 border border-purple-200/80 dark:border-purple-900/50 space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                   <span class="text-xl">📱</span>
@@ -564,10 +598,10 @@ class CustomerApp {
                 <span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200">INSTANT UPI</span>
               </div>
 
-              <!-- Large QR Code Canvas Container -->
-              <div class="flex flex-col items-center justify-center gap-3 py-2">
-                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-md flex items-center justify-center min-w-[175px] min-h-[175px]">
-                  <div id="checkout-upi-qrcode"></div>
+              <!-- High Contrast White Container with Padding for Fast Optical Camera Scanning -->
+              <div class="flex flex-col items-center justify-center gap-3 py-1">
+                <div class="bg-white p-4 rounded-2xl border-2 border-slate-300 shadow-md flex items-center justify-center min-w-[200px] min-h-[200px]">
+                  <div id="checkout-upi-qrcode" class="flex items-center justify-center"></div>
                 </div>
                 
                 <a 
@@ -575,15 +609,16 @@ class CustomerApp {
                   href="upi://pay?pa=${encodeURIComponent(this.upiId)}&pn=Surya%20Agencies&am=${total}&cu=INR&tn=Surya%20Agencies%20Order" 
                   class="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition-all space-x-1.5 sm:hidden"
                 >
-                  <span>⚡ Pay Directly in UPI App</span>
+                  <span>⚡ Open UPI App (GPay / PhonePe / Paytm)</span>
                 </a>
+
                 <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium text-center">
-                  Scan QR with any payment app, or tap below to proceed.
+                  Scan QR with any payment app, or tap below to proceed with order.
                 </p>
               </div>
             </div>
 
-            <!-- Order Summary Box -->
+            <!-- Order Summary -->
             <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
               <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300">
                 <span>Items in Order</span>
@@ -601,7 +636,7 @@ class CustomerApp {
               id="submit-order-btn"
               class="w-full py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
             >
-              <span>✓ Proceed / Confirm Order & Get Ticket →</span>
+              <span>✓ Confirm Order & Get Pickup Ticket →</span>
             </button>
           </form>
         </div>
@@ -627,25 +662,34 @@ class CustomerApp {
       const qrContainer = document.getElementById('checkout-upi-qrcode');
       if (!qrContainer) return;
 
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(this.upiId || 'suryaagencies@upi')}&pn=Surya%20Agencies&am=${amount}&cu=INR&tn=Surya%20Agencies%20Order`;
+      const upiUri = `upi://pay?pa=${encodeURIComponent(this.upiId || 'suryaagencies@upi')}&pn=Surya%20Agencies&am=${amount}&cu=INR&tn=Surya%20Agencies%20Order`;
 
       qrContainer.innerHTML = '';
-      if (typeof QRCode !== 'undefined') {
-        try {
-          new QRCode(qrContainer, {
-            text: upiUrl,
-            width: 160,
-            height: 160,
-            colorDark: '#0f172a',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
-          });
-          return;
-        } catch (e) {}
-      }
 
-      // Fallback img generator
-      qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(upiUrl)}" alt="UPI QR" class="w-40 h-40 object-contain rounded-xl" />`;
+      // Direct High-Resolution SVG API Generator Fallback
+      const img = new Image();
+      img.src = `/api/qr?text=${encodeURIComponent(upiUri)}&format=svg`;
+      img.alt = 'UPI Payment QR Code';
+      img.className = 'w-44 h-44 object-contain rounded-lg';
+      img.onload = () => {
+        qrContainer.innerHTML = '';
+        qrContainer.appendChild(img);
+      };
+      img.onerror = () => {
+        // Fallback to client-side QRCode if available
+        if (typeof QRCode !== 'undefined') {
+          try {
+            new QRCode(qrContainer, {
+              text: upiUri,
+              width: 176,
+              height: 176,
+              colorDark: '#0f172a',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } catch (e) {}
+        }
+      };
     }, 50);
   }
 
@@ -752,6 +796,10 @@ class CustomerApp {
       parsedItems = [];
     }
 
+    // Direct unique link for this exact order
+    const origin = window.location.origin || 'https://surya-agencies.onrender.com';
+    const ticketUrl = `${origin}/#order/${encodeURIComponent(order.orderNumber)}`;
+
     container.innerHTML = `
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
         
@@ -826,18 +874,18 @@ class CustomerApp {
           </div>
         ` : ''}
 
-        <!-- SCANNABLE CUSTOMER TICKET QR CODE -->
+        <!-- SCANNABLE CUSTOMER TICKET QR CODE (HIGH CONTRAST WHITE CONTAINER) -->
         <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-center gap-5 text-center sm:text-left">
-          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-md flex items-center justify-center min-w-[145px] min-h-[145px]">
-            <div id="tracking-ticket-qrcode"></div>
+          <div class="bg-white p-3.5 rounded-2xl border-2 border-slate-300 shadow-md flex items-center justify-center min-w-[155px] min-h-[155px]">
+            <div id="tracking-ticket-qrcode" class="flex items-center justify-center"></div>
           </div>
           <div class="space-y-1.5 max-w-xs">
             <span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 uppercase tracking-wider">Digital Counter Ticket</span>
             <h4 class="font-black text-slate-900 dark:text-white text-base">Show at Surya Agencies</h4>
             <p class="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-              Shopkeeper will scan this QR code or type <strong>${order.orderNumber}</strong> to hand over your ice cream & dairy items.
+              Shopkeeper will scan this QR or type <strong>${order.orderNumber}</strong> to hand over your order.
             </p>
-            <span class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 block">Total Payable: ₹${order.total} (${order.paymentMethod === 'upi' ? 'UPI' : 'Cash at Shop'})</span>
+            <span class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 block">Total: ₹${order.total} (${order.paymentMethod === 'upi' ? 'UPI' : 'Cash at Counter'})</span>
           </div>
         </div>
 
@@ -860,29 +908,34 @@ class CustomerApp {
       </div>
     `;
 
-    // Render Ticket QR Code
+    // Render Scannable Ticket QR Code
     setTimeout(() => {
       const qrEl = document.getElementById('tracking-ticket-qrcode');
       if (!qrEl) return;
       qrEl.innerHTML = '';
 
-      const ticketPayload = order.orderNumber;
-
-      if (typeof QRCode !== 'undefined') {
-        try {
-          new QRCode(qrEl, {
-            text: ticketPayload,
-            width: 135,
-            height: 135,
-            colorDark: '#0f172a',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
-          });
-          return;
-        } catch (e) {}
-      }
-
-      qrEl.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=135x135&data=${encodeURIComponent(ticketPayload)}" alt="Ticket QR" class="w-32 h-32 object-contain" />`;
+      const img = new Image();
+      img.src = `/api/qr?text=${encodeURIComponent(ticketUrl)}&format=svg`;
+      img.alt = 'Order Ticket QR';
+      img.className = 'w-36 h-36 object-contain rounded-lg';
+      img.onload = () => {
+        qrEl.innerHTML = '';
+        qrEl.appendChild(img);
+      };
+      img.onerror = () => {
+        if (typeof QRCode !== 'undefined') {
+          try {
+            new QRCode(qrEl, {
+              text: ticketUrl,
+              width: 140,
+              height: 140,
+              colorDark: '#0f172a',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } catch (e) {}
+        }
+      };
     }, 50);
   }
 
@@ -913,11 +966,11 @@ class CustomerApp {
 
     if (this.myOrders.length === 0) {
       container.innerHTML = `
-        <div class="max-w-2xl mx-auto text-center py-16 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-8 shadow-sm">
+        <div class="max-w-2xl mx-auto text-center py-16 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-8 shadow-xs">
           <span class="text-4xl block mb-2">📦</span>
           <h4 class="font-black text-slate-800 dark:text-slate-200 text-base">No orders placed yet</h4>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Browse products and place your first order for instant counter pickup!</p>
-          <button type="button" onclick="customerApp.showCatalogView()" class="mt-4 px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs shadow-sm">
+          <button type="button" onclick="customerApp.showCatalogView()" class="mt-4 px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs shadow-xs">
             Browse Store →
           </button>
         </div>
@@ -934,7 +987,7 @@ class CustomerApp {
 
         <div class="space-y-3">
           ${this.myOrders.map(order => `
-            <div class="p-4 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:border-rose-300 transition-all" onclick="customerApp.openSpecificOrder('${order.id}')">
+            <div class="p-4 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:border-rose-300 transition-all" onclick="customerApp.openSpecificOrder('${order.id}')">
               <div>
                 <div class="flex items-center space-x-2">
                   <span class="font-black text-slate-900 dark:text-white">${order.orderNumber}</span>

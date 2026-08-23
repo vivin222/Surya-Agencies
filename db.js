@@ -440,9 +440,16 @@ class DatabaseService {
 
   async getOrderById(idOrOrderNumber) {
     if (this.ready) await this.ready;
+    if (!idOrOrderNumber) return null;
+
+    let raw = idOrOrderNumber.trim();
+    try { raw = decodeURIComponent(raw); } catch (e) {}
+    const withHash = raw.startsWith('#') ? raw : ('#' + raw);
+    const withoutHash = raw.replace(/^#/, '');
+
     const row = await this.get(
-      `SELECT * FROM orders WHERE id = ? OR orderNumber = ?`,
-      [idOrOrderNumber, idOrOrderNumber]
+      `SELECT * FROM orders WHERE id = ? OR orderNumber = ? OR orderNumber = ? OR orderNumber = ?`,
+      [raw, withHash, withoutHash, idOrOrderNumber]
     );
     if (!row) return null;
 

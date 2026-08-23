@@ -1,6 +1,6 @@
 /**
  * Real-Time Ice Cream & Dairy Parlour System — Surya Agencies
- * Backend Server with Express, Socket.io, Multer, and SQLite Integration
+ * Backend Server with Express, Socket.io, Multer, SQLite, and QR Generator
  */
 
 const express = require('express');
@@ -10,6 +10,7 @@ const os = require('os');
 const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
+const QRCode = require('qrcode');
 const { Server } = require('socket.io');
 
 const db = require('./db');
@@ -107,6 +108,48 @@ const requireShopkeeperAuth = async (req, res, next) => {
     return res.status(401).json({ success: false, error: 'Authentication failed' });
   }
 };
+
+// -------------------------------------------------------------
+// QR CODE GENERATOR API (HIGH-CONTRAST VECTOR SVG & PNG)
+// -------------------------------------------------------------
+
+app.get('/api/qr', async (req, res) => {
+  try {
+    const text = req.query.text || req.query.data;
+    if (!text) {
+      return res.status(400).send('Query parameter "text" or "data" is required');
+    }
+
+    const format = (req.query.format || 'svg').toLowerCase();
+
+    if (format === 'png') {
+      const buffer = await QRCode.toBuffer(text, {
+        type: 'png',
+        margin: 3,
+        scale: 8,
+        errorCorrectionLevel: 'M',
+        color: { dark: '#0f172a', light: '#ffffff' }
+      });
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(buffer);
+    }
+
+    // Default SVG vector output
+    const svg = await QRCode.toString(text, {
+      type: 'svg',
+      margin: 3,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#0f172a', light: '#ffffff' }
+    });
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(svg);
+  } catch (err) {
+    console.error('QR Generator Error:', err);
+    res.status(500).send('Error generating QR code: ' + err.message);
+  }
+});
 
 // -------------------------------------------------------------
 // AUTHENTICATION APIs
@@ -314,7 +357,7 @@ app.post('/api/upload/image', requireShopkeeperAuth, upload.single('image'), (re
 // Create New Product / Stock Endpoint (Shopkeeper Only - Real-Time Broadcast)
 app.post('/api/products', requireShopkeeperAuth, async (req, res) => {
   try {
-    const { name, category, packSize, price, costPrice, stock, available, description, image } = req.body;
+    const { name, category, packSize, price, costPrice, stock, minThreshold, available, description, image } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, error: 'Product name is required' });
@@ -330,6 +373,7 @@ app.post('/api/products', requireShopkeeperAuth, async (req, res) => {
       price: price !== undefined && price !== '' ? Number(price) : null,
       costPrice: costPrice !== undefined && costPrice !== '' ? Number(costPrice) : null,
       stock: parseInt(stock, 10) || 0,
+      minThreshold: parseInt(minThreshold, 10) || 5,
       available: available !== undefined ? Boolean(available) : true,
       description: description || '',
       image: image || '/assets/arun-vanilla-cup.jpg'
@@ -352,7 +396,7 @@ app.post('/api/products', requireShopkeeperAuth, async (req, res) => {
   }
 });
 
-// Update product (Price, Cost, Stock, Availability, PackSize, Image) - Shopkeeper Only
+// Update product (Price, Cost, Stock, MinThreshold, Availability, PackSize, Image) - Shopkeeper Only
 app.patch('/api/products/:id', requireShopkeeperAuth, async (req, res) => {
   try {
     const updatedProduct = await db.updateProduct(req.params.id, req.body);
@@ -439,6 +483,27 @@ app.get('/api/customer/orders', async (req, res) => {
     res.json({ success: true, orders });
   } catch (err) {
     console.error('Error fetching customer orders:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Direct Order Lookup by Order Number or ID (For QR Scanners & Verification)
+app.get('/api/orders/lookup/:query', async (req, res) => {
+  try {
+    const query = req.params.query.trim().toUpperCase();
+    const orders = await db.getOrders();
+    const found = orders.find(o => 
+      o.id.toUpperCase() === query || 
+      o.orderNumber.toUpperCase() === query || 
+      o.orderNumber.replace('#', '').toUpperCase() === query.replace('#', '')
+    );
+
+    if (!found) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
+    res.json({ success: true, order: found });
+  } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });

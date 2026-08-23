@@ -1,20 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>SURYA AGENCIES — Ice Cream & Dairy Ordering Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <title>Surya Agencies — Ice Cream & Dairy Ordering Portal</title>
   
+  <!-- PWA & Mobile Meta -->
   <meta name="theme-color" content="#e11d48" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Surya Agencies" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" href="/assets/icon-192.png" />
-
-  <!-- PWA Web App Manifest -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="description" content="Surya Agencies — Authorized Parlour for Arun Icecreams & Hatsun Dairy Products. Live stock, instant UPI payments, and counter pickup ticket QR." />
+  
   <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+  <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -22,31 +28,27 @@
       theme: {
         extend: {
           colors: {
-            rose: {
+            brand: {
               50: '#fff1f2',
               100: '#ffe4e6',
               200: '#fecdd3',
               500: '#f43f5e',
               600: '#e11d48',
               700: '#be123c',
-              800: '#9f1239',
               900: '#881337',
             }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Outfit"', 'sans-serif'],
           }
         }
       }
     }
   </script>
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Local QRCode.js for Fast QR Generation -->
+  <!-- QR Code & Camera Scanner Libraries -->
   <script src="./js/qrcode.min.js"></script>
-
-  <!-- Html5-QRCode for Live Camera QR Scanning -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <!-- Socket.io Client -->
@@ -55,63 +57,85 @@
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="./css/app.css" />
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-rose-600 selection:text-white pb-16 md:pb-0">
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-rose-600 selection:text-white pb-20 md:pb-0">
 
   <!-- ========================================================================
-       1. UNIFIED GATEWAY / ROLE SELECTION & LOGIN SCREEN
+       1. MODERN STORE GATEWAY & LOGIN SCREEN (DAIRY & ICE CREAM STORE THEME)
        ======================================================================== -->
-  <div id="gateway-portal" class="min-h-screen flex flex-col items-center justify-center p-3 sm:p-6 bg-gradient-to-b from-rose-50/70 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+  <div id="gateway-portal" class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-rose-50/60 via-slate-50 to-amber-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
     <div class="max-w-4xl w-full">
-      <!-- Top Theme Switcher & PWA on Gateway -->
-      <div class="flex items-center justify-end gap-2 mb-3">
-        <button 
-          type="button" 
-          id="pwa-install-btn-gateway" 
-          onclick="appController.promptInstallPWA()" 
-          class="hidden px-3 py-1.5 rounded-full bg-rose-600 text-white text-xs font-extrabold shadow-sm hover:bg-rose-700 transition-all flex items-center space-x-1"
-        >
-          <span>📲 Install App</span>
-        </button>
-        <button 
-          type="button" 
-          onclick="appController.toggleTheme()" 
-          class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-amber-400 font-bold flex items-center justify-center shadow-sm hover:bg-slate-50 transition-all" 
-          title="Toggle Light / Dark Theme"
-        >
-          <span class="theme-icon-indicator text-sm">🌙</span>
-        </button>
+      
+      <!-- Top Actions: PWA Install & Theme Switcher -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300">
+            🍨 Arun Icecreams & Hatsun Dairy
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            id="pwa-install-btn-gateway" 
+            onclick="appController.promptInstallPWA()" 
+            class="hidden px-3 py-1.5 rounded-full bg-rose-600 text-white text-xs font-extrabold shadow-sm hover:bg-rose-700 transition-all flex items-center space-x-1"
+          >
+            <span>📲 Install App</span>
+          </button>
+          <button 
+            type="button" 
+            onclick="appController.toggleTheme()" 
+            class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-amber-400 font-bold flex items-center justify-center shadow-sm hover:bg-slate-50 transition-all" 
+            title="Toggle Light / Dark Theme"
+          >
+            <span class="theme-icon-indicator text-sm">🌙</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Header Brand -->
+      <!-- Store Entrance Header -->
       <div class="text-center mb-6 sm:mb-8">
-        <div class="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-gradient-to-tr from-rose-600 to-red-500 text-white text-2xl sm:text-3xl shadow-xl shadow-rose-600/30 mb-3 sm:mb-4 font-black">
+        <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-rose-600 to-amber-500 text-white text-3xl sm:text-4xl shadow-xl shadow-rose-600/20 mb-3 font-black">
           🍨
         </div>
         <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white font-display tracking-tight">SURYA AGENCIES</h1>
-        <p class="text-sm sm:text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5 sm:mt-1">Ice Cream & Dairy Ordering Portal</p>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1.5 sm:mt-2 px-2">
-          Authorized Parlour for Hatsun Dairy Products & Arun Icecreams. Choose your portal below:
+        <p class="text-xs sm:text-sm font-extrabold text-rose-600 dark:text-rose-400 mt-1 uppercase tracking-wider">Ice Cream & Fresh Dairy Ordering Portal</p>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-2 px-2">
+          Explore 95+ ice creams and fresh dairy items with live parlour stock and digital counter pickup tickets.
         </p>
       </div>
 
-      <!-- Two Gateway Options Grid -->
+      <!-- Clean Store Access Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
-        <!-- Customer Portal Card -->
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-8 border border-slate-200/90 dark:border-slate-700 shadow-xl hover:border-rose-300 transition-all flex flex-col justify-between">
+        
+        <!-- Customer Store Access Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-7 border border-slate-200/90 dark:border-slate-700 shadow-xl flex flex-col justify-between hover:border-rose-300 transition-all">
           <div>
-            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl sm:text-2xl mb-3 sm:mb-4 font-bold">
-              📱
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl font-bold">
+                🛒
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                🟢 PARLOUR OPEN
+              </span>
             </div>
             <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white font-display">Customer Store</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Browse 95+ dairy and ice cream products, check live parlour stock, and order for instant counter pickup.
+              Browse full product range, add to cart, pay via UPI QR, and track your order in real time.
             </p>
 
             <div class="mt-5 space-y-2.5">
               <button 
                 type="button" 
+                onclick="appController.continueAsGuest()" 
+                class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-xs sm:text-sm shadow-md shadow-rose-600/20 active:scale-98 transition-all flex items-center justify-center space-x-2"
+              >
+                <span>🍨 Enter Store / Order Now →</span>
+              </button>
+
+              <button 
+                type="button" 
                 onclick="appController.triggerGoogleSignIn()" 
-                class="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center space-x-2.5"
+                class="w-full py-2.5 px-4 rounded-2xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2"
               >
                 <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -119,414 +143,392 @@
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                 </svg>
-                <span>Continue with Google</span>
+                <span>Sign In with Google</span>
               </button>
 
               <button 
                 type="button" 
                 onclick="appController.openCustomerAuthModal('phone')" 
-                class="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-slate-900/10 transition-all flex items-center justify-center space-x-2"
+                class="w-full py-2.5 px-4 rounded-2xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition-all flex items-center justify-center space-x-1.5"
               >
                 <span>📱 Login with Mobile (OTP)</span>
               </button>
             </div>
           </div>
-
-          <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-700 text-center">
-            <button 
-              type="button" 
-              onclick="appController.continueAsGuest()" 
-              class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
-            >
-              Or Browse & Order as Guest →
-            </button>
-          </div>
         </div>
 
-        <!-- Shopkeeper Portal Card -->
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-8 border border-slate-200/90 dark:border-slate-700 shadow-xl hover:border-slate-400 transition-all flex flex-col justify-between">
+        <!-- Shopkeeper Portal Login Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-7 border border-slate-200/90 dark:border-slate-700 shadow-xl flex flex-col justify-between hover:border-slate-400 transition-all">
           <div>
-            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-xl sm:text-2xl mb-3 sm:mb-4 font-bold">
+            <div class="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-2xl mb-3 font-bold">
               🏪
             </div>
             <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white font-display">Shopkeeper Portal</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Surya Agencies staff login for order processing, QR scanning, price/stock management, and revenue reports.
+              Owner portal for order acceptance, camera QR scanning, stock & price management, and revenue analytics.
             </p>
 
-            <form id="gateway-shopkeeper-form" onsubmit="appController.handleShopkeeperLogin(event)" class="mt-5 space-y-3">
+            <form id="gateway-shopkeeper-form" onsubmit="appController.handleShopkeeperLogin(event)" class="mt-4 space-y-2.5">
               <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Username</label>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Staff Username</label>
                 <input 
                   type="text" 
                   id="shop-login-username" 
-                  placeholder="Enter Username" 
+                  placeholder="surya_agencies" 
                   required 
-                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
+                  class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500"
                 />
               </div>
 
               <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Password</label>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
                 <input 
                   type="password" 
                   id="shop-login-password" 
                   placeholder="••••••••••••" 
                   required 
-                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
+                  class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500"
                 />
               </div>
 
-              <div id="shopkeeper-login-error" class="text-xs text-rose-600 font-bold hidden py-1"></div>
+              <div id="shopkeeper-login-error" class="text-xs text-rose-600 font-bold hidden py-0.5"></div>
 
               <button 
                 type="submit" 
-                class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition-all flex items-center justify-center space-x-2"
+                id="btn-shopkeeper-login"
+                class="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md active:scale-98 transition-all flex items-center justify-center space-x-1.5 mt-2"
               >
-                <span>🔑 Enter Shopkeeper Dashboard</span>
+                <span>🔐 Login to Dashboard →</span>
               </button>
             </form>
           </div>
-
-          <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-700 text-center">
-            <span class="text-[11px] font-bold text-slate-400">Restricted Access • Surya Agencies Staff Only</span>
-          </div>
         </div>
+
       </div>
+
+      <!-- Footer Info -->
+      <div class="text-center mt-6 text-xs text-slate-400 font-medium">
+        <p>Surya Agencies • Authorized Hatsun Agro Product Ltd Distributor</p>
+      </div>
+
     </div>
   </div>
 
   <!-- ========================================================================
-       2. CUSTOMER STORE PORTAL (WITH ORDER TIMELINE & LARGE UPI QR)
+       2. CUSTOMER STORE VIEW
        ======================================================================== -->
-  <div id="customer-portal" class="hidden flex-1 flex flex-col">
-    <!-- Top Glass Navigation -->
-    <header class="glass-header sticky top-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-sm">
-      <div class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer" onclick="customerApp.showCatalogView()">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 flex items-center justify-center text-lg sm:text-xl text-white shadow-md shadow-rose-600/20 font-black flex-shrink-0">
-          🍨
-        </div>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="font-black text-slate-900 dark:text-white tracking-tight text-sm sm:text-base font-display">SURYA AGENCIES</h1>
-            <span class="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">ARUN & HATSUN</span>
+  <div id="customer-portal" class="hidden min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
+    
+    <!-- Top Glass Header -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+        
+        <!-- Brand Logo -->
+        <div class="flex items-center space-x-2.5 cursor-pointer" onclick="customerApp.showCatalogView()">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-amber-500 text-white flex items-center justify-center text-lg sm:text-xl font-bold shadow-md shadow-rose-500/20">
+            🍨
           </div>
-          <p class="text-[9px] sm:text-[10px] font-bold text-rose-600 dark:text-rose-400">Ice Cream & Dairy Ordering</p>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex items-center space-x-1.5 sm:space-x-2">
-        <div id="customer-conn-pill" class="conn-status-pill conn-status-online hidden lg:inline-flex" title="Connected to Surya Agencies backend">
-          <span class="conn-dot conn-dot-online"></span>
-          <span>Live Store</span>
-        </div>
-
-        <button 
-          type="button" 
-          id="pwa-install-btn-nav" 
-          onclick="appController.promptInstallPWA()" 
-          class="hidden px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white text-xs font-extrabold shadow-sm flex items-center space-x-1"
-          title="Install as Mobile App"
-        >
-          <span>📲 App</span>
-        </button>
-
-        <button 
-          type="button" 
-          onclick="appController.toggleTheme()" 
-          class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-amber-400 font-bold flex items-center justify-center text-xs shadow-sm transition-all"
-          title="Switch Dark / Light Theme"
-        >
-          <span class="theme-icon-indicator">🌙</span>
-        </button>
-
-        <button 
-          type="button" 
-          onclick="appController.showGateway()" 
-          class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm hidden md:inline-flex items-center space-x-1"
-          title="Switch role"
-        >
-          <span>🔄 Switch</span>
-        </button>
-
-        <button 
-          type="button" 
-          onclick="customerApp.showOrdersView()" 
-          class="px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm flex items-center space-x-1"
-        >
-          <span>📦 Orders</span>
-          <span id="active-orders-badge" class="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-extrabold hidden">0</span>
-        </button>
-
-        <button 
-          type="button" 
-          id="customer-profile-btn" 
-          onclick="appController.openCustomerAuthModal()" 
-          class="px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm flex items-center space-x-1 hidden sm:flex"
-        >
-          <span>👤 Profile</span>
-        </button>
-
-        <button 
-          type="button" 
-          onclick="customerApp.openCartDrawer()" 
-          class="px-3 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 hover:from-rose-700 hover:to-red-700 flex items-center space-x-1.5"
-        >
-          <span>🛍️</span>
-          <span class="hidden sm:inline">Cart</span>
-          <span id="cart-badge-count" class="px-1.5 py-0.5 rounded-full bg-white text-rose-700 text-[10px] font-black leading-none">0</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Main Customer Body -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-20 md:pb-6">
-      
-      <!-- Catalog View -->
-      <div id="customer-catalog-view" class="space-y-4 sm:space-y-6">
-        <!-- Hero Banner -->
-        <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white p-5 sm:p-8 shadow-xl relative overflow-hidden">
-          <div class="max-w-xl relative z-10">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider">
-              Surya Agencies • Fresh Ice Cream & Dairy
-            </span>
-            <h2 class="text-xl sm:text-3xl font-black font-display tracking-tight mt-2 sm:mt-3">
-              Order Arun Icecreams & Hatsun Dairy
+          <div>
+            <h2 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base font-display tracking-tight leading-none">
+              SURYA AGENCIES
             </h2>
-            <p class="text-[11px] sm:text-sm text-slate-300 mt-1.5 sm:mt-2 leading-relaxed">
-              Browse live parlour stock. Pay via UPI QR or at shop and pick up fresh with your digital ticket!
-            </p>
+            <span class="text-[10px] text-rose-600 dark:text-rose-400 font-bold block mt-0.5">Arun Icecreams & Dairy</span>
           </div>
         </div>
 
-        <!-- Search & Category Filters -->
-        <div class="space-y-3 sm:space-y-4">
+        <!-- Search Bar (Desktop/Tablet) -->
+        <div class="hidden md:flex flex-1 max-w-md mx-4">
           <div class="relative w-full">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">🔍</span>
             <input 
               type="text" 
-              id="customer-search-input" 
-              oninput="customerApp.setSearchQuery(this.value)" 
-              placeholder="Search milk, curd, paneer, cones, bars, tubs, cakes..." 
-              class="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm"
+              placeholder="Search cups, cones, milk, curd, cakes..." 
+              oninput="customerApp.setSearchQuery(this.value)"
+              class="w-full pl-9 pr-4 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500 dark:text-white"
             />
-            <span class="absolute left-3 top-2.5 sm:top-3.5 text-slate-400 text-sm">🔍</span>
-          </div>
-
-          <div id="customer-categories-bar" class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
-            <!-- Rendered Dynamically -->
           </div>
         </div>
 
-        <!-- Section Title -->
-        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2.5">
-          <div>
-            <h3 id="current-category-title" class="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-display">All Products</h3>
-            <p id="current-category-count" class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold">Loading products...</p>
-          </div>
-        </div>
-
-        <!-- Products Grid -->
-        <div id="customer-products-grid" class="product-grid">
-          <!-- Injected Dynamically -->
-        </div>
-
-        <!-- Empty Products State -->
-        <div id="customer-empty-products" class="hidden text-center py-12 sm:py-16 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
-          <span class="text-3xl sm:text-4xl block mb-2">🍨</span>
-          <h4 class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-200">No products found</h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Try adjusting your search query or selecting a different category.</p>
-        </div>
-      </div>
-
-      <!-- Order Tracking View (Live Digital Ticket & 5-Step Order Timeline) -->
-      <div id="customer-tracking-view" class="hidden max-w-2xl mx-auto space-y-4 sm:space-y-6">
-        <!-- Rendered Dynamically -->
-      </div>
-
-      <!-- My Orders View (Personal History) -->
-      <div id="customer-orders-view" class="hidden space-y-4 sm:space-y-6">
-        <!-- Rendered Dynamically -->
-      </div>
-
-      <!-- Mobile Quick Floating Cart Bar -->
-      <div id="mobile-floating-cart-bar" class="mobile-cart-bar hidden cursor-pointer" onclick="customerApp.openCartDrawer()">
-        <div class="flex items-center space-x-2">
-          <span class="text-xl">🛍️</span>
-          <div>
-            <span id="mobile-cart-items-count" class="font-extrabold text-xs block leading-none">0 Items</span>
-            <span id="mobile-cart-total-amount" class="text-sm font-black font-mono leading-none">₹0</span>
-          </div>
-        </div>
-        <div class="flex items-center space-x-1.5 font-black text-xs bg-white text-rose-600 px-3.5 py-1.5 rounded-xl shadow-sm">
-          <span>View Cart & Pay →</span>
-        </div>
-      </div>
-    </main>
-
-    <!-- Mobile Bottom Navigation (Customer) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-1.5 px-4 flex items-center justify-around shadow-lg">
-      <button type="button" onclick="customerApp.showCatalogView()" class="flex flex-col items-center justify-center text-[10px] font-bold text-rose-600 dark:text-rose-400">
-        <span class="text-lg">🍨</span>
-        <span>Store</span>
-      </button>
-      <button type="button" onclick="customerApp.showOrdersView()" class="flex flex-col items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
-        <span class="text-lg">📦</span>
-        <span>Orders</span>
-      </button>
-      <button type="button" onclick="customerApp.openCartDrawer()" class="flex flex-col items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 relative">
-        <span class="text-lg">🛍️</span>
-        <span>Cart</span>
-      </button>
-      <button type="button" onclick="appController.openCustomerAuthModal()" class="flex flex-col items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
-        <span class="text-lg">👤</span>
-        <span>Profile</span>
-      </button>
-    </nav>
-  </div>
-
-  <!-- ========================================================================
-       3. SHOPKEEPER DASHBOARD (SCANNER + QUICK STOCK + NOTIFICATIONS)
-       ======================================================================== -->
-  <div id="shopkeeper-portal" class="hidden flex-1 flex flex-col">
-    <!-- Top Header -->
-    <header class="glass-header sticky top-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-sm bg-slate-900 text-white">
-      <div class="flex items-center space-x-2 sm:space-x-3">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-rose-600 flex items-center justify-center text-lg sm:text-xl text-white font-black flex-shrink-0">
-          🏪
-        </div>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="font-black text-white tracking-tight text-sm sm:text-base font-display">SURYA AGENCIES</h1>
-            <span class="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/30">SHOPKEEPER</span>
-          </div>
-          <p class="text-[9px] sm:text-[10px] font-bold text-slate-400">Inventory, Orders & Revenue Reports</p>
-        </div>
-      </div>
-
-      <div class="flex items-center space-x-1.5 sm:space-x-2">
-        <div id="shop-conn-pill" class="conn-status-pill conn-status-online hidden lg:inline-flex">
-          <span class="conn-dot conn-dot-online"></span>
-          <span>Live Backend</span>
-        </div>
-
-        <!-- 📷 CAMERA SCAN ORDER QR BUTTON IN HEADER -->
-        <button 
-          type="button" 
-          onclick="shopkeeperApp.openQRScannerModal()" 
-          class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-xs font-black shadow-md flex items-center space-x-1"
-          title="Scan Customer Order Ticket QR"
-        >
-          <span>📷</span>
-          <span class="hidden sm:inline">Scan QR</span>
-        </button>
-
-        <!-- 🔔 NOTIFICATION BELL WITH BADGE -->
-        <div class="relative">
+        <!-- Header Actions -->
+        <div class="flex items-center space-x-1.5 sm:space-x-2">
+          <!-- Theme Toggle -->
           <button 
             type="button" 
-            onclick="shopkeeperApp.toggleNotificationsModal()" 
-            class="relative w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold flex items-center justify-center text-xs border border-slate-700 shadow-sm transition-all"
-            title="Notifications & Alerts"
+            onclick="appController.toggleTheme()" 
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-amber-400 font-bold flex items-center justify-center hover:bg-slate-200 transition-all text-xs" 
+            title="Toggle Light / Dark Theme"
           >
-            <span>🔔</span>
-            <span id="shop-bell-badge" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center hidden">0</span>
+            <span class="theme-icon-indicator">🌙</span>
+          </button>
+
+          <!-- My Orders Link -->
+          <button 
+            type="button" 
+            onclick="customerApp.showOrdersView()" 
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs flex items-center space-x-1"
+          >
+            <span>📦</span>
+            <span class="hidden sm:inline">My Orders</span>
+          </button>
+
+          <!-- Cart Button -->
+          <button 
+            type="button" 
+            onclick="customerApp.openCartDrawer()" 
+            class="relative px-3 sm:px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 flex items-center space-x-1.5 transition-all"
+          >
+            <span>🛒</span>
+            <span class="hidden sm:inline">Cart</span>
+            <span id="cart-badge-count" class="ml-1 px-1.5 py-0.2 rounded-full bg-white text-rose-600 text-[10px] font-black hidden">0</span>
+          </button>
+
+          <!-- Switch Role / Logout -->
+          <button 
+            type="button" 
+            onclick="appController.showGateway()" 
+            class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 font-bold text-xs"
+            title="Switch Portal"
+          >
+            <span class="hidden sm:inline">Switch</span>
+            <span class="sm:hidden">🔄</span>
           </button>
         </div>
 
-        <button 
-          type="button" 
-          onclick="appController.toggleTheme()" 
-          class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold flex items-center justify-center text-xs border border-slate-700 shadow-sm"
-          title="Toggle Theme"
-        >
-          <span class="theme-icon-indicator">🌙</span>
-        </button>
+      </div>
 
-        <button 
-          type="button" 
-          onclick="appController.showGateway()" 
-          class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 hidden sm:inline-flex"
-        >
-          🔄 Switch
-        </button>
-
-        <button 
-          type="button" 
-          onclick="appController.logoutShopkeeper()" 
-          class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-bold border border-rose-500/30"
-        >
-          🚪 Logout
-        </button>
+      <!-- Mobile Search Bar Sub-row -->
+      <div class="px-3 pb-2.5 md:hidden">
+        <div class="relative w-full">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
+          <input 
+            type="text" 
+            placeholder="Search ice cream, milk, curd, cakes..." 
+            oninput="customerApp.setSearchQuery(this.value)"
+            class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-rose-500 dark:text-white"
+          />
+        </div>
       </div>
     </header>
 
-    <!-- Shopkeeper Main Dashboard Body -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-20 md:pb-6">
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
       
-      <!-- KPI Stats Grid with Revenue Overview -->
+      <!-- VIEW A: CATALOG & STOREFRONT -->
+      <div id="customer-catalog-view" class="space-y-4 sm:space-y-6">
+        
+        <!-- Clean Store Hero Announcement Banner (Dairy Store Style) -->
+        <div class="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="text-center sm:text-left">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-white/20 uppercase tracking-wider inline-block mb-1">
+              Counter Pickup Ready
+            </span>
+            <h3 class="text-base sm:text-xl font-black font-display leading-tight">Fresh Arun Icecreams & Dairy at Factory-Direct Prices</h3>
+            <p class="text-xs text-rose-100 mt-0.5">Order online, pay instantly with any UPI app, and collect with your Ticket QR!</p>
+          </div>
+          <div class="flex items-center space-x-2 flex-shrink-0">
+            <span class="px-3 py-1 rounded-xl bg-white/20 text-xs font-black backdrop-blur-sm">⚡ 95+ Items Available</span>
+          </div>
+        </div>
+
+        <!-- Category Horizontal Filter Bar (Clean Store Pills) -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h4 id="current-category-title" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white font-display">All Products</h4>
+            <span id="current-category-count" class="text-xs text-slate-400 font-semibold">Showing all products</span>
+          </div>
+          <div id="customer-categories-bar" class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none">
+            <!-- Rendered by customer-app.js -->
+          </div>
+        </div>
+
+        <!-- Products Grid (2 columns on mobile, 3 on tablet, 4 on desktop) -->
+        <div id="customer-products-grid" class="product-grid">
+          <!-- Populated by customer-app.js -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="customer-empty-products" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-8">
+          <span class="text-4xl block mb-2">🍨</span>
+          <h4 class="font-bold text-slate-800 dark:text-slate-200 text-base">No products match your search</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Try another flavor, category, or clear search filter.</p>
+        </div>
+
+      </div>
+
+      <!-- VIEW B: LIVE ORDER TRACKING & DIGITAL TICKET QR -->
+      <div id="customer-tracking-view" class="hidden max-w-2xl mx-auto space-y-4">
+        <!-- Rendered by customer-app.js -->
+      </div>
+
+      <!-- VIEW C: MY ORDERS HISTORY -->
+      <div id="customer-orders-view" class="hidden">
+        <!-- Rendered by customer-app.js -->
+      </div>
+
+    </main>
+
+    <!-- Floating Mobile Bottom Bar for Cart Checkout -->
+    <div id="mobile-floating-cart-bar" class="fixed bottom-14 left-0 right-0 p-3 z-30 md:hidden hidden">
+      <button 
+        type="button" 
+        onclick="customerApp.openCartDrawer()" 
+        class="w-full py-3 px-4 rounded-2xl bg-slate-900 dark:bg-rose-600 text-white font-black text-xs shadow-xl flex items-center justify-between active:scale-98 transition-all"
+      >
+        <div class="flex items-center space-x-2">
+          <span>🛒</span>
+          <span id="mobile-cart-items-count">0 Items</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span id="mobile-cart-total-amount" class="font-mono text-sm font-black">₹0</span>
+          <span>View Cart →</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Customer Mobile Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-1.5 px-3 z-40 md:hidden flex justify-around items-center text-center">
+      <button type="button" onclick="customerApp.showCatalogView()" class="flex flex-col items-center text-slate-700 dark:text-slate-200 text-[10px] font-bold p-1">
+        <span class="text-base">🍨</span>
+        <span>Store</span>
+      </button>
+      <button type="button" onclick="customerApp.showOrdersView()" class="flex flex-col items-center text-slate-700 dark:text-slate-200 text-[10px] font-bold p-1">
+        <span class="text-base">📦</span>
+        <span>Orders</span>
+      </button>
+      <button type="button" onclick="customerApp.openCartDrawer()" class="flex flex-col items-center text-rose-600 text-[10px] font-bold p-1">
+        <span class="text-base">🛒</span>
+        <span>Cart</span>
+      </button>
+      <button type="button" onclick="appController.showGateway()" class="flex flex-col items-center text-slate-500 text-[10px] font-bold p-1">
+        <span class="text-base">👤</span>
+        <span>Portal</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ========================================================================
+       3. SHOPKEEPER DASHBOARD VIEW
+       ======================================================================== -->
+  <div id="shopkeeper-portal" class="hidden min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950">
+    
+    <!-- Top Header -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+        
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-slate-900 dark:bg-rose-600 text-white flex items-center justify-center text-lg font-black shadow-md">
+            🏪
+          </div>
+          <div>
+            <h2 class="font-black text-slate-900 dark:text-white text-sm sm:text-base font-display">SHOPKEEPER PORTAL</h2>
+            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">● Live Counter System</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-1.5 sm:space-x-2">
+          
+          <!-- 📷 Scan QR Button -->
+          <button 
+            type="button" 
+            onclick="shopkeeperApp.openQRScannerModal()" 
+            class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-purple-600/20 flex items-center space-x-1 transition-all"
+          >
+            <span>📷</span>
+            <span class="hidden sm:inline">Scan QR</span>
+          </button>
+
+          <!-- 🔔 Smart Notification Bell -->
+          <button 
+            type="button" 
+            onclick="shopkeeperApp.toggleNotificationsModal()" 
+            class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center hover:bg-slate-200 text-xs" 
+            title="Notifications & Alerts"
+          >
+            <span>🔔</span>
+            <span id="shop-bell-badge" class="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[9px] font-black hidden">0</span>
+          </button>
+
+          <!-- ➕ Add New Product -->
+          <button 
+            type="button" 
+            onclick="shopkeeperApp.openAddProductModal()" 
+            class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm flex items-center space-x-1 transition-all"
+          >
+            <span>➕</span>
+            <span class="hidden sm:inline">New Item</span>
+          </button>
+
+          <!-- Theme Switcher -->
+          <button 
+            type="button" 
+            onclick="appController.toggleTheme()" 
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-amber-400 font-bold flex items-center justify-center text-xs"
+          >
+            <span class="theme-icon-indicator">🌙</span>
+          </button>
+
+          <!-- Logout -->
+          <button 
+            type="button" 
+            onclick="appController.logoutShopkeeper()" 
+            class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-800"
+          >
+            Exit
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Shopkeeper Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      
+      <!-- KPI Stats Strip -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 dark:text-slate-400 block">Today's Orders</span>
-          <span id="shop-kpi-orders" class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-0.5 sm:mt-1 block">0</span>
-          <span class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 sm:mt-1 block">✓ Real-time sync</span>
+        
+        <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Today's Revenue</span>
+          <h3 id="shop-kpi-revenue" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 font-mono mt-0.5">₹0</h3>
+          <span class="text-[10px] text-slate-500 font-semibold block mt-0.5">Live completed sales</span>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 dark:text-slate-400 block">Pending / Preparing</span>
-          <span id="shop-kpi-pending" class="text-xl sm:text-3xl font-black text-rose-600 dark:text-rose-400 font-display mt-0.5 sm:mt-1 block">0</span>
-          <span class="text-[10px] sm:text-[11px] font-semibold text-rose-500 dark:text-rose-300 mt-0.5 sm:mt-1 block">⚡ Needs action</span>
+        <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Orders</span>
+          <h3 id="shop-kpi-orders" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono mt-0.5">0</h3>
+          <span class="text-[10px] text-slate-500 font-semibold block mt-0.5">Today's counter orders</span>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer hover:border-emerald-300 transition-all" onclick="shopkeeperApp.switchTab('reports')">
-          <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 dark:text-slate-400 block">Completed Sales</span>
-          <span id="shop-kpi-revenue" class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-0.5 sm:mt-1 block">₹0</span>
-          <span class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 sm:mt-1 block">📊 View Full Reports →</span>
+        <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pending / Preparing</span>
+          <h3 id="shop-kpi-pending" class="text-xl sm:text-2xl font-black text-amber-500 font-mono mt-0.5">0</h3>
+          <span class="text-[10px] text-slate-500 font-semibold block mt-0.5">Awaiting fulfillment</span>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer hover:border-amber-400" onclick="shopkeeperApp.filterProductStock('LOW_STOCK')">
-          <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 dark:text-slate-400 block">Low / Out of Stock</span>
-          <span id="shop-kpi-stock" class="text-xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 font-display mt-0.5 sm:mt-1 block">0</span>
-          <span class="text-[10px] sm:text-[11px] font-semibold text-amber-600 dark:text-amber-300 mt-0.5 sm:mt-1 block">Items ≤ min threshold</span>
+        <div class="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Low Stock Items</span>
+          <h3 id="shop-kpi-stock" class="text-xl sm:text-2xl font-black text-red-500 font-mono mt-0.5">0</h3>
+          <span class="text-[10px] text-slate-500 font-semibold block mt-0.5">At or below threshold</span>
         </div>
+
       </div>
 
-      <!-- Recent Live Activity & Alert Bar -->
-      <div id="shop-recent-activity-bar" class="p-3.5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2 text-xs">
-        <div class="flex items-center space-x-2 min-w-0">
-          <span class="text-base flex-shrink-0">⚡</span>
-          <span id="shop-recent-activity-text" class="text-slate-700 dark:text-slate-200 font-bold truncate">Surya Agencies live ordering portal running smoothly.</span>
-        </div>
-        <button type="button" onclick="shopkeeperApp.toggleNotificationsModal()" class="text-rose-600 dark:text-rose-400 font-extrabold text-[11px] hover:underline flex-shrink-0">
-          View All Alerts →
-        </button>
-      </div>
-
-      <!-- Shopkeeper Navigation Tabs (5 TABS INCLUDING QR SCANNER) -->
-      <div class="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 dark:border-slate-700 pb-2 overflow-x-auto scrollbar-none -mx-1 px-1">
+      <!-- Navigation Tabs (Orders | Stock & Products | Revenue & Reports | Settings) -->
+      <div class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none border-b border-slate-200 dark:border-slate-800">
         <button 
           type="button" 
-          id="shop-tab-orders" 
-          onclick="shopkeeperApp.switchTab('orders')" 
-          class="px-3.5 sm:px-4 py-2 rounded-2xl bg-slate-900 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-1.5 whitespace-nowrap"
+          id="shop-tab-orders"
+          onclick="shopkeeperApp.switchTab('orders')"
+          class="px-3.5 sm:px-4 py-2 rounded-2xl bg-slate-900 dark:bg-rose-600 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-1.5 whitespace-nowrap"
         >
-          <span>📥 Orders</span>
-          <span id="shop-active-orders-count" class="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black">0</span>
+          <span>📥 Live Orders</span>
+          <span id="shop-active-orders-count" class="px-1.5 py-0.2 rounded-full bg-white/20 text-[10px] font-mono">0</span>
         </button>
 
         <button 
           type="button" 
-          id="shop-tab-scanner" 
-          onclick="shopkeeperApp.openQRScannerModal()" 
-          class="px-3.5 sm:px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-extrabold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center space-x-1.5 whitespace-nowrap"
-        >
-          <span>📷 Scan Order QR</span>
-        </button>
-
-        <button 
-          type="button" 
-          id="shop-tab-products" 
-          onclick="shopkeeperApp.switchTab('products')" 
+          id="shop-tab-products"
+          onclick="shopkeeperApp.switchTab('products')"
           class="px-3.5 sm:px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-extrabold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center space-x-1.5 whitespace-nowrap"
         >
           <span>📦 Products & Stock</span>
@@ -534,324 +536,277 @@
 
         <button 
           type="button" 
-          id="shop-tab-reports" 
-          onclick="shopkeeperApp.switchTab('reports')" 
+          id="shop-tab-reports"
+          onclick="shopkeeperApp.switchTab('reports')"
           class="px-3.5 sm:px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-extrabold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center space-x-1.5 whitespace-nowrap"
         >
-          <span>📊 Revenue & Reports</span>
+          <span>📊 Revenue & Profit/Loss</span>
         </button>
 
         <button 
           type="button" 
-          id="shop-tab-settings" 
-          onclick="shopkeeperApp.switchTab('settings')" 
+          id="shop-tab-settings"
+          onclick="shopkeeperApp.switchTab('settings')"
           class="px-3.5 sm:px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-extrabold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center space-x-1.5 whitespace-nowrap"
         >
-          <span>⚙️ Settings</span>
+          <span>⚙️ Shop & UPI Settings</span>
         </button>
       </div>
 
-      <!-- Tab 1: Live Orders View (SEARCH & FILTER SUPPORT) -->
-      <div id="shop-view-orders" class="space-y-3 sm:space-y-4">
+      <!-- TAB 1: LIVE ORDERS FEED -->
+      <div id="shop-view-orders" class="space-y-4">
         
-        <!-- Search & Filter Bar for Orders -->
-        <div class="flex flex-col sm:flex-row gap-2 bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
-          <div class="relative flex-1">
+        <!-- Search & Filter Strip -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div class="relative w-full sm:w-72">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
             <input 
               type="text" 
-              id="shop-order-search" 
-              oninput="shopkeeperApp.searchOrders(this.value)" 
-              placeholder="Search by Order ID (#A009), customer name, phone, date..." 
-              class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-transparent"
+              placeholder="Search Order #, customer, phone..." 
+              oninput="shopkeeperApp.searchOrders(this.value)"
+              class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-rose-500 dark:text-white"
             />
-            <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
           </div>
 
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          <div class="flex items-center space-x-1.5 overflow-x-auto w-full sm:w-auto scrollbar-none">
             <button type="button" onclick="shopkeeperApp.filterOrders('ALL')" class="shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white whitespace-nowrap">All</button>
             <button type="button" onclick="shopkeeperApp.filterOrders('NEW')" class="shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap">New</button>
             <button type="button" onclick="shopkeeperApp.filterOrders('ACCEPTED')" class="shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Accepted</button>
             <button type="button" onclick="shopkeeperApp.filterOrders('PREPARING')" class="shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Preparing</button>
             <button type="button" onclick="shopkeeperApp.filterOrders('READY_FOR_PICKUP')" class="shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Ready</button>
             <button type="button" onclick="shopkeeperApp.filterOrders('COMPLETED')" class="shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Completed</button>
-            <button type="button" onclick="shopkeeperApp.filterOrders('CANCELLED')" class="shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Cancelled</button>
           </div>
         </div>
 
+        <!-- Orders List Container -->
         <div id="shopkeeper-orders-list" class="space-y-3">
-          <!-- Injected Dynamically -->
+          <!-- Populated by shopkeeper-app.js -->
         </div>
 
-        <div id="shopkeeper-orders-empty" class="hidden text-center py-12 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
-          <span class="text-3xl block mb-2">📥</span>
-          <h4 class="font-extrabold text-slate-800 dark:text-slate-200 text-sm">No matching orders</h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Incoming customer orders appear here with audio alerts.</p>
+        <div id="shopkeeper-orders-empty" class="hidden text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
+          <span class="text-4xl block mb-2">📥</span>
+          <h4 class="font-extrabold text-slate-800 dark:text-slate-200 text-base">No orders matching this filter</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Incoming customer orders will appear here automatically in real time.</p>
         </div>
+
       </div>
 
-      <!-- Tab 2: Product & Stock Management (QUICK STEPPERS −1 / +1 & INSTANT TOGGLE) -->
+      <!-- TAB 2: PRODUCTS & STOCK MANAGEMENT -->
       <div id="shop-view-products" class="hidden space-y-4">
-        <!-- Top Toolbar with Availability Filter & Add Product Button -->
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white dark:bg-slate-800 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <div class="flex flex-wrap items-center gap-2 sm:gap-3 flex-1">
+        
+        <!-- Controls Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div class="relative w-full sm:w-64">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
             <input 
               type="text" 
-              id="shop-product-search" 
-              oninput="shopkeeperApp.searchProducts(this.value)" 
-              placeholder="Search by name or category..." 
-              class="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 flex-1 min-w-[150px]"
+              placeholder="Search products..." 
+              oninput="shopkeeperApp.searchProducts(this.value)"
+              class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium focus:ring-2 focus:ring-rose-500 dark:text-white"
             />
-            
-            <!-- Category Filter -->
-            <select 
-              id="shop-product-cat-filter" 
-              onchange="shopkeeperApp.filterProductCategory(this.value)" 
-              class="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
-            >
-              <option value="ALL">All Categories</option>
-              <option value="Dairy Products">Dairy Products</option>
-              <option value="Ice Cream Cones">Ice Cream Cones</option>
-              <option value="Ice Cream Bars & Sticks">Ice Cream Bars & Sticks</option>
-              <option value="Ice Cream Cups & Duets">Ice Cream Cups & Duets</option>
-              <option value="Ice Cream Novelties & Slices">Ice Cream Novelties & Slices</option>
-              <option value="Sundaes & In-Store Specials">Sundaes & In-Store Specials</option>
-              <option value="Family Tubs & Packs">Family Tubs & Packs</option>
-              <option value="Ice Cream Cakes">Ice Cream Cakes</option>
-            </select>
+          </div>
 
-            <!-- Availability & Stock Status Filter -->
+          <div class="flex items-center space-x-2 w-full sm:w-auto">
             <select 
-              id="shop-product-stock-filter" 
+              id="shop-product-stock-filter"
               onchange="shopkeeperApp.filterProductStock(this.value)" 
-              class="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
+              class="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold dark:text-white"
             >
               <option value="ALL">All Stock Statuses</option>
-              <option value="IN_STOCK">🟢 In Stock (&gt; threshold)</option>
-              <option value="LOW_STOCK">⚡ Low Stock (≤ threshold)</option>
-              <option value="OUT_OF_STOCK">🔴 Out of Stock (0)</option>
+              <option value="IN_STOCK">🟢 In Stock Only</option>
+              <option value="LOW_STOCK">⚡ Low Stock Only</option>
+              <option value="OUT_OF_STOCK">🔴 Out of Stock Only</option>
             </select>
+
+            <button 
+              type="button" 
+              onclick="shopkeeperApp.openAddProductModal()" 
+              class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm flex items-center space-x-1"
+            >
+              <span>➕ Add New Product</span>
+            </button>
           </div>
-
-          <button 
-            type="button" 
-            onclick="shopkeeperApp.openAddProductModal()" 
-            class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-xs sm:text-sm shadow-md shadow-rose-600/20 flex items-center justify-center space-x-1.5 flex-shrink-0"
-          >
-            <span>➕ Add New Product</span>
-          </button>
         </div>
 
-        <!-- Product Table / Cards for Management -->
-        <div id="shopkeeper-products-table" class="space-y-3">
-          <!-- Injected Dynamically -->
+        <!-- Products Table Container -->
+        <div id="shopkeeper-products-table" class="space-y-2.5">
+          <!-- Populated by shopkeeper-app.js -->
         </div>
+
       </div>
 
-      <!-- Tab 3: Revenue & Reports View (DARK THEME CONTRAST FIXED) -->
+      <!-- TAB 3: REVENUE & REPORTS -->
       <div id="shop-view-reports" class="hidden space-y-4 sm:space-y-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        
+        <!-- Summary Cards (Dark Mode Contrast Fixed) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Today's Revenue</span>
+            <h3 id="rep-today-rev" class="text-xl sm:text-3xl font-black text-rose-600 dark:text-rose-400 font-mono mt-1">₹0</h3>
+            <span id="rep-today-orders" class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">0 completed order(s)</span>
+          </div>
+
+          <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">This Week's Revenue</span>
+            <h3 id="rep-week-rev" class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono mt-1">₹0</h3>
+            <span id="rep-week-orders" class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">0 completed order(s)</span>
+          </div>
+
+          <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">This Month's Revenue</span>
+            <h3 id="rep-month-rev" class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono mt-1">₹0</h3>
+            <span id="rep-month-orders" class="text-xs text-slate-500 dark:text-slate-400 mt-1 block">0 completed order(s)</span>
+          </div>
+        </div>
+
+        <!-- Profit / Loss Card -->
+        <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h3 class="text-lg font-black text-slate-900 dark:text-white font-display">Revenue & Profit/Loss Reports</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Real-time financial analytics from completed and paid sales.</p>
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Estimated All-Time Net Profit</span>
+            <h3 id="rep-total-profit" class="text-xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">+₹0</h3>
+            <p id="rep-profit-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Calculated from configured cost prices</p>
           </div>
-          <button 
-            type="button" 
-            onclick="shopkeeperApp.fetchRevenueReports()" 
-            class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm flex items-center space-x-1.5"
-          >
-            <span>🔄 Refresh Analytics</span>
-          </button>
-        </div>
-
-        <!-- 6 Main Financial Metric Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          <div class="report-card-rose bg-rose-50/70 dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-rose-200 dark:border-rose-900/60 shadow-sm">
-            <span class="text-[10px] sm:text-xs font-bold uppercase text-rose-700 dark:text-rose-300 block">Today's Revenue</span>
-            <span id="rep-today-rev" class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-1 block">₹0</span>
-            <span id="rep-today-orders" class="text-[10px] sm:text-[11px] font-semibold text-rose-600 dark:text-rose-400 mt-1 block">0 orders today</span>
-          </div>
-
-          <div class="report-card-indigo bg-indigo-50/70 dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-indigo-200 dark:border-indigo-900/60 shadow-sm">
-            <span class="text-[10px] sm:text-xs font-bold uppercase text-indigo-700 dark:text-indigo-300 block">This Week's Revenue</span>
-            <span id="rep-week-rev" class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-1 block">₹0</span>
-            <span id="rep-week-orders" class="text-[10px] sm:text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 mt-1 block">Last 7 days</span>
-          </div>
-
-          <div class="report-card-emerald bg-emerald-50/70 dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm">
-            <span class="text-[10px] sm:text-xs font-bold uppercase text-emerald-700 dark:text-emerald-300 block">This Month's Revenue</span>
-            <span id="rep-month-rev" class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-1 block">₹0</span>
-            <span id="rep-month-orders" class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1 block">Current month</span>
-          </div>
-
-          <div class="report-card-amber bg-amber-50/70 dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-amber-200 dark:border-amber-900/60 shadow-sm">
-            <span class="text-[10px] sm:text-xs font-bold uppercase text-amber-700 dark:text-amber-300 block">Estimated Net Profit</span>
-            <span id="rep-total-profit" class="text-xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 font-display mt-1 block">₹0</span>
-            <span id="rep-profit-sub" class="text-[10px] sm:text-[11px] font-semibold text-amber-700 dark:text-amber-300 mt-1 block">Selling Price − Cost Price</span>
-          </div>
-
-          <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-500 dark:text-slate-400 block">💵 Cash at Shop</span>
-            <span id="rep-cash-sales" class="text-xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-1 block">₹0</span>
-            <span class="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-400 mt-1 block">Counter cash collections</span>
-          </div>
-
-          <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <span class="text-[10px] sm:text-xs font-bold uppercase text-purple-700 dark:text-purple-300 block">📱 UPI Payments</span>
-            <span id="rep-upi-sales" class="text-xl sm:text-3xl font-black text-purple-700 dark:text-purple-400 font-display mt-1 block">₹0</span>
-            <span class="text-[10px] sm:text-[11px] font-semibold text-purple-600 dark:text-purple-300 mt-1 block">GPay / PhonePe / Paytm</span>
+          <div class="flex items-center space-x-3">
+            <div class="p-3 rounded-2xl bg-purple-50 dark:bg-slate-800 border border-purple-200 dark:border-slate-700 text-xs">
+              <span class="text-slate-400 block text-[10px] uppercase font-bold">UPI Sales</span>
+              <span id="rep-upi-sales" class="font-mono font-black text-purple-700 dark:text-purple-300">₹0</span>
+            </div>
+            <div class="p-3 rounded-2xl bg-amber-50 dark:bg-slate-800 border border-amber-200 dark:border-slate-700 text-xs">
+              <span class="text-slate-400 block text-[10px] uppercase font-bold">Cash Sales</span>
+              <span id="rep-cash-sales" class="font-mono font-black text-amber-700 dark:text-amber-300">₹0</span>
+            </div>
           </div>
         </div>
 
-        <!-- Profit Transparency Notice -->
-        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3 text-xs">
-          <span class="text-lg">💡</span>
-          <div>
-            <h5 class="font-extrabold text-slate-800 dark:text-slate-200">Accurate Profit Calculation Policy</h5>
-            <p class="text-slate-600 dark:text-slate-400 mt-0.5">
-              Profits are calculated using exact formula: <code>(Selling Price − Cost Price) × Units Sold</code>. For items where no Cost Price is configured, revenue is counted without creating fictional profit numbers.
-            </p>
+        <!-- Product Sales Breakdown Table (High Contrast in Dark Mode) -->
+        <div class="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-black text-slate-900 dark:text-white text-sm sm:text-base">Product Sales Breakdown</h4>
+            <span id="rep-product-count" class="text-xs text-slate-400">0 products sold</span>
+          </div>
+
+          <div id="rep-products-table" class="overflow-x-auto">
+            <!-- Populated by shopkeeper-app.js -->
           </div>
         </div>
 
-        <!-- Best-Selling Products Breakdown Table -->
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
-            <h4 class="font-black text-slate-900 dark:text-white font-display text-base">Product Sales & Performance Breakdown</h4>
-            <span id="rep-product-count" class="text-xs text-slate-400 font-bold">0 products sold</span>
-          </div>
-
-          <div id="rep-products-table" class="space-y-2 overflow-x-auto">
-            <!-- Injected Dynamically -->
-          </div>
-        </div>
       </div>
 
-      <!-- Tab 4: Shop & UPI Settings -->
-      <div id="shop-view-settings" class="hidden space-y-6">
-        <div class="bg-white dark:bg-slate-800 p-5 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm max-w-2xl">
-          <div class="flex items-center space-x-3 mb-6">
-            <span class="text-2xl">⚙️</span>
-            <div>
-              <h3 class="text-lg font-black text-slate-900 dark:text-white font-display">Parlour & UPI Payment Settings</h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400">Changes immediately sync across all customer QR codes in real time.</p>
-            </div>
+      <!-- TAB 4: SHOP & UPI SETTINGS -->
+      <div id="shop-view-settings" class="hidden max-w-xl mx-auto space-y-4">
+        <div class="bg-white dark:bg-slate-900 p-5 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h3 class="font-black text-slate-900 dark:text-white text-base">Shop & UPI Settings</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Configure your store's UPI VPA and contact details broadcasted to customers.</p>
           </div>
 
           <form id="shop-settings-form" onsubmit="shopkeeperApp.saveShopSettings(event)" class="space-y-4">
             <div>
-              <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">UPI ID for Customer QR Payments *</label>
-              <div class="relative">
-                <input 
-                  type="text" 
-                  id="settings-upi-id" 
-                  placeholder="e.g. suryaagencies@upi" 
-                  required 
-                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-mono font-bold focus:ring-2 focus:ring-rose-500" 
-                />
-                <span class="absolute right-3 top-2.5 text-xs text-emerald-600 font-bold">✓ Live Sync</span>
-              </div>
-              <span class="text-[10px] text-slate-400 block mt-1">This UPI ID is encoded into the payment QR code for customers to scan and pay.</span>
+              <label class="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">UPI ID (For Customer Payment QR) *</label>
+              <input 
+                type="text" 
+                id="settings-upi-id" 
+                required 
+                placeholder="e.g. suryaagencies@okaxis" 
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:text-white"
+              />
+              <span class="text-[10px] text-slate-400 block mt-1">This UPI ID is encoded into the payment QR code generated during checkout.</span>
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Parlour Contact Phone Number</label>
+              <label class="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Shop Helpline Phone Number</label>
               <input 
                 type="text" 
                 id="settings-shop-phone" 
                 placeholder="+91 98400 12345" 
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-medium focus:ring-2 focus:ring-rose-500" 
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:text-white"
               />
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Shop Name & Address</label>
-              <input 
-                type="text" 
+              <label class="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Shop Address</label>
+              <textarea 
                 id="settings-shop-address" 
+                rows="2" 
                 placeholder="Surya Agencies, Main Road, Ice Cream & Dairy Junction" 
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-medium focus:ring-2 focus:ring-rose-500" 
-              />
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500 dark:bg-slate-800 dark:text-white"
+              ></textarea>
             </div>
 
             <button 
               type="submit" 
               id="save-settings-btn"
-              class="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2"
+              class="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs sm:text-sm shadow-md active:scale-98 transition-all"
             >
               <span>💾 Save & Broadcast Settings</span>
             </button>
           </form>
         </div>
       </div>
+
     </main>
 
-    <!-- Mobile Bottom Navigation (Shopkeeper) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 text-white backdrop-blur-md border-t border-slate-800 py-1.5 px-4 flex items-center justify-around shadow-lg">
-      <button type="button" onclick="shopkeeperApp.switchTab('orders')" class="flex flex-col items-center justify-center text-[10px] font-bold text-rose-400">
-        <span class="text-lg">📥</span>
+    <!-- Shopkeeper Mobile Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-1.5 px-3 z-40 md:hidden flex justify-around items-center text-center">
+      <button type="button" onclick="shopkeeperApp.switchTab('orders')" class="flex flex-col items-center text-slate-700 dark:text-slate-200 text-[10px] font-bold p-1">
+        <span class="text-base">📥</span>
         <span>Orders</span>
       </button>
-      <button type="button" onclick="shopkeeperApp.openQRScannerModal()" class="flex flex-col items-center justify-center text-[10px] font-bold text-emerald-400">
-        <span class="text-lg">📷</span>
+      <button type="button" onclick="shopkeeperApp.openQRScannerModal()" class="flex flex-col items-center text-purple-600 text-[10px] font-bold p-1">
+        <span class="text-base">📷</span>
         <span>Scan QR</span>
       </button>
-      <button type="button" onclick="shopkeeperApp.switchTab('products')" class="flex flex-col items-center justify-center text-[10px] font-bold text-slate-400">
-        <span class="text-lg">📦</span>
+      <button type="button" onclick="shopkeeperApp.switchTab('products')" class="flex flex-col items-center text-slate-700 dark:text-slate-200 text-[10px] font-bold p-1">
+        <span class="text-base">📦</span>
         <span>Stock</span>
       </button>
-      <button type="button" onclick="shopkeeperApp.switchTab('reports')" class="flex flex-col items-center justify-center text-[10px] font-bold text-slate-400">
-        <span class="text-lg">📊</span>
+      <button type="button" onclick="shopkeeperApp.switchTab('reports')" class="flex flex-col items-center text-slate-700 dark:text-slate-200 text-[10px] font-bold p-1">
+        <span class="text-base">📊</span>
         <span>Reports</span>
       </button>
-      <button type="button" onclick="shopkeeperApp.switchTab('settings')" class="flex flex-col items-center justify-center text-[10px] font-bold text-slate-400">
-        <span class="text-lg">⚙️</span>
+      <button type="button" onclick="shopkeeperApp.switchTab('settings')" class="flex flex-col items-center text-slate-700 dark:text-slate-200 text-[10px] font-bold p-1">
+        <span class="text-base">⚙️</span>
         <span>Settings</span>
       </button>
     </nav>
+
   </div>
 
   <!-- ========================================================================
-       4. MODAL: 📷 CAMERA QR SCANNER & ORDER LOOKUP (SHOPKEEPER)
+       4. MODALS & POPUPS (QR SCANNER, CHECKOUT, ORDER DETAILS, NOTIFICATIONS)
        ======================================================================== -->
-  <div id="shop-qr-scanner-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="shopkeeperApp.closeQRScannerModal(event)">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 flex flex-col justify-between max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
+
+  <!-- A. Live Camera QR Scanner Modal (Shopkeeper) -->
+  <div id="shop-qr-scanner-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="shopkeeperApp.closeQRScannerModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
           <span class="text-xl">📷</span>
-          <div>
-            <h3 class="text-base font-black text-slate-900 dark:text-white font-display">Scan Customer Ticket QR</h3>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">Point camera at customer's digital order ticket</p>
-          </div>
+          <h3 class="text-base font-black text-slate-900 dark:text-white font-display">Scan Customer Ticket QR</h3>
         </div>
         <button type="button" onclick="shopkeeperApp.closeQRScannerModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
       </div>
 
-      <!-- Camera Live Video Viewport Container -->
-      <div class="my-4 flex flex-col items-center justify-center">
-        <div id="shop-qr-reader" class="w-full max-w-[280px] min-h-[220px] rounded-2xl overflow-hidden bg-black border-2 border-slate-300 dark:border-slate-700 shadow-inner flex items-center justify-center text-white text-xs">
-          <!-- Live Camera Stream injected by Html5Qrcode -->
-          <span class="text-slate-400 p-4 text-center">Starting Camera...</span>
-        </div>
-        <p id="shop-scanner-status" class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-medium text-center">
-          Align QR code inside the box. Camera permission required.
-        </p>
+      <!-- Camera Scanner Viewport -->
+      <div class="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 flex flex-col items-center justify-center relative min-h-[240px]">
+        <div id="shop-qr-reader" class="w-full"></div>
       </div>
+      <p id="shop-scanner-status" class="text-xs text-slate-500 font-medium text-center">Initializing camera...</p>
 
       <!-- Manual Order ID Lookup Fallback -->
-      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-        <span class="text-[10px] font-bold text-slate-400 uppercase block">Manual Order Number Lookup</span>
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+        <span class="text-[10px] font-black uppercase text-slate-400 block">Manual Order Number Search</span>
         <div class="flex items-center space-x-2">
           <input 
             type="text" 
             id="manual-order-search-input" 
-            placeholder="e.g. #A009 or A009" 
-            class="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-mono font-bold uppercase focus:ring-2 focus:ring-rose-500" 
-            onkeydown="if(event.key==='Enter') shopkeeperApp.lookupOrderByManualInput()"
+            placeholder="e.g. #A009" 
+            class="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold uppercase focus:ring-2 focus:ring-purple-500 dark:bg-slate-800 dark:text-white" 
           />
           <button 
             type="button" 
             onclick="shopkeeperApp.lookupOrderByManualInput()" 
-            class="px-3.5 py-2 rounded-xl bg-slate-900 text-white font-extrabold text-xs hover:bg-slate-800"
+            class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-sm"
           >
             Find Order
           </button>
@@ -860,297 +815,118 @@
     </div>
   </div>
 
-  <!-- ========================================================================
-       5. MODAL: 📋 SCANNED ORDER DETAILS & STATUS CONTROLLER
-       ======================================================================== -->
-  <div id="shop-order-details-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="shopkeeperApp.closeOrderDetailsModal(event)">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+  <!-- B. Scanned Order Inspection Modal (Shopkeeper) -->
+  <div id="shop-order-details-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="shopkeeperApp.closeOrderDetailsModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-        <div class="flex items-center space-x-2">
-          <span class="text-xl">📋</span>
-          <div>
-            <h3 class="text-base font-black text-slate-900 dark:text-white font-display">Order Inspection & Action</h3>
-            <p id="detail-modal-order-subtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">Order #A009</p>
-          </div>
+        <div>
+          <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Order Details</h3>
+          <span id="detail-modal-order-subtitle" class="text-xs text-slate-400">Order Information</span>
         </div>
         <button type="button" onclick="shopkeeperApp.closeOrderDetailsModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
       </div>
 
-      <div id="shop-order-details-content" class="py-4 space-y-4">
-        <!-- Injected Dynamically -->
+      <div id="shop-order-details-content" class="space-y-4">
+        <!-- Rendered by shopkeeper-app.js -->
       </div>
     </div>
   </div>
 
-  <!-- ========================================================================
-       6. MODAL: 🔔 NOTIFICATIONS & LIVE ALERTS (SHOPKEEPER)
-       ======================================================================== -->
-  <div id="shop-notifications-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="shopkeeperApp.closeNotificationsModal(event)">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[85vh] flex flex-col justify-between" onclick="event.stopPropagation()">
+  <!-- C. Notifications Modal (Shopkeeper) -->
+  <div id="shop-notifications-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="shopkeeperApp.closeNotificationsModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-3 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+        <div class="flex items-center space-x-2">
+          <span class="text-lg">🔔</span>
+          <h3 class="text-sm font-black text-slate-900 dark:text-white">Shopkeeper Notifications</h3>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="shopkeeperApp.clearNotifications()" class="text-[10px] font-bold text-slate-400 hover:text-slate-600">Clear</button>
+          <button type="button" onclick="shopkeeperApp.closeNotificationsModal()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center text-xs">✕</button>
+        </div>
+      </div>
+
+      <div id="shop-notifications-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+        <!-- Rendered by shopkeeper-app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- D. Add New Product Modal -->
+  <div id="add-product-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="shopkeeperApp.closeAddProductModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
-          <span class="text-xl">🔔</span>
-          <div>
-            <h3 class="text-base font-black text-slate-900 dark:text-white font-display">Notifications & Live Alerts</h3>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">Real-time store activity & inventory warnings</p>
-          </div>
+          <span class="text-xl">➕</span>
+          <h3 class="text-base font-black text-slate-900 dark:text-white font-display">Add Product / Stock</h3>
         </div>
-        <button type="button" onclick="shopkeeperApp.closeNotificationsModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
+        <button type="button" onclick="shopkeeperApp.closeAddProductModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center">✕</button>
       </div>
 
-      <div id="shop-notifications-list" class="flex-1 overflow-y-auto py-3 space-y-2 max-h-[50vh]">
-        <!-- Injected Dynamically -->
-      </div>
-
-      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <button type="button" onclick="shopkeeperApp.markAllNotificationsRead()" class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline">
-          ✓ Mark all as read
-        </button>
-        <button type="button" onclick="shopkeeperApp.clearNotifications()" class="text-xs font-bold text-slate-400 hover:text-slate-600">
-          🗑️ Clear list
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Slide-out Cart Drawer -->
-  <div id="cart-drawer-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden" onclick="customerApp.closeCartDrawer(event)">
-    <div 
-      id="cart-drawer-panel" 
-      class="bg-white dark:bg-slate-900 w-full max-w-md h-full ml-auto flex flex-col justify-between p-4 sm:p-6 shadow-2xl transition-transform duration-300 transform translate-x-full" 
-      onclick="event.stopPropagation()"
-    >
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4">
-        <div class="flex items-center space-x-2">
-          <span class="text-xl sm:text-2xl">🛍️</span>
-          <div>
-            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Your Surya Cart</h3>
-            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Pick up fresh at Surya Agencies</p>
-          </div>
-        </div>
-        <button type="button" onclick="customerApp.closeCartDrawer()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
-      </div>
-
-      <div id="cart-drawer-items" class="flex-1 overflow-y-auto py-3 space-y-2.5">
-        <!-- Injected dynamically -->
-      </div>
-
-      <div id="cart-drawer-empty" class="flex-1 flex flex-col items-center justify-center text-center p-6 hidden">
-        <span class="text-4xl block mb-2">🍨</span>
-        <h4 class="font-extrabold text-sm text-slate-800 dark:text-slate-200">Your Cart is Empty</h4>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Select your favourite ice cream & dairy items!</p>
-      </div>
-
-      <div id="cart-drawer-footer" class="border-t border-slate-100 dark:border-slate-800 pt-3 sm:pt-4 space-y-2.5">
-        <div class="space-y-1 text-xs">
-          <div class="flex justify-between text-slate-500 dark:text-slate-400">
-            <span>Subtotal</span>
-            <span id="cart-drawer-subtotal" class="font-bold text-slate-800 dark:text-slate-100 font-mono">₹0</span>
-          </div>
-          <div class="flex justify-between items-center text-base font-black text-slate-900 dark:text-white font-display pt-1 border-t border-slate-100 dark:border-slate-800">
-            <span>Total Payable</span>
-            <span id="cart-drawer-total" class="text-lg text-rose-600 font-mono">₹0</span>
-          </div>
-        </div>
-
-        <button 
-          type="button" 
-          onclick="customerApp.openCheckoutModal()"
-          class="w-full py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
-        >
-          <span>Proceed to Checkout →</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Customer Auth Modal (Phone OTP & Google) -->
-  <div id="customer-auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="appController.closeCustomerAuthModal(event)">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+      <form id="add-product-form" onsubmit="shopkeeperApp.submitNewProduct(event)" class="mt-4 space-y-3">
         <div>
-          <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Customer Sign In</h3>
-          <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Sign in to track orders & save your favourites</p>
-        </div>
-        <button type="button" onclick="appController.closeCustomerAuthModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
-      </div>
-
-      <div class="mt-4 space-y-3">
-        <button 
-          type="button" 
-          onclick="appController.triggerGoogleSignIn()" 
-          class="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center space-x-2.5"
-        >
-          <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-          <span>Continue with Google</span>
-        </button>
-
-        <div class="flex items-center my-2">
-          <div class="flex-1 border-t border-slate-200 dark:border-slate-700"></div>
-          <span class="px-2.5 text-[10px] font-bold text-slate-400 uppercase">Or Mobile Number (OTP)</span>
-          <div class="flex-1 border-t border-slate-200 dark:border-slate-700"></div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Product Name *</label>
+          <input type="text" id="new-prod-name" required placeholder="e.g. Arun Mango Duet Stick" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium dark:bg-slate-800 dark:text-white" />
         </div>
 
-        <div id="auth-phone-step-1" class="space-y-3">
+        <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Your Full Name</label>
-            <input type="text" id="cust-modal-name" placeholder="Enter Your Name" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Mobile Phone Number</label>
-            <input type="tel" id="cust-modal-phone" placeholder="Enter 10-digit Mobile Number" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
-          </div>
-
-          <button 
-            type="button" 
-            onclick="appController.requestPhoneOTP()" 
-            class="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2"
-          >
-            <span>📱 Send 4-Digit OTP →</span>
-          </button>
-        </div>
-
-        <div id="auth-phone-step-2" class="space-y-3.5 hidden">
-          <div id="simulated-sms-banner" class="p-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl border border-slate-700 shadow-lg">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-[9px] font-black uppercase tracking-wider text-rose-400 flex items-center gap-1">
-                <span>💬</span> <span>MESSAGES • SURYA-OTP</span>
-              </span>
-              <span class="text-[9px] text-slate-400 font-mono">Now</span>
-            </div>
-            <p class="text-xs text-slate-200 leading-snug">
-              Your Surya Agencies verification code is <strong id="sms-otp-display" class="text-yellow-400 font-mono text-sm tracking-wider">0000</strong>.
-            </p>
-            <button 
-              type="button" 
-              onclick="appController.autoFillOTP()" 
-              class="mt-1.5 text-[11px] font-black text-rose-300 hover:text-rose-200 underline block"
-            >
-              📋 Tap here to Auto-Fill this OTP →
-            </button>
-          </div>
-
-          <div class="text-center">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Enter 4-Digit Verification Code</span>
-            <div class="flex items-center justify-center gap-2 mt-2">
-              <input type="text" id="otp-digit-1" maxlength="1" oninput="appController.onOtpInput(1, this.value)" class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 dark:border-slate-600 focus:border-rose-600 focus:outline-none bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white" />
-              <input type="text" id="otp-digit-2" maxlength="1" oninput="appController.onOtpInput(2, this.value)" class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 dark:border-slate-600 focus:border-rose-600 focus:outline-none bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white" />
-              <input type="text" id="otp-digit-3" maxlength="1" oninput="appController.onOtpInput(3, this.value)" class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 dark:border-slate-600 focus:border-rose-600 focus:outline-none bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white" />
-              <input type="text" id="otp-digit-4" maxlength="1" oninput="appController.onOtpInput(4, this.value)" class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 dark:border-slate-600 focus:border-rose-600 focus:outline-none bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white" />
-            </div>
-            <input type="hidden" id="cust-modal-otp" value="" />
-          </div>
-
-          <button 
-            type="button" 
-            onclick="appController.verifyPhoneOTP()" 
-            class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/25 transition-all flex items-center justify-center space-x-2"
-          >
-            <span>✓ Verify OTP & Sign In</span>
-          </button>
-
-          <div class="flex items-center justify-between text-xs pt-1">
-            <button type="button" onclick="appController.requestPhoneOTP()" class="font-bold text-rose-600 dark:text-rose-400 hover:underline">
-              🔄 Resend Code
-            </button>
-            <button type="button" onclick="appController.resetPhoneAuth()" class="font-bold text-slate-400 hover:text-slate-600">
-              ← Change Number
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: ➕ Add New Stock / Product (SHOPKEEPER) -->
-  <div id="add-product-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="shopkeeperApp.closeAddProductModal(event)">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-        <div class="flex items-center space-x-2">
-          <span class="text-2xl">➕</span>
-          <div>
-            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Add New Product / Stock</h3>
-            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Instantly appears in store and inventory</p>
-          </div>
-        </div>
-        <button type="button" onclick="shopkeeperApp.closeAddProductModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
-      </div>
-
-      <form id="add-product-form" onsubmit="shopkeeperApp.submitNewProduct(event)" class="mt-4 space-y-3.5">
-        <div>
-          <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Product Name *</label>
-          <input type="text" id="new-prod-name" required placeholder="e.g. Arun Mango Duet Bar" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500" />
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Category *</label>
-            <select id="new-prod-category" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500">
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Category *</label>
+            <select id="new-prod-category" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold dark:bg-slate-800 dark:text-white">
               <option value="Dairy Products">Dairy Products</option>
               <option value="Ice Cream Cones">Ice Cream Cones</option>
               <option value="Ice Cream Bars & Sticks">Ice Cream Bars & Sticks</option>
               <option value="Ice Cream Cups & Duets">Ice Cream Cups & Duets</option>
-              <option value="Ice Cream Novelties & Slices">Ice Cream Novelties & Slices</option>
-              <option value="Sundaes & In-Store Specials">Sundaes & In-Store Specials</option>
               <option value="Family Tubs & Packs">Family Tubs & Packs</option>
               <option value="Ice Cream Cakes">Ice Cream Cakes</option>
+              <option value="Sundaes & In-Store Specials">Sundaes & In-Store Specials</option>
             </select>
           </div>
-
           <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Pack Size / Volume</label>
-            <input type="text" id="new-prod-packsize" placeholder="e.g. 100ml Cup, 1L Tub" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500" />
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Pack Size</label>
+            <input type="text" id="new-prod-packsize" placeholder="e.g. 100ml / 500g" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium dark:bg-slate-800 dark:text-white" />
           </div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Selling Price (₹) *</label>
-            <input type="number" id="new-prod-price" required min="0" step="0.5" placeholder="50" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500" />
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Selling Price (₹) *</label>
+            <input type="number" id="new-prod-price" required step="0.5" min="0" placeholder="35" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold dark:bg-slate-800 dark:text-white" />
           </div>
-
           <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Cost Price (₹)</label>
-            <input type="number" id="new-prod-cost" min="0" step="0.5" placeholder="35 (opt)" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500" title="Used for net profit calculation" />
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Cost Price (₹)</label>
+            <input type="number" id="new-prod-cost" step="0.5" min="0" placeholder="22 (for profit)" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium dark:bg-slate-800 dark:text-white" />
           </div>
+        </div>
 
+        <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Stock (Units) *</label>
-            <input type="number" id="new-prod-stock" required min="0" step="1" value="25" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500" />
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Initial Stock Units *</label>
+            <input type="number" id="new-prod-stock" required min="0" value="20" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold dark:bg-slate-800 dark:text-white" />
           </div>
-
           <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Min Threshold</label>
-            <input type="number" id="new-prod-min-threshold" min="1" step="1" value="5" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500" title="Triggers low stock alert when stock drops to this" />
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Low Stock Threshold</label>
+            <input type="number" id="new-prod-min-threshold" min="1" value="5" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold dark:bg-slate-800 dark:text-white" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Product Photo</label>
+          <div class="flex items-center space-x-3">
+            <img id="new-prod-preview-img" src="./assets/arun-vanilla-cup.jpg" alt="Preview" class="w-12 h-12 object-contain rounded-xl border border-slate-200 dark:border-slate-700 p-1 bg-white" />
+            <input type="file" id="new-prod-image-file" accept="image/*" onchange="shopkeeperApp.previewNewProductImage(event)" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-200 cursor-pointer" />
           </div>
         </div>
 
         <div>
-          <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Product Description</label>
-          <textarea id="new-prod-desc" rows="2" placeholder="Brief delicious description of the product..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Product Image (Instant Preview)</label>
-          <div class="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <img id="new-prod-preview-img" src="/assets/arun-vanilla-cup.jpg" alt="Preview" class="w-14 h-14 object-contain bg-white dark:bg-slate-900 rounded-xl p-1 border border-slate-200 dark:border-slate-700 flex-shrink-0" />
-            <div class="flex-1">
-              <input type="file" id="new-prod-image-file" accept="image/*" onchange="shopkeeperApp.previewNewProductImage(event)" class="text-xs text-slate-500 dark:text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-rose-600 file:text-white hover:file:bg-rose-700 cursor-pointer" />
-              <span class="text-[10px] text-slate-400 block mt-1">Supports JPG, JPEG, PNG, WebP (Max 10MB)</span>
-            </div>
-          </div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Description (Optional)</label>
+          <textarea id="new-prod-desc" rows="2" placeholder="Creamy rich dessert..." class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium dark:bg-slate-800 dark:text-white"></textarea>
         </div>
 
         <button 
           type="submit" 
           id="btn-save-new-product"
-          class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-xs sm:text-sm shadow-md shadow-rose-600/25 transition-all flex items-center justify-center space-x-2"
+          class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm shadow-md active:scale-98 transition-all"
         >
           <span>✓ Save & Publish to Store</span>
         </button>
@@ -1158,29 +934,27 @@
     </div>
   </div>
 
-  <!-- Modal: 🖼️ Edit Product Image (SHOPKEEPER) -->
-  <div id="edit-product-image-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="shopkeeperApp.closeEditImageModal(event)">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-        <div>
-          <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Update Product Image</h3>
-          <p id="edit-img-prod-name" class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold truncate max-w-[260px]">Product Name</p>
-        </div>
-        <button type="button" onclick="shopkeeperApp.closeEditImageModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
+  <!-- E. Edit Product Image Modal -->
+  <div id="edit-product-image-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="shopkeeperApp.closeEditImageModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+        <h3 class="text-sm font-black text-slate-900 dark:text-white">Change Product Image</h3>
+        <button type="button" onclick="shopkeeperApp.closeEditImageModal()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center text-xs">✕</button>
       </div>
 
-      <form id="edit-image-form" onsubmit="shopkeeperApp.submitProductImageUpdate(event)" class="mt-4 space-y-4">
-        <input type="hidden" id="edit-img-prod-id" value="" />
+      <form onsubmit="shopkeeperApp.submitProductImageUpdate(event)" class="space-y-3">
+        <input type="hidden" id="edit-img-prod-id" />
+        <p id="edit-img-prod-name" class="text-xs font-extrabold text-slate-900 dark:text-white truncate">Product Name</p>
 
-        <div class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
-          <img id="edit-img-preview" src="/assets/arun-vanilla-cup.jpg" alt="Preview" class="w-28 h-28 object-contain bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-200 dark:border-slate-700 shadow-sm" />
-          <input type="file" id="edit-img-file-input" accept="image/*" onchange="shopkeeperApp.previewEditImage(event)" required class="text-xs text-slate-500 dark:text-slate-400 file:mr-2 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-rose-600 file:text-white hover:file:bg-rose-700 cursor-pointer" />
+        <div class="flex flex-col items-center justify-center p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+          <img id="edit-img-preview" src="./assets/arun-vanilla-cup.jpg" alt="Preview" class="w-24 h-24 object-contain rounded-xl mb-2 bg-white p-1" />
+          <input type="file" id="edit-img-file-input" accept="image/*" onchange="shopkeeperApp.previewEditImage(event)" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 cursor-pointer" />
         </div>
 
         <button 
           type="submit" 
           id="btn-save-edit-image"
-          class="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2"
+          class="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-rose-600 text-white font-extrabold text-xs shadow-md"
         >
           <span>💾 Save & Broadcast Image</span>
         </button>
@@ -1188,36 +962,71 @@
     </div>
   </div>
 
-  <!-- Checkout Modal Container -->
+  <!-- F. Customer Cart Drawer -->
+  <div id="cart-drawer-backdrop" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden transition-opacity" onclick="customerApp.closeCartDrawer(event)">
+    <div id="cart-drawer-panel" class="absolute right-0 top-0 bottom-0 max-w-md w-full bg-white dark:bg-slate-900 shadow-2xl p-5 sm:p-6 flex flex-col justify-between transform translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
+      
+      <div>
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🛍️</span>
+            <h3 class="text-base font-black text-slate-900 dark:text-white font-display">My Cart</h3>
+          </div>
+          <button type="button" onclick="customerApp.closeCartDrawer()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
+        </div>
+
+        <div id="cart-drawer-items" class="mt-4 space-y-2.5 max-h-[55vh] overflow-y-auto pr-1">
+          <!-- Populated by customer-app.js -->
+        </div>
+
+        <div id="cart-drawer-empty" class="hidden text-center py-12">
+          <span class="text-3xl block mb-2">🍨</span>
+          <h4 class="font-bold text-slate-700 dark:text-slate-300 text-sm">Your cart is empty</h4>
+          <p class="text-xs text-slate-400 mt-0.5">Explore our store and add some delicious items!</p>
+        </div>
+      </div>
+
+      <div id="cart-drawer-footer" class="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-3">
+        <div class="flex justify-between text-xs text-slate-500">
+          <span>Subtotal</span>
+          <span id="cart-drawer-subtotal" class="font-mono font-bold text-slate-800 dark:text-slate-200">₹0</span>
+        </div>
+        <div class="flex justify-between text-base font-black text-slate-900 dark:text-white">
+          <span>Total Payable</span>
+          <span id="cart-drawer-total" class="font-mono text-rose-600">₹0</span>
+        </div>
+        <button 
+          type="button" 
+          onclick="customerApp.openCheckoutModal()" 
+          class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
+        >
+          <span>Proceed to Checkout →</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- G. Checkout Container (UPI QR Modal dynamically rendered by customer-app.js) -->
   <div id="checkout-modal-container"></div>
 
-  <!-- Global Toast Notification Container -->
-  <div id="global-toast-container" class="fixed top-14 sm:top-16 right-3 sm:right-4 z-50 max-w-sm w-full pointer-events-auto space-y-2"></div>
+  <!-- H. Global Toast Notifications Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
-  <!-- Global Footer -->
-  <footer class="mt-auto py-5 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 mb-14 md:mb-0">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <div class="text-center sm:text-left">
-        <p class="font-extrabold text-slate-800 dark:text-slate-200">SURYA AGENCIES</p>
-        <p class="text-[11px] text-slate-400">Ice Cream & Dairy Ordering Portal • Unified Smart System</p>
-      </div>
-      <div class="flex items-center space-x-3">
-        <a href="/privacy.html" class="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600">Privacy Policy</a>
-        <span class="text-slate-300 dark:text-slate-700">•</span>
-        <button type="button" onclick="appController.toggleTheme()" class="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600 flex items-center space-x-1">
-          <span class="theme-icon-indicator">🌙</span>
-          <span>Theme</span>
-        </button>
-        <span class="text-slate-300 dark:text-slate-700">•</span>
-        <button type="button" onclick="appController.showGateway()" class="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600">Portal Gateway</button>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Core Scripts -->
+  <!-- Application Logic Scripts -->
   <script src="./js/socket-client.js"></script>
-  <script src="./js/app.js"></script>
+  <script src="./js/app-controller.js"></script>
   <script src="./js/customer-app.js"></script>
   <script src="./js/shopkeeper-app.js"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration error:', err));
+      });
+    }
+  </script>
+
 </body>
 </html>

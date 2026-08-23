@@ -255,6 +255,92 @@ class CustomerApp {
     container.innerHTML = allPill + catPills;
   }
 
+    getCategoryIcon(cat) {
+    if (!cat) return '🍨';
+    const c = cat.toLowerCase();
+    if (c.includes('dairy') || c.includes('milk') || c.includes('curd') || c.includes('paneer') || c.includes('ghee') || c.includes('butter')) return '🥛';
+    if (c.includes('cone')) return '🍦';
+    if (c.includes('bar') || c.includes('stick')) return '🍫';
+    if (c.includes('cup') || c.includes('duet')) return '🍨';
+    if (c.includes('tub') || c.includes('pack') || c.includes('family')) return '📦';
+    if (c.includes('cake')) return '🍰';
+    if (c.includes('sundae') || c.includes('special')) return '🍧';
+    if (c.includes('novelty') || c.includes('slice')) return '🍭';
+    return '🍨';
+  }
+
+  renderProductCardHtml(p) {
+    const stockInt = Math.max(0, parseInt(p.stock, 10) || 0);
+    const minThresh = parseInt(p.minThreshold, 10) || 5;
+    const isManuallyOff = !p.available;
+    const isOutOfStock = stockInt === 0;
+    const isOrderable = p.available && stockInt > 0;
+    const isLowStock = isOrderable && stockInt <= minThresh;
+    const cartItem = this.cart.find(c => c.productId === p.id);
+    const cartQty = cartItem ? cartItem.quantity : 0;
+    const hasPrice = p.price !== null && p.price !== undefined;
+
+    let stockBadge = '';
+    if (isManuallyOff) {
+      stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">🔴 NOT AVAILABLE</span>`;
+    } else if (isOutOfStock) {
+      stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">🔴 OUT OF STOCK</span>`;
+    } else if (isLowStock) {
+      stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">⚡ Only ${stockInt} left</span>`;
+    } else {
+      stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">🟢 AVAILABLE</span>`;
+    }
+
+    const imageUrl = p.image || '/assets/arun-vanilla-cup.jpg';
+
+    return `
+      <div class="product-card">
+        <div class="p-2 sm:p-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+          <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 truncate max-w-[90px] sm:max-w-none">${p.category || 'Surya'}</span>
+          ${stockBadge}
+        </div>
+
+        <div class="product-image-box">
+          <img src="${imageUrl}" alt="${p.name}" loading="lazy" class="product-img" onerror="this.src='/assets/arun-vanilla-cup.jpg'" />
+          ${p.packSize ? `<span class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-extrabold">${p.packSize}</span>` : ''}
+        </div>
+
+        <div class="p-3 sm:p-3.5 flex flex-col justify-between flex-1 space-y-2">
+          <div>
+            <h4 class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white leading-tight line-clamp-2" title="${p.name}">${p.name}</h4>
+          </div>
+
+          <div class="pt-1 flex items-center justify-between gap-1.5 mt-auto">
+            <div>
+              <span class="text-[10px] text-slate-400 block font-bold">PRICE</span>
+              <span class="text-sm sm:text-base font-black text-rose-600 dark:text-rose-400 font-mono">
+                ${hasPrice ? `₹${p.price}` : '<span class="text-xs text-slate-400">N/A</span>'}
+              </span>
+            </div>
+
+            <div class="flex-shrink-0">
+              ${!isOrderable ? `
+                <button type="button" disabled class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] sm:text-xs font-extrabold cursor-not-allowed">
+                  Unavailable
+                </button>
+              ` : cartQty > 0 ? `
+                <div class="flex items-center space-x-1 bg-rose-600 text-white rounded-xl p-0.5 shadow-sm">
+                  <button type="button" onclick="customerApp.decrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-rose-700 hover:bg-rose-800 font-black text-xs flex items-center justify-center transition-all">−</button>
+                  <span class="text-xs font-black font-mono w-5 text-center">${cartQty}</span>
+                  <button type="button" onclick="customerApp.incrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-rose-700 hover:bg-rose-800 font-black text-xs flex items-center justify-center transition-all">+</button>
+                </div>
+              ` : `
+                <button type="button" onclick="customerApp.addToCart('${p.id}')" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[11px] sm:text-xs shadow-sm shadow-rose-600/20 active:scale-95 transition-all flex items-center space-x-1">
+                  <span>+ Add</span>
+                </button>
+              `}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   renderProductsGrid() {
     const container = document.getElementById('customer-products-grid');
     const emptyEl = document.getElementById('customer-empty-products');
@@ -275,100 +361,66 @@ class CustomerApp {
 
     if (emptyEl) emptyEl.classList.add('hidden');
 
-    container.innerHTML = items.map(p => {
-      const stockInt = Math.max(0, parseInt(p.stock, 10) || 0);
-      const minThresh = parseInt(p.minThreshold, 10) || 5;
-      const isManuallyOff = !p.available;
-      const isOutOfStock = stockInt === 0;
-      const isOrderable = p.available && stockInt > 0;
-      const isLowStock = isOrderable && stockInt <= minThresh;
-      const cartItem = this.cart.find(c => c.productId === p.id);
-      const cartQty = cartItem ? cartItem.quantity : 0;
-      const hasPrice = p.price !== null && p.price !== undefined;
-
-      let stockBadge = '';
-      if (isManuallyOff) {
-        stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">🔴 NOT AVAILABLE</span>`;
-      } else if (isOutOfStock) {
-        stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">🔴 OUT OF STOCK</span>`;
-      } else if (isLowStock) {
-        stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">⚡ Only ${stockInt} left</span>`;
-      } else {
-        stockBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">🟢 AVAILABLE</span>`;
-      }
-
-      const imageUrl = p.image || '/assets/arun-vanilla-cup.jpg';
-
-      return `
-        <div class="product-card ${!isOrderable ? 'opacity-75 grayscale-[15%]' : ''}">
-          <div>
-            <div class="product-image-box">
-              <img 
-                src="${imageUrl}" 
-                alt="${p.name}" 
-                class="product-img"
-                loading="lazy"
-                onerror="this.src='/assets/arun-vanilla-cup.jpg'"
-              />
-              <div class="absolute top-2.5 left-2.5">
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 shadow-xs">
-                  ${p.category}
-                </span>
-              </div>
-              <div class="absolute top-2.5 right-2.5">
-                ${stockBadge}
-              </div>
-            </div>
-
-            <div class="p-3.5 sm:p-4">
-              <div class="flex items-center justify-between gap-1 mb-1">
-                <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                  ${p.packSize || 'Standard Pack'}
-                </span>
-              </div>
-              <h4 class="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm leading-snug hover:text-rose-600 transition-colors line-clamp-2">
-                ${p.name}
-              </h4>
+    // Case 1: Specific Category Selected
+    if (this.selectedCategory !== 'ALL') {
+      container.innerHTML = `
+        <section class="category-section">
+          <div class="flex items-center justify-between mb-2.5 px-1">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg sm:text-xl">${this.getCategoryIcon(this.selectedCategory)}</span>
+              <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display tracking-tight">${this.selectedCategory}</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">${items.length} items</span>
             </div>
           </div>
-
-          <div class="p-3.5 sm:p-4 pt-0">
-            <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-2.5 sm:pt-3 mt-1">
-              <div>
-                <span class="text-[9px] uppercase font-bold text-slate-400 block">Price</span>
-                ${hasPrice 
-                  ? `<span class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">₹${p.price}</span>` 
-                  : `<span class="text-xs font-bold text-amber-600">Price not configured</span>`
-                }
-              </div>
-
-              <div>
-                ${!isOrderable || !hasPrice
-                  ? `<button disabled class="px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-black cursor-not-allowed">${isManuallyOff ? '🔴 Not Available' : '🔴 Out of Stock'}</button>`
-                  : cartQty > 0
-                    ? `
-                      <div class="flex items-center bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl p-0.5 sm:p-1 shadow-xs">
-                        <button type="button" onclick="customerApp.decrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-300 font-extrabold flex items-center justify-center hover:bg-rose-100 shadow-xs">−</button>
-                        <span class="w-6 text-center text-xs font-black text-rose-700 dark:text-rose-300">${cartQty}</span>
-                        <button type="button" onclick="customerApp.incrementCart('${p.id}')" class="w-6 h-6 rounded-lg bg-rose-600 text-white font-extrabold flex items-center justify-center hover:bg-rose-700 shadow-xs" ${cartQty >= stockInt ? 'disabled opacity-40' : ''}>+</button>
-                      </div>
-                    `
-                    : `
-                      <button 
-                        type="button" 
-                        onclick="customerApp.addToCart('${p.id}', 1)"
-                        class="px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-extrabold shadow-md shadow-rose-500/20 active:scale-95 transition-all flex items-center space-x-1"
-                      >
-                        <span>+ Add</span>
-                      </button>
-                    `
-                }
-              </div>
+          
+          <!-- Transparent Category Container/Box -->
+          <div class="category-box">
+            <div class="product-grid">
+              ${items.map(p => this.renderProductCardHtml(p)).join('')}
             </div>
+          </div>
+        </section>
+      `;
+      return;
+    }
+
+    // Case 2: "ALL" Selected or Search Active -> Group products by categories in transparent containers
+    // Determine which categories have matching products
+    const catsWithItems = [];
+    const usedCats = new Set();
+
+    this.categories.forEach(cat => {
+      const catProducts = items.filter(p => p.category === cat);
+      if (catProducts.length > 0) {
+        catsWithItems.push({ category: cat, products: catProducts });
+        usedCats.add(cat);
+      }
+    });
+
+    // Also include any products with uncategorized or other categories
+    const otherProducts = items.filter(p => !usedCats.has(p.category));
+    if (otherProducts.length > 0) {
+      catsWithItems.push({ category: 'Other Products', products: otherProducts });
+    }
+
+    container.innerHTML = catsWithItems.map(group => `
+      <section class="category-section">
+        <div class="flex items-center justify-between mb-2.5 px-1">
+          <div class="flex items-center space-x-2">
+            <span class="text-lg sm:text-xl">${this.getCategoryIcon(group.category)}</span>
+            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display tracking-tight">${group.category}</h3>
+            <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">${group.products.length} items</span>
           </div>
         </div>
-      `;
-    }).join('');
+
+        <!-- Transparent Category Container/Box wrapping product cards -->
+        <div class="category-box">
+          <div class="product-grid">
+            ${group.products.map(p => this.renderProductCardHtml(p)).join('')}
+          </div>
+        </div>
+      </section>
+    `).join('');
   }
 
   // --- CART OPERATIONS ---
@@ -801,9 +853,10 @@ class CustomerApp {
       parsedItems = [];
     }
 
-    // Direct unique link for this exact order
+        // Direct clean unique order link for exact lookup
     const origin = window.location.origin || 'https://surya-agencies.onrender.com';
-    const ticketUrl = `${origin}/#order/${encodeURIComponent(order.orderNumber)}`;
+    const cleanNum = String(order.orderNumber || '').replace(/^#/, '').trim();
+    const ticketUrl = `${origin}/#order/${cleanNum}`;
 
     container.innerHTML = `
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">

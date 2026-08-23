@@ -408,7 +408,30 @@ class ShopkeeperApp {
     if (tab === 'settings') this.populateSettingsForm();
   }
 
-  // --- CAMERA QR SCANNER & ORDER INSPECTION ---
+    // --- CAMERA QR SCANNER & ORDER INSPECTION ---
+
+  extractOrderIdentifier(rawText) {
+    if (!rawText) return '';
+    let str = String(rawText).trim();
+    try { str = decodeURIComponent(str); } catch (e) {}
+    try { str = decodeURIComponent(str); } catch (e) {}
+
+    if (str.includes('#order/')) {
+      str = str.split('#order/')[1];
+    } else if (str.includes('#ticket/')) {
+      str = str.split('#ticket/')[1];
+    } else if (str.includes('/order/')) {
+      str = str.split('/order/')[1];
+    } else if (str.includes('orderNumber=')) {
+      str = str.split('orderNumber=')[1].split('&')[0];
+    } else if (str.startsWith('SURYA:')) {
+      str = str.replace('SURYA:', '');
+    }
+
+    // Strip query parameters or hashes
+    str = str.split('?')[0].split('&')[0].trim();
+    return str;
+  }
 
   async openQRScannerModal() {
     const modal = document.getElementById('shop-qr-scanner-modal');
@@ -435,7 +458,7 @@ class ShopkeeperApp {
         statusEl.className = 'text-xs text-emerald-600 font-bold mt-2 text-center';
       }
 
-      const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+      const config = { fps: 15, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
 
       await this.html5QrCode.start(
         { facingMode: 'environment' },
@@ -452,12 +475,32 @@ class ShopkeeperApp {
         statusEl.className = 'text-xs text-emerald-600 font-bold mt-2 text-center';
       }
     } catch (err) {
-      console.warn('Camera start error:', err);
+      console.warn('Camera start note:', err);
       this.isScanning = false;
       if (statusEl) {
-        statusEl.textContent = '⚠️ Camera permission denied or unavailable. Enter Order Number manually below.';
+        statusEl.textContent = '⚠️ Camera permission denied or unavailable. Choose QR image file or type Order # below.';
         statusEl.className = 'text-xs text-amber-600 font-bold mt-2 text-center';
       }
+    }
+  }
+
+  async scanQRFromImageFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById('shop-scanner-status');
+    if (statusEl) statusEl.textContent = 'Processing QR image...';
+
+    try {
+      if (!this.html5QrCode) {
+        this.html5QrCode = new Html5Qrcode('shop-qr-reader');
+      }
+      const decodedText = await this.html5QrCode.scanFile(file, true);
+      this.handleScannedQR(decodedText);
+    } catch (err) {
+      console.error('File scan error:', err);
+      alert('Could not decode QR code from the selected image. Please ensure the QR code is clearly visible.');
+      if (statusEl) statusEl.textContent = '⚠️ Could not read QR image. Try another photo or type Order #.';
     }
   }
 
@@ -478,14 +521,14 @@ class ShopkeeperApp {
     if (window.appController) window.appController.playChime();
     this.closeQRScannerModal();
 
-    let cleanCode = decodedText.trim();
-    if (cleanCode.includes('/#order/')) {
-      cleanCode = cleanCode.split('/#order/')[1];
-    } else if (cleanCode.includes('/#ticket/')) {
-      cleanCode = cleanCode.split('/#ticket/')[1];
+    const orderId = this.extractOrderIdentifier(decodedText);
+    if (!orderId) {
+      if (window.appController) window.appController.showToast('Invalid Ticket QR code', 'error');
+      alert('Invalid Ticket QR. Please scan a valid Surya Agencies Ticket QR or use manual search.');
+      return;
     }
 
-    this.findAndInspectOrder(cleanCode);
+    this.findAndInspectOrder(orderId);
   }
 
   lookupOrderByManualInput() {
@@ -501,21 +544,26 @@ class ShopkeeperApp {
   }
 
   async findAndInspectOrder(query) {
-    const cleanQ = query.replace('#', '').trim().toUpperCase();
-    let found = this.orders.find(o => 
-      o.id.toUpperCase() === cleanQ || 
-      o.orderNumber.replace('#', '').toUpperCase() === cleanQ ||
-      o.orderNumber.toUpperCase() === query.trim().toUpperCase()
-    );
+    if (!query) return;
+    const rawClean = this.extractOrderIdentifier(query);
+    const numOnly = rawClean.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const withHash = '#' + numOnly;
+
+    // 1. Search in local state
+    let found = this.orders.find(o => {
+      const oNum = (o.orderNumber || '').toUpperCase().replace(/[^A-Za-z0-9]/g, '');
+      const oId = (o.id || '').toUpperCase();
+      return oNum === numOnly || oId === rawClean.toUpperCase() || o.orderNumber === query.trim() || o.orderNumber === withHash;
+    });
 
     if (found) {
       this.openOrderDetailsModal(found);
       return;
     }
 
-    // Try backend lookup endpoint
+    // 2. Query backend lookup
     try {
-      const res = await fetch(`/api/orders/lookup/${encodeURIComponent(query.trim())}`);
+      const res = await fetch(`/api/orders/lookup/${encodeURIComponent(rawClean)}`);
       const data = await res.json();
       if (data.success && data.order) {
         const idx = this.orders.findIndex(o => o.id === data.order.id);
@@ -527,9 +575,11 @@ class ShopkeeperApp {
         this.openOrderDetailsModal(data.order);
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Backend lookup error:', e);
+    }
 
-    alert(`No order found matching "${query}". Please check the order number.`);
+    alert(`Order not found matching "${query}". Please check the order number.`);
   }
 
   openOrderDetailsModal(order) {

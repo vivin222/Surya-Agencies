@@ -438,18 +438,26 @@ class DatabaseService {
     }));
   }
 
-  async getOrderById(idOrOrderNumber) {
+    async getOrderById(idOrOrderNumber) {
     if (this.ready) await this.ready;
     if (!idOrOrderNumber) return null;
 
-    let raw = idOrOrderNumber.trim();
+    let raw = String(idOrOrderNumber).trim();
     try { raw = decodeURIComponent(raw); } catch (e) {}
-    const withHash = raw.startsWith('#') ? raw : ('#' + raw);
-    const withoutHash = raw.replace(/^#/, '');
+    try { raw = decodeURIComponent(raw); } catch (e) {}
+    const clean = raw.replace(/^#/, '').trim();
+    const withHash = '#' + clean;
 
     const row = await this.get(
-      `SELECT * FROM orders WHERE id = ? OR orderNumber = ? OR orderNumber = ? OR orderNumber = ?`,
-      [raw, withHash, withoutHash, idOrOrderNumber]
+      `SELECT * FROM orders 
+       WHERE id = ? 
+          OR orderNumber = ? 
+          OR orderNumber = ? 
+          OR UPPER(orderNumber) = ? 
+          OR UPPER(orderNumber) = ? 
+          OR UPPER(id) = ? 
+          OR REPLACE(orderNumber, '#', '') = ?`,
+      [raw, withHash, clean, withHash.toUpperCase(), clean.toUpperCase(), raw.toUpperCase(), clean]
     );
     if (!row) return null;
 

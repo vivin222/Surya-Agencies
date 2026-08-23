@@ -888,7 +888,7 @@
     </div>
   </div>
 
-  <!-- Modal: 📷 Live Camera QR Scanner (Shopkeeper) -->
+    <!-- Modal: 📷 Live Camera QR Scanner (Shopkeeper) -->
   <div id="shop-qr-scanner-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden" onclick="shopkeeperApp.closeQRScannerModal(event)">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -900,10 +900,18 @@
       </div>
 
       <!-- Camera Scanner Viewport -->
-      <div class="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 flex flex-col items-center justify-center relative min-h-[240px]">
+      <div class="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 flex flex-col items-center justify-center relative min-h-[220px]">
         <div id="shop-qr-reader" class="w-full"></div>
       </div>
       <p id="shop-scanner-status" class="text-xs text-slate-500 font-medium text-center">Initializing camera...</p>
+
+      <!-- Scan from Photo File Option -->
+      <div class="flex items-center justify-center pt-1">
+        <label class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold cursor-pointer flex items-center space-x-2 border border-slate-200 dark:border-slate-700">
+          <span>🖼️ Choose QR Photo / Screenshot</span>
+          <input type="file" accept="image/*" onchange="shopkeeperApp.scanQRFromImageFile(event)" class="hidden" />
+        </label>
+      </div>
 
       <!-- Manual Order ID Lookup Fallback -->
       <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
@@ -912,7 +920,7 @@
           <input 
             type="text" 
             id="manual-order-search-input" 
-            placeholder="e.g. #A009" 
+            placeholder="e.g. #A009 or A009" 
             class="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold uppercase focus:ring-2 focus:ring-purple-500 dark:bg-slate-800 dark:text-white" 
           />
           <button 
@@ -925,6 +933,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- Modal: 🔍 Scanned Order Inspection (Shopkeeper) -->

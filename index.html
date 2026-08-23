@@ -6,14 +6,10 @@
   <title>SURYA AGENCIES — Ice Cream & Dairy Ordering Portal</title>
   
   <meta name="theme-color" content="#e11d48" />
-  
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Surya Agencies" />
-  <link rel="apple-touch-icon" href="/assets/arun-vanilla-cup.jpg" />
-
   <meta name="apple-mobile-web-app-title" content="Surya Agencies" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="/assets/icon-192.png" />
 
   <!-- PWA Web App Manifest -->
   <link rel="manifest" href="./manifest.json" />
@@ -59,12 +55,12 @@
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-rose-600 selection:text-white">
 
   <!-- ========================================================================
-       1. UNIFIED GATEWAY / ROLE SELECTION & LOGIN SCREEN
+       1. UNIFIED GATEWAY / ROLE SELECTION & LOGIN SCREEN (MOBILE OPTIMIZED)
        ======================================================================== -->
-  <div id="gateway-portal" class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-rose-50/70 via-slate-50 to-slate-100">
+  <div id="gateway-portal" class="min-h-screen flex flex-col items-center justify-center p-3 sm:p-6 bg-gradient-to-b from-rose-50/70 via-slate-50 to-slate-100">
     <div class="max-w-4xl w-full">
       <!-- Top Theme Switcher & PWA on Gateway -->
-      <div class="flex items-center justify-end gap-2 mb-4">
+      <div class="flex items-center justify-end gap-2 mb-3">
         <button 
           type="button" 
           id="pwa-install-btn-gateway" 
@@ -84,39 +80,39 @@
       </div>
 
       <!-- Header Brand -->
-      <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-tr from-rose-600 to-red-500 text-white text-3xl shadow-xl shadow-rose-600/30 mb-4 font-black">
+      <div class="text-center mb-6 sm:mb-8">
+        <div class="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-gradient-to-tr from-rose-600 to-red-500 text-white text-2xl sm:text-3xl shadow-xl shadow-rose-600/30 mb-3 sm:mb-4 font-black">
           🍨
         </div>
-        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 font-display tracking-tight">SURYA AGENCIES</h1>
-        <p class="text-base sm:text-lg font-bold text-rose-600 mt-1">Ice Cream & Dairy Ordering Portal</p>
-        <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto mt-2">
+        <h1 class="text-2xl sm:text-4xl font-black text-slate-900 font-display tracking-tight">SURYA AGENCIES</h1>
+        <p class="text-sm sm:text-lg font-bold text-rose-600 mt-0.5 sm:mt-1">Ice Cream & Dairy Ordering Portal</p>
+        <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto mt-1.5 sm:mt-2 px-2">
           Authorized Parlour for Hatsun Dairy Products & Arun Icecreams. Choose your portal below:
         </p>
       </div>
 
       <!-- Two Gateway Options Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
         <!-- Customer Portal Card -->
-        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xl hover:border-rose-300 transition-all flex flex-col justify-between">
+        <div class="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/90 shadow-xl hover:border-rose-300 transition-all flex flex-col justify-between">
           <div>
-            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-2xl mb-4 font-bold">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl sm:text-2xl mb-3 sm:mb-4 font-bold">
               📱
             </div>
-            <h2 class="text-xl font-extrabold text-slate-900 font-display">Customer Store</h2>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 font-display">Customer Store</h2>
             <p class="text-xs text-slate-500 mt-1">
-              Browse 95+ dairy and ice cream products, check live stock, and order for quick counter pickup.
+              Browse 95+ dairy and ice cream products, check live parlour stock, and order for instant counter pickup.
             </p>
 
             <!-- Customer Auth Options -->
-            <div class="mt-6 space-y-3">
+            <div class="mt-5 space-y-2.5">
               <!-- Google Login -->
               <button 
                 type="button" 
                 onclick="appController.triggerGoogleSignIn()" 
-                class="w-full py-3.5 px-4 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center space-x-3"
+                class="w-full py-3 px-4 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center space-x-2.5"
               >
-                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
@@ -129,15 +125,15 @@
               <button 
                 type="button" 
                 onclick="appController.openCustomerAuthModal('phone')" 
-                class="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-slate-900/10 transition-all flex items-center justify-center space-x-2"
+                class="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-slate-900/10 transition-all flex items-center justify-center space-x-2"
               >
-                <span>📱 Login with Mobile Number (OTP)</span>
+                <span>📱 Login with Mobile (OTP)</span>
               </button>
             </div>
           </div>
 
           <!-- Quick Guest Access -->
-          <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+          <div class="mt-5 pt-3.5 border-t border-slate-100 text-center">
             <button 
               type="button" 
               onclick="appController.continueAsGuest()" 
@@ -149,18 +145,18 @@
         </div>
 
         <!-- Shopkeeper Portal Card -->
-        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xl hover:border-slate-400 transition-all flex flex-col justify-between">
+        <div class="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/90 shadow-xl hover:border-slate-400 transition-all flex flex-col justify-between">
           <div>
-            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center text-2xl mb-4 font-bold">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center text-xl sm:text-2xl mb-3 sm:mb-4 font-bold">
               🏪
             </div>
-            <h2 class="text-xl font-extrabold text-slate-900 font-display">Shopkeeper Portal</h2>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 font-display">Shopkeeper Portal</h2>
             <p class="text-xs text-slate-500 mt-1">
-              Authorized Surya Agencies staff login for order processing, inventory, and UPI payment settings.
+              Surya Agencies staff login for order processing, price & stock additions, and revenue reports.
             </p>
 
             <!-- Shopkeeper Login Form -->
-            <form id="gateway-shopkeeper-form" onsubmit="appController.handleShopkeeperLogin(event)" class="mt-6 space-y-3">
+            <form id="gateway-shopkeeper-form" onsubmit="appController.handleShopkeeperLogin(event)" class="mt-5 space-y-3">
               <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Username</label>
                 <input 
@@ -187,14 +183,14 @@
 
               <button 
                 type="submit" 
-                class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition-all flex items-center justify-center space-x-2"
+                class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition-all flex items-center justify-center space-x-2"
               >
                 <span>🔑 Enter Shopkeeper Dashboard</span>
               </button>
             </form>
           </div>
 
-          <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+          <div class="mt-5 pt-3.5 border-t border-slate-100 text-center">
             <span class="text-[11px] font-bold text-slate-400">Restricted Access • Surya Agencies Staff Only</span>
           </div>
         </div>
@@ -203,28 +199,28 @@
   </div>
 
   <!-- ========================================================================
-       2. CUSTOMER STORE PORTAL
+       2. CUSTOMER STORE PORTAL (MOBILE-FIRST)
        ======================================================================== -->
   <div id="customer-portal" class="hidden flex-1 flex flex-col">
     <!-- Top Glass Navigation -->
-    <header class="glass-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-sm">
-      <div class="flex items-center space-x-3 cursor-pointer" onclick="customerApp.showCatalogView()">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 flex items-center justify-center text-xl text-white shadow-md shadow-rose-600/20 font-black">
+    <header class="glass-header sticky top-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-sm">
+      <div class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer" onclick="customerApp.showCatalogView()">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 flex items-center justify-center text-lg sm:text-xl text-white shadow-md shadow-rose-600/20 font-black flex-shrink-0">
           🍨
         </div>
         <div>
           <div class="flex items-center gap-1.5">
-            <h1 class="font-black text-slate-900 tracking-tight text-base font-display">SURYA AGENCIES</h1>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-800 border border-rose-200">ARUN & HATSUN</span>
+            <h1 class="font-black text-slate-900 tracking-tight text-sm sm:text-base font-display">SURYA AGENCIES</h1>
+            <span class="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-black bg-rose-100 text-rose-800 border border-rose-200">ARUN & HATSUN</span>
           </div>
-          <p class="text-[10px] font-bold text-rose-600">Ice Cream & Dairy Ordering Portal</p>
+          <p class="text-[9px] sm:text-[10px] font-bold text-rose-600">Ice Cream & Dairy Ordering</p>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-1.5 sm:space-x-2">
         <!-- Live Connection Pill -->
-        <div id="customer-conn-pill" class="conn-status-pill conn-status-online hidden sm:inline-flex" title="Connected to Surya Agencies backend">
+        <div id="customer-conn-pill" class="conn-status-pill conn-status-online hidden lg:inline-flex" title="Connected to Surya Agencies backend">
           <span class="conn-dot conn-dot-online"></span>
           <span>Live Store</span>
         </div>
@@ -235,9 +231,9 @@
           id="pwa-install-btn-nav" 
           onclick="appController.promptInstallPWA()" 
           class="hidden px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white text-xs font-extrabold shadow-sm flex items-center space-x-1"
-          title="Install as Android App on your device"
+          title="Install as Mobile App"
         >
-          <span>📲 Install App</span>
+          <span>📲 App</span>
         </button>
 
         <!-- Theme Switcher Toggle (Sun / Moon) -->
@@ -264,9 +260,9 @@
         <button 
           type="button" 
           onclick="customerApp.showOrdersView()" 
-          class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-sm flex items-center space-x-1.5"
+          class="px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-sm flex items-center space-x-1"
         >
-          <span>📦 My Orders</span>
+          <span>📦 Orders</span>
           <span id="active-orders-badge" class="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-extrabold hidden">0</span>
         </button>
 
@@ -275,7 +271,7 @@
           type="button" 
           id="customer-profile-btn" 
           onclick="appController.openCustomerAuthModal()" 
-          class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-sm flex items-center space-x-1.5"
+          class="px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-sm flex items-center space-x-1 hidden sm:flex"
         >
           <span>👤 Profile</span>
         </button>
@@ -284,86 +280,87 @@
         <button 
           type="button" 
           onclick="customerApp.openCartDrawer()" 
-          class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 hover:from-rose-700 hover:to-red-700 flex items-center space-x-2"
+          class="px-3 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 hover:from-rose-700 hover:to-red-700 flex items-center space-x-1.5"
         >
-          <span>🛍️ Cart</span>
+          <span>🛍️</span>
+          <span class="hidden sm:inline">Cart</span>
           <span id="cart-badge-count" class="px-1.5 py-0.5 rounded-full bg-white text-rose-700 text-[10px] font-black leading-none">0</span>
         </button>
       </div>
     </header>
 
     <!-- Main Customer Body -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       
       <!-- Catalog View -->
-      <div id="customer-catalog-view" class="space-y-6">
+      <div id="customer-catalog-view" class="space-y-4 sm:space-y-6">
         <!-- Hero Banner -->
-        <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white p-5 sm:p-8 shadow-xl relative overflow-hidden">
           <div class="max-w-xl relative z-10">
-            <span class="px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider">
               Surya Agencies • Fresh Ice Cream & Dairy
             </span>
-            <h2 class="text-2xl sm:text-3xl font-black font-display tracking-tight mt-3">
-              Order Fresh Arun Icecreams & Hatsun Dairy
+            <h2 class="text-xl sm:text-3xl font-black font-display tracking-tight mt-2 sm:mt-3">
+              Order Arun Icecreams & Hatsun Dairy
             </h2>
-            <p class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
-              Browse 95+ items across 8 categories with live parlour stock. Pay via UPI QR or at shop and pick up fresh!
+            <p class="text-[11px] sm:text-sm text-slate-300 mt-1.5 sm:mt-2 leading-relaxed">
+              Browse full dairy & ice cream catalogue with live parlour stock. Pay via UPI QR or at shop and pick up fresh!
             </p>
           </div>
         </div>
 
         <!-- Search & Category Filters -->
-        <div class="space-y-4">
+        <div class="space-y-3 sm:space-y-4">
           <!-- Search Bar -->
-          <div class="relative max-w-md w-full">
+          <div class="relative w-full">
             <input 
               type="text" 
               id="customer-search-input" 
               oninput="customerApp.setSearchQuery(this.value)" 
-              placeholder="Search milk, curd, paneer, cones, chocobars, tubs, cakes..." 
-              class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm"
+              placeholder="Search milk, curd, paneer, cones, bars, tubs, cakes..." 
+              class="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 rounded-2xl border border-slate-200 bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm"
             />
-            <span class="absolute left-3.5 top-3.5 text-slate-400">🔍</span>
+            <span class="absolute left-3 top-2.5 sm:top-3.5 text-slate-400 text-sm">🔍</span>
           </div>
 
           <!-- Category Pills (Horizontal Scrollable) -->
-          <div id="customer-categories-bar" class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <div id="customer-categories-bar" class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
             <!-- Rendered Dynamically -->
           </div>
         </div>
 
         <!-- Section Title -->
-        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
           <div>
-            <h3 id="current-category-title" class="text-xl font-black text-slate-900 font-display">All Products</h3>
-            <p id="current-category-count" class="text-xs text-slate-500 font-semibold">Loading products...</p>
+            <h3 id="current-category-title" class="text-lg sm:text-xl font-black text-slate-900 font-display">All Products</h3>
+            <p id="current-category-count" class="text-[11px] sm:text-xs text-slate-500 font-semibold">Loading products...</p>
           </div>
         </div>
 
-        <!-- Products Grid (Rigid Card Layout - Zero Overlap) -->
+        <!-- Products Grid (Rigid 2-Col Mobile / 4-Col Desktop Zero Overlap) -->
         <div id="customer-products-grid" class="product-grid">
           <!-- Injected Dynamically -->
         </div>
 
         <!-- Empty Products State -->
-        <div id="customer-empty-products" class="hidden text-center py-16 bg-white rounded-3xl border border-slate-200 p-8">
-          <span class="text-4xl block mb-2">🍨</span>
-          <h4 class="font-extrabold text-base text-slate-800">No products found</h4>
+        <div id="customer-empty-products" class="hidden text-center py-12 sm:py-16 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8">
+          <span class="text-3xl sm:text-4xl block mb-2">🍨</span>
+          <h4 class="font-extrabold text-sm sm:text-base text-slate-800">No products found</h4>
           <p class="text-xs text-slate-500 mt-1">Try adjusting your search query or selecting a different category.</p>
         </div>
       </div>
 
       <!-- Order Tracking View (Live Digital Ticket) -->
-      <div id="customer-tracking-view" class="hidden max-w-2xl mx-auto space-y-6">
+      <div id="customer-tracking-view" class="hidden max-w-2xl mx-auto space-y-4 sm:space-y-6">
         <!-- Rendered Dynamically -->
       </div>
 
       <!-- My Orders View (Personal History) -->
-      <div id="customer-orders-view" class="hidden space-y-6">
+      <div id="customer-orders-view" class="hidden space-y-4 sm:space-y-6">
         <!-- Rendered Dynamically -->
       </div>
-    
-      <!-- Mobile Quick Floating Cart Bar (iPhone / Android Bottom Pill) -->
+
+      <!-- Mobile Quick Floating Cart Bar -->
       <div id="mobile-floating-cart-bar" class="mobile-cart-bar hidden cursor-pointer" onclick="customerApp.openCartDrawer()">
         <div class="flex items-center space-x-2">
           <span class="text-xl">🛍️</span>
@@ -377,35 +374,33 @@
         </div>
       </div>
     </main>
-
   </div>
 
   <!-- ========================================================================
-       3. SHOPKEEPER DASHBOARD
+       3. SHOPKEEPER DASHBOARD (REVENUE & REPORTS + ADD PRODUCT + IMAGE EDIT)
        ======================================================================== -->
   <div id="shopkeeper-portal" class="hidden flex-1 flex flex-col">
     <!-- Top Header -->
-    <header class="glass-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between shadow-sm bg-slate-900 text-white">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-2xl bg-rose-600 flex items-center justify-center text-xl text-white font-black">
+    <header class="glass-header sticky top-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-sm bg-slate-900 text-white">
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-rose-600 flex items-center justify-center text-lg sm:text-xl text-white font-black flex-shrink-0">
           🏪
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="font-black text-white tracking-tight text-base font-display">SURYA AGENCIES</h1>
-            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/30">SHOPKEEPER PORTAL</span>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-black text-white tracking-tight text-sm sm:text-base font-display">SURYA AGENCIES</h1>
+            <span class="px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/30">SHOPKEEPER</span>
           </div>
-          <p class="text-[10px] font-bold text-slate-400">Live Inventory & Order Fulfillment System</p>
+          <p class="text-[9px] sm:text-[10px] font-bold text-slate-400">Inventory, Orders & Revenue Reports</p>
         </div>
       </div>
 
-      <div class="flex items-center space-x-2">
-        <div id="shop-conn-pill" class="conn-status-pill conn-status-online hidden sm:inline-flex">
+      <div class="flex items-center space-x-1.5 sm:space-x-2">
+        <div id="shop-conn-pill" class="conn-status-pill conn-status-online hidden lg:inline-flex">
           <span class="conn-dot conn-dot-online"></span>
           <span>Live Backend</span>
         </div>
 
-        <!-- Theme Toggle for Shopkeeper -->
         <button 
           type="button" 
           onclick="appController.toggleTheme()" 
@@ -418,7 +413,7 @@
         <button 
           type="button" 
           onclick="appController.showGateway()" 
-          class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700"
+          class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 hidden sm:inline-flex"
         >
           🔄 Switch View
         </button>
@@ -426,7 +421,7 @@
         <button 
           type="button" 
           onclick="appController.logoutShopkeeper()" 
-          class="px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-bold border border-rose-500/30"
+          class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-bold border border-rose-500/30"
         >
           🚪 Logout
         </button>
@@ -434,76 +429,86 @@
     </header>
 
     <!-- Shopkeeper Main Dashboard Body -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       
-      <!-- KPI Stats Grid -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-          <span class="text-xs font-bold uppercase text-slate-400 block">Today's Orders</span>
-          <span id="shop-kpi-orders" class="text-2xl sm:text-3xl font-black text-slate-900 font-display mt-1 block">0</span>
-          <span class="text-[11px] font-semibold text-emerald-600 mt-1 block">✓ Real-time sync</span>
+      <!-- KPI Stats Grid with Revenue Overview -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">Today's Orders</span>
+          <span id="shop-kpi-orders" class="text-xl sm:text-3xl font-black text-slate-900 font-display mt-0.5 sm:mt-1 block">0</span>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 mt-0.5 sm:mt-1 block">✓ Real-time sync</span>
         </div>
 
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-          <span class="text-xs font-bold uppercase text-slate-400 block">Pending / Preparing</span>
-          <span id="shop-kpi-pending" class="text-2xl sm:text-3xl font-black text-rose-600 font-display mt-1 block">0</span>
-          <span class="text-[11px] font-semibold text-rose-500 mt-1 block">⚡ Needs action</span>
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">Pending / Preparing</span>
+          <span id="shop-kpi-pending" class="text-xl sm:text-3xl font-black text-rose-600 font-display mt-0.5 sm:mt-1 block">0</span>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-rose-500 mt-0.5 sm:mt-1 block">⚡ Needs action</span>
         </div>
 
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-          <span class="text-xs font-bold uppercase text-slate-400 block">Completed Sales</span>
-          <span id="shop-kpi-revenue" class="text-2xl sm:text-3xl font-black text-slate-900 font-display mt-1 block">₹0</span>
-          <span class="text-[11px] font-semibold text-slate-400 mt-1 block">Cash + UPI</span>
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm cursor-pointer hover:border-emerald-300 transition-all" onclick="shopkeeperApp.switchTab('reports')">
+          <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">Completed Sales</span>
+          <span id="shop-kpi-revenue" class="text-xl sm:text-3xl font-black text-slate-900 font-display mt-0.5 sm:mt-1 block">₹0</span>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 mt-0.5 sm:mt-1 block">📊 View Full Reports →</span>
         </div>
 
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
-          <span class="text-xs font-bold uppercase text-slate-400 block">Low / Out of Stock</span>
-          <span id="shop-kpi-stock" class="text-2xl sm:text-3xl font-black text-amber-600 font-display mt-1 block">0</span>
-          <span class="text-[11px] font-semibold text-amber-600 mt-1 block">Items below 5 units</span>
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">Low / Out of Stock</span>
+          <span id="shop-kpi-stock" class="text-xl sm:text-3xl font-black text-amber-600 font-display mt-0.5 sm:mt-1 block">0</span>
+          <span class="text-[10px] sm:text-[11px] font-semibold text-amber-600 mt-0.5 sm:mt-1 block">Items below 5 units</span>
         </div>
       </div>
 
-      <!-- Shopkeeper Navigation Tabs -->
-      <div class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto scrollbar-none">
+      <!-- Shopkeeper Navigation Tabs (4 TABS) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 pb-2 overflow-x-auto scrollbar-none -mx-1 px-1">
         <button 
           type="button" 
           id="shop-tab-orders" 
           onclick="shopkeeperApp.switchTab('orders')" 
-          class="px-4 py-2 rounded-2xl bg-slate-900 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-2 whitespace-nowrap"
+          class="px-3.5 sm:px-4 py-2 rounded-2xl bg-slate-900 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-1.5 whitespace-nowrap"
         >
-          <span>📥 Live Customer Orders</span>
-          <span id="shop-active-orders-count" class="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black">0</span>
+          <span>📥 Orders</span>
+          <span id="shop-active-orders-count" class="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black">0</span>
         </button>
 
         <button 
           type="button" 
           id="shop-tab-products" 
           onclick="shopkeeperApp.switchTab('products')" 
-          class="px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-2 whitespace-nowrap"
+          class="px-3.5 sm:px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-1.5 whitespace-nowrap"
         >
-          <span>📦 Product & Price Management</span>
+          <span>📦 Products & Stock</span>
+        </button>
+
+        <button 
+          type="button" 
+          id="shop-tab-reports" 
+          onclick="shopkeeperApp.switchTab('reports')" 
+          class="px-3.5 sm:px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-1.5 whitespace-nowrap"
+        >
+          <span>📊 Revenue & Reports</span>
         </button>
 
         <button 
           type="button" 
           id="shop-tab-settings" 
           onclick="shopkeeperApp.switchTab('settings')" 
-          class="px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-2 whitespace-nowrap"
+          class="px-3.5 sm:px-4 py-2 rounded-2xl bg-white text-slate-700 hover:bg-slate-100 font-extrabold text-xs border border-slate-200 transition-all flex items-center space-x-1.5 whitespace-nowrap"
         >
-          <span>⚙️ Shop & UPI Settings</span>
+          <span>⚙️ Settings</span>
         </button>
       </div>
 
       <!-- Tab 1: Live Orders View -->
-      <div id="shop-view-orders" class="space-y-4">
+      <div id="shop-view-orders" class="space-y-3 sm:space-y-4">
         <!-- Order Filter Pills -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          <button type="button" onclick="shopkeeperApp.filterOrders('ALL')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white">All Orders</button>
-          <button type="button" onclick="shopkeeperApp.filterOrders('NEW')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">New</button>
-          <button type="button" onclick="shopkeeperApp.filterOrders('PREPARING')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">Preparing</button>
-          <button type="button" onclick="shopkeeperApp.filterOrders('READY_FOR_PICKUP')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">Ready for Pickup</button>
-          <button type="button" onclick="shopkeeperApp.filterOrders('COMPLETED')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">Completed</button>
-          <button type="button" onclick="shopkeeperApp.filterOrders('CANCELLED')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200">Cancelled</button>
+        <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
+          <button type="button" onclick="shopkeeperApp.filterOrders('ALL')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white whitespace-nowrap">All Orders</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('NEW')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">New</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('ACCEPTED')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Accepted</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('PREPARING')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Preparing</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('READY_FOR_PICKUP')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Ready</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('COMPLETED')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Completed</button>
+          <button type="button" onclick="shopkeeperApp.filterOrders('CANCELLED')" class="shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Cancelled</button>
         </div>
 
         <!-- Orders List Container -->
@@ -511,23 +516,24 @@
           <!-- Injected Dynamically -->
         </div>
 
-        <div id="shopkeeper-orders-empty" class="hidden text-center py-12 bg-white rounded-3xl border border-slate-200 p-8">
+        <div id="shopkeeper-orders-empty" class="hidden text-center py-12 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8">
           <span class="text-3xl block mb-2">📥</span>
           <h4 class="font-extrabold text-slate-800 text-sm">No incoming orders</h4>
           <p class="text-xs text-slate-500 mt-1">Orders placed by customers will appear here in real time with an audio alert.</p>
         </div>
       </div>
 
-      <!-- Tab 2: Product & Price Management View -->
+      <!-- Tab 2: Product & Stock Management View -->
       <div id="shop-view-products" class="hidden space-y-4">
+        <!-- Top Toolbar with "➕ Add New Stock / Product" Button -->
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3 flex-1">
             <input 
               type="text" 
               id="shop-product-search" 
               oninput="shopkeeperApp.searchProducts(this.value)" 
-              placeholder="Search products to edit price/stock..." 
-              class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 w-64"
+              placeholder="Search by name or category..." 
+              class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 flex-1 min-w-[160px]"
             />
             <select 
               id="shop-product-cat-filter" 
@@ -545,7 +551,15 @@
               <option value="Ice Cream Cakes">Ice Cream Cakes</option>
             </select>
           </div>
-          <span class="text-xs font-bold text-slate-500">Edit price or stock below & click Save</span>
+
+          <!-- Add Product Button -->
+          <button 
+            type="button" 
+            onclick="shopkeeperApp.openAddProductModal()" 
+            class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-xs sm:text-sm shadow-md shadow-rose-600/20 flex items-center justify-center space-x-1.5 flex-shrink-0"
+          >
+            <span>➕ Add New Product</span>
+          </button>
         </div>
 
         <!-- Product Table / Cards for Management -->
@@ -554,9 +568,95 @@
         </div>
       </div>
 
-      <!-- Tab 3: Shop & UPI Settings View -->
+      <!-- Tab 3: Revenue & Reports View (NEW) -->
+      <div id="shop-view-reports" class="hidden space-y-4 sm:space-y-6">
+        <!-- Reports Header with Refresh -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <div>
+            <h3 class="text-lg font-black text-slate-900 font-display">Revenue & Profit/Loss Reports</h3>
+            <p class="text-xs text-slate-500 font-semibold">Real-time financial analytics from completed and paid sales.</p>
+          </div>
+          <button 
+            type="button" 
+            onclick="shopkeeperApp.fetchRevenueReports()" 
+            class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold shadow-sm flex items-center space-x-1.5"
+          >
+            <span>🔄 Refresh Analytics</span>
+          </button>
+        </div>
+
+        <!-- 6 Main Financial Metric Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <!-- Today's Revenue -->
+          <div class="bg-gradient-to-br from-rose-50 to-white p-4 sm:p-5 rounded-3xl border border-rose-200/80 shadow-sm">
+            <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">Today's Revenue</span>
+            <span id="rep-today-rev" class="text-xl sm:text-3xl font-black text-slate-900 font-display mt-1 block">₹0</span>
+            <span id="rep-today-orders" class="text-[10px] sm:text-[11px] font-semibold text-rose-600 mt-1 block">0 orders today</span>
+          </div>
+
+          <!-- Weekly Revenue -->
+          <div class="bg-gradient-to-br from-indigo-50 to-white p-4 sm:p-5 rounded-3xl border border-indigo-200/80 shadow-sm">
+            <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">This Week's Revenue</span>
+            <span id="rep-week-rev" class="text-xl sm:text-3xl font-black text-slate-900 font-display mt-1 block">₹0</span>
+            <span id="rep-week-orders" class="text-[10px] sm:text-[11px] font-semibold text-indigo-600 mt-1 block">Last 7 days</span>
+          </div>
+
+          <!-- Monthly Revenue -->
+          <div class="bg-gradient-to-br from-emerald-50 to-white p-4 sm:p-5 rounded-3xl border border-emerald-200/80 shadow-sm">
+            <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">This Month's Revenue</span>
+            <span id="rep-month-rev" class="text-xl sm:text-3xl font-black text-slate-900 font-display mt-1 block">₹0</span>
+            <span id="rep-month-orders" class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 mt-1 block">Current month</span>
+          </div>
+
+          <!-- Net Profit / Loss Card -->
+          <div class="bg-gradient-to-br from-amber-50 to-white p-4 sm:p-5 rounded-3xl border border-amber-200/80 shadow-sm">
+            <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">Estimated Net Profit</span>
+            <span id="rep-total-profit" class="text-xl sm:text-3xl font-black text-emerald-700 font-display mt-1 block">₹0</span>
+            <span id="rep-profit-sub" class="text-[10px] sm:text-[11px] font-semibold text-amber-700 mt-1 block">Selling Price − Cost Price</span>
+          </div>
+
+          <!-- Cash Sales Total -->
+          <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">💵 Cash at Shop</span>
+            <span id="rep-cash-sales" class="text-xl sm:text-3xl font-black text-slate-900 font-display mt-1 block">₹0</span>
+            <span class="text-[10px] sm:text-[11px] font-semibold text-slate-400 mt-1 block">Counter cash collections</span>
+          </div>
+
+          <!-- UPI Online Sales Total -->
+          <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] sm:text-xs font-bold uppercase text-slate-400 block">📱 UPI Payments</span>
+            <span id="rep-upi-sales" class="text-xl sm:text-3xl font-black text-purple-700 font-display mt-1 block">₹0</span>
+            <span class="text-[10px] sm:text-[11px] font-semibold text-purple-600 mt-1 block">GPay / PhonePe / Paytm</span>
+          </div>
+        </div>
+
+        <!-- Profit Transparency Notice -->
+        <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3 text-xs">
+          <span class="text-lg">💡</span>
+          <div>
+            <h5 class="font-extrabold text-slate-800 dark:text-slate-200">Accurate Profit Calculation Policy</h5>
+            <p class="text-slate-600 dark:text-slate-400 mt-0.5">
+              Profits are calculated using exact formula: <code>(Selling Price − Cost Price) × Units Sold</code>. For items where you have not set a Cost Price in the Products tab, revenue is counted normally without inventing fake profits.
+            </p>
+          </div>
+        </div>
+
+        <!-- Best-Selling Products & Product-Wise Breakdown Table -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h4 class="font-black text-slate-900 font-display text-base">Product Sales & Performance Breakdown</h4>
+            <span id="rep-product-count" class="text-xs text-slate-400 font-bold">0 products sold</span>
+          </div>
+
+          <div id="rep-products-table" class="space-y-2 overflow-x-auto">
+            <!-- Injected Dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Shop & UPI Settings View -->
       <div id="shop-view-settings" class="hidden space-y-6">
-        <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm max-w-2xl">
+        <div class="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 shadow-sm max-w-2xl">
           <div class="flex items-center space-x-3 mb-6">
             <span class="text-2xl">⚙️</span>
             <div>
@@ -578,7 +678,7 @@
                 />
                 <span class="absolute right-3 top-2.5 text-xs text-emerald-600 font-bold">✓ Live Sync</span>
               </div>
-              <span class="text-[10px] text-slate-400 block mt-1">When customers choose UPI at checkout, the QR code will instantly link to this UPI ID.</span>
+              <span class="text-[10px] text-slate-400 block mt-1">This UPI ID is embedded directly in the Customer QR Code for instant scanning.</span>
             </div>
 
             <div>
@@ -622,21 +722,21 @@
   <div id="cart-drawer-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden" onclick="customerApp.closeCartDrawer(event)">
     <div 
       id="cart-drawer-panel" 
-      class="bg-white w-full max-w-md h-full ml-auto flex flex-col justify-between p-6 shadow-2xl transition-transform duration-300 transform translate-x-full" 
+      class="bg-white w-full max-w-md h-full ml-auto flex flex-col justify-between p-4 sm:p-6 shadow-2xl transition-transform duration-300 transform translate-x-full" 
       onclick="event.stopPropagation()"
     >
-      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4">
         <div class="flex items-center space-x-2">
-          <span class="text-2xl">🛍️</span>
+          <span class="text-xl sm:text-2xl">🛍️</span>
           <div>
-            <h3 class="text-lg font-black text-slate-900 font-display">Your Surya Cart</h3>
-            <p class="text-xs text-slate-500">Pick up fresh at Surya Agencies</p>
+            <h3 class="text-base sm:text-lg font-black text-slate-900 font-display">Your Surya Cart</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500">Pick up fresh at Surya Agencies</p>
           </div>
         </div>
         <button type="button" onclick="customerApp.closeCartDrawer()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
       </div>
 
-      <div id="cart-drawer-items" class="flex-1 overflow-y-auto py-4 space-y-3">
+      <div id="cart-drawer-items" class="flex-1 overflow-y-auto py-3 space-y-2.5">
         <!-- Injected dynamically -->
       </div>
 
@@ -646,7 +746,7 @@
         <p class="text-xs text-slate-500 mt-1">Select your favourite ice cream & dairy items!</p>
       </div>
 
-      <div id="cart-drawer-footer" class="border-t border-slate-100 pt-4 space-y-3">
+      <div id="cart-drawer-footer" class="border-t border-slate-100 pt-3 sm:pt-4 space-y-2.5">
         <div class="space-y-1 text-xs">
           <div class="flex justify-between text-slate-500">
             <span>Subtotal</span>
@@ -661,33 +761,33 @@
         <button 
           type="button" 
           onclick="customerApp.openCheckoutModal()"
-          class="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
+          class="w-full py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
         >
-          <span>Proceed to Order Checkout →</span>
+          <span>Proceed to Checkout →</span>
         </button>
       </div>
     </div>
   </div>
 
   <!-- Customer Auth Modal (Phone OTP & Google) -->
-  <div id="customer-auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="appController.closeCustomerAuthModal(event)">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+  <div id="customer-auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="appController.closeCustomerAuthModal(event)">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-8 border border-slate-200 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
-          <h3 class="text-lg font-black text-slate-900 font-display">Customer Sign In</h3>
-          <p class="text-xs text-slate-500">Sign in to track orders & save your favourites</p>
+          <h3 class="text-base sm:text-lg font-black text-slate-900 font-display">Customer Sign In</h3>
+          <p class="text-[11px] sm:text-xs text-slate-500">Sign in to track orders & save your favourites</p>
         </div>
         <button type="button" onclick="appController.closeCustomerAuthModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
       </div>
 
-      <div class="mt-6 space-y-4">
+      <div class="mt-4 space-y-3">
         <!-- Google Sign-In button -->
         <button 
           type="button" 
           onclick="appController.triggerGoogleSignIn()" 
-          class="w-full py-3.5 px-4 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center space-x-3"
+          class="w-full py-3 px-4 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center space-x-2.5"
         >
-          <svg class="w-4 h-4" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
@@ -696,9 +796,9 @@
           <span>Continue with Google</span>
         </button>
 
-        <div class="flex items-center my-3">
+        <div class="flex items-center my-2">
           <div class="flex-1 border-t border-slate-200"></div>
-          <span class="px-3 text-[11px] font-bold text-slate-400 uppercase">Or Mobile Number (OTP)</span>
+          <span class="px-2.5 text-[10px] font-bold text-slate-400 uppercase">Or Mobile Number (OTP)</span>
           <div class="flex-1 border-t border-slate-200"></div>
         </div>
 
@@ -717,29 +817,29 @@
           <button 
             type="button" 
             onclick="appController.requestPhoneOTP()" 
-            class="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2"
+            class="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2"
           >
             <span>📱 Send 4-Digit OTP →</span>
           </button>
         </div>
 
         <!-- Step 2: OTP Verification Box -->
-        <div id="auth-phone-step-2" class="space-y-4 hidden">
-          <!-- Realistic Simulated SMS Alert Banner -->
-          <div id="simulated-sms-banner" class="p-3.5 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl border border-slate-700 shadow-lg animate-in slide-in-from-top duration-300">
+        <div id="auth-phone-step-2" class="space-y-3.5 hidden">
+          <!-- Simulated SMS Alert Banner -->
+          <div id="simulated-sms-banner" class="p-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl border border-slate-700 shadow-lg">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-black uppercase tracking-wider text-rose-400 flex items-center gap-1">
+              <span class="text-[9px] font-black uppercase tracking-wider text-rose-400 flex items-center gap-1">
                 <span>💬</span> <span>MESSAGES • SURYA-OTP</span>
               </span>
-              <span class="text-[10px] text-slate-400 font-mono">Now</span>
+              <span class="text-[9px] text-slate-400 font-mono">Now</span>
             </div>
             <p class="text-xs text-slate-200 leading-snug">
-              Your Surya Agencies login verification code is <strong id="sms-otp-display" class="text-yellow-400 font-mono text-sm tracking-wider">0000</strong>.
+              Your Surya Agencies verification code is <strong id="sms-otp-display" class="text-yellow-400 font-mono text-sm tracking-wider">0000</strong>.
             </p>
             <button 
               type="button" 
               onclick="appController.autoFillOTP()" 
-              class="mt-2 text-[11px] font-black text-rose-300 hover:text-rose-200 underline block"
+              class="mt-1.5 text-[11px] font-black text-rose-300 hover:text-rose-200 underline block"
             >
               📋 Tap here to Auto-Fill this OTP →
             </button>
@@ -748,10 +848,10 @@
           <div class="text-center">
             <span class="text-xs font-bold text-slate-500">Enter 4-Digit Verification Code</span>
             <div class="flex items-center justify-center gap-2 mt-2">
-              <input type="text" id="otp-digit-1" maxlength="1" oninput="appController.onOtpInput(1, this.value)" class="w-12 h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 focus:border-rose-600 focus:outline-none bg-slate-50 font-mono" />
-              <input type="text" id="otp-digit-2" maxlength="1" oninput="appController.onOtpInput(2, this.value)" class="w-12 h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 focus:border-rose-600 focus:outline-none bg-slate-50 font-mono" />
-              <input type="text" id="otp-digit-3" maxlength="1" oninput="appController.onOtpInput(3, this.value)" class="w-12 h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 focus:border-rose-600 focus:outline-none bg-slate-50 font-mono" />
-              <input type="text" id="otp-digit-4" maxlength="1" oninput="appController.onOtpInput(4, this.value)" class="w-12 h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 focus:border-rose-600 focus:outline-none bg-slate-50 font-mono" />
+              <input type="text" id="otp-digit-1" maxlength="1" oninput="appController.onOtpInput(1, this.value)" class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 focus:border-rose-600 focus:outline-none bg-slate-50 font-mono" />
+              <input type="text" id="otp-digit-2" maxlength="1" oninput="appController.onOtpInput(2, this.value)" class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 focus:border-rose-600 focus:outline-none bg-slate-50 font-mono" />
+              <input type="text" id="otp-digit-3" maxlength="1" oninput="appController.onOtpInput(3, this.value)" class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 focus:border-rose-600 focus:outline-none bg-slate-50 font-mono" />
+              <input type="text" id="otp-digit-4" maxlength="1" oninput="appController.onOtpInput(4, this.value)" class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 border-slate-300 focus:border-rose-600 focus:outline-none bg-slate-50 font-mono" />
             </div>
             <input type="hidden" id="cust-modal-otp" value="" />
           </div>
@@ -759,7 +859,7 @@
           <button 
             type="button" 
             onclick="appController.verifyPhoneOTP()" 
-            class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/25 transition-all flex items-center justify-center space-x-2"
+            class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-600/25 transition-all flex items-center justify-center space-x-2"
           >
             <span>✓ Verify OTP & Sign In</span>
           </button>
@@ -785,22 +885,21 @@
     </div>
   </div>
 
-  
   <!-- Install App Modal (iPhone & Android Guides) -->
-  <div id="install-app-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="appController.closeInstallModal(event)">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+  <div id="install-app-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="appController.closeInstallModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
           <span class="text-2xl">📲</span>
           <div>
-            <h3 class="text-lg font-black text-slate-900 dark:text-white font-display">Install Surya Agencies App</h3>
-            <p class="text-xs text-slate-500">Fast 1-tap ordering on your phone</p>
+            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Install Surya Agencies App</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500">Fast 1-tap ordering on your phone</p>
           </div>
         </div>
         <button type="button" onclick="appController.closeInstallModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
       </div>
 
-      <div class="mt-4 space-y-4">
+      <div class="mt-4 space-y-3.5">
         <!-- Device Tab Switcher -->
         <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
           <button type="button" id="tab-guide-iphone" onclick="appController.switchInstallGuide('iphone')" class="py-2 rounded-xl text-xs font-black bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all flex items-center justify-center space-x-1.5">
@@ -812,25 +911,25 @@
         </div>
 
         <!-- iPhone Safari Guide -->
-        <div id="guide-content-iphone" class="space-y-3 py-2">
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
-            <span class="w-7 h-7 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">1</span>
+        <div id="guide-content-iphone" class="space-y-2.5 py-1">
+          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
+            <span class="w-6 h-6 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">1</span>
             <div>
               <h5 class="text-xs font-extrabold text-slate-900 dark:text-white">Open in Safari & Tap Share</h5>
-              <p class="text-[11px] text-slate-500 mt-0.5">At the bottom of your Safari screen, tap the <strong>Share</strong> button (the square with an arrow pointing up <span class="text-base">📤</span>).</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">At the bottom of Safari, tap the <strong>Share</strong> button (square with arrow <span class="text-sm">📤</span>).</p>
             </div>
           </div>
 
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
-            <span class="w-7 h-7 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">2</span>
+          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
+            <span class="w-6 h-6 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">2</span>
             <div>
               <h5 class="text-xs font-extrabold text-slate-900 dark:text-white">Tap "Add to Home Screen"</h5>
-              <p class="text-[11px] text-slate-500 mt-0.5">Scroll down the share menu and tap <strong>"Add to Home Screen" ➕</strong>.</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Scroll down the menu and tap <strong>"Add to Home Screen" ➕</strong>.</p>
             </div>
           </div>
 
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
-            <span class="w-7 h-7 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">3</span>
+          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
+            <span class="w-6 h-6 rounded-full bg-rose-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0">3</span>
             <div>
               <h5 class="text-xs font-extrabold text-slate-900 dark:text-white">Tap "Add" in Top Right</h5>
               <p class="text-[11px] text-slate-500 mt-0.5">Surya Agencies app icon will appear directly on your iPhone home screen!</p>
@@ -839,8 +938,8 @@
         </div>
 
         <!-- Android Guide -->
-        <div id="guide-content-android" class="space-y-3 py-2 hidden">
-          <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-center">
+        <div id="guide-content-android" class="space-y-2.5 py-1 hidden">
+          <div class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-center">
             <button 
               type="button" 
               onclick="appController.triggerNativeInstallPrompt()" 
@@ -848,18 +947,126 @@
             >
               <span>📲 1-Tap Install App on Android</span>
             </button>
-            <span class="text-[10px] text-rose-700 dark:text-rose-300 font-bold block mt-2">Or tap Chrome menu (⋮) → "Install app"</span>
-          </div>
-
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start space-x-3">
-            <span class="w-7 h-7 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center flex-shrink-0">✓</span>
-            <div>
-              <h5 class="text-xs font-extrabold text-slate-900 dark:text-white">Full Screen & Lightning Fast</h5>
-              <p class="text-[11px] text-slate-500 mt-0.5">Runs offline with instant notifications and real-time UPI payments.</p>
-            </div>
+            <span class="text-[10px] text-rose-700 dark:text-rose-300 font-bold block mt-1.5">Or tap Chrome menu (⋮) → "Install app"</span>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: ➕ Add New Stock / Product (SHOPKEEPER) -->
+  <div id="add-product-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="shopkeeperApp.closeAddProductModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">➕</span>
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Add New Product / Stock</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500">Instantly appears in store and inventory</p>
+          </div>
+        </div>
+        <button type="button" onclick="shopkeeperApp.closeAddProductModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
+      </div>
+
+      <form id="add-product-form" onsubmit="shopkeeperApp.submitNewProduct(event)" class="mt-4 space-y-3.5">
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Product Name *</label>
+          <input type="text" id="new-prod-name" required placeholder="e.g. Arun Mango Duet Bar" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Category *</label>
+            <select id="new-prod-category" required class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500">
+              <option value="Dairy Products">Dairy Products</option>
+              <option value="Ice Cream Cones">Ice Cream Cones</option>
+              <option value="Ice Cream Bars & Sticks">Ice Cream Bars & Sticks</option>
+              <option value="Ice Cream Cups & Duets">Ice Cream Cups & Duets</option>
+              <option value="Ice Cream Novelties & Slices">Ice Cream Novelties & Slices</option>
+              <option value="Sundaes & In-Store Specials">Sundaes & In-Store Specials</option>
+              <option value="Family Tubs & Packs">Family Tubs & Packs</option>
+              <option value="Ice Cream Cakes">Ice Cream Cakes</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Pack Size / Volume</label>
+            <input type="text" id="new-prod-packsize" placeholder="e.g. 100ml Cup, 1L Tub" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Selling Price (₹) *</label>
+            <input type="number" id="new-prod-price" required min="0" step="0.5" placeholder="50" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Cost Price (₹)</label>
+            <input type="number" id="new-prod-cost" min="0" step="0.5" placeholder="35 (optional)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500" title="Used for net profit calculation" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Initial Stock *</label>
+            <input type="number" id="new-prod-stock" required min="0" value="25" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Product Description</label>
+          <textarea id="new-prod-desc" rows="2" placeholder="Brief delicious description of the product..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-rose-500"></textarea>
+        </div>
+
+        <!-- Image Upload with Live Preview -->
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Product Image (Upload or Default)</label>
+          <div class="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <img id="new-prod-preview-img" src="/assets/arun-vanilla-cup.jpg" alt="Preview" class="w-14 h-14 object-contain bg-white dark:bg-slate-900 rounded-xl p-1 border border-slate-200 dark:border-slate-700 flex-shrink-0" />
+            <div class="flex-1">
+              <input type="file" id="new-prod-image-file" accept="image/*" onchange="shopkeeperApp.previewNewProductImage(event)" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-rose-600 file:text-white hover:file:bg-rose-700 cursor-pointer" />
+              <span class="text-[10px] text-slate-400 block mt-1">Supports JPG, PNG, WebP (Max 5MB)</span>
+            </div>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="btn-save-new-product"
+          class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-xs sm:text-sm shadow-md shadow-rose-600/25 transition-all flex items-center justify-center space-x-2"
+        >
+          <span>✓ Save & Publish to Store</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: 🖼️ Edit Product Image (SHOPKEEPER) -->
+  <div id="edit-product-image-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4" onclick="shopkeeperApp.closeEditImageModal(event)">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Update Product Image</h3>
+          <p id="edit-img-prod-name" class="text-[11px] sm:text-xs text-slate-500 font-semibold truncate max-w-[260px]">Product Name</p>
+        </div>
+        <button type="button" onclick="shopkeeperApp.closeEditImageModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
+      </div>
+
+      <form id="edit-image-form" onsubmit="shopkeeperApp.submitProductImageUpdate(event)" class="mt-4 space-y-4">
+        <input type="hidden" id="edit-img-prod-id" value="" />
+
+        <div class="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+          <img id="edit-img-preview" src="/assets/arun-vanilla-cup.jpg" alt="Preview" class="w-28 h-28 object-contain bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-200 dark:border-slate-700 shadow-sm" />
+          <input type="file" id="edit-img-file-input" accept="image/*" onchange="shopkeeperApp.previewEditImage(event)" required class="text-xs text-slate-500 file:mr-2 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-rose-600 file:text-white hover:file:bg-rose-700 cursor-pointer" />
+        </div>
+
+        <button 
+          type="submit" 
+          id="btn-save-edit-image"
+          class="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2"
+        >
+          <span>💾 Save & Broadcast Image</span>
+        </button>
+      </form>
     </div>
   </div>
 
@@ -867,16 +1074,18 @@
   <div id="checkout-modal-container"></div>
 
   <!-- Global Toast Notification Container -->
-  <div id="global-toast-container" class="fixed top-16 right-4 z-50 max-w-sm space-y-2 pointer-events-auto"></div>
+  <div id="global-toast-container" class="fixed top-14 sm:top-16 right-3 sm:right-4 z-50 max-w-sm w-full pointer-events-auto space-y-2"></div>
 
   <!-- Global Footer -->
-  <footer class="mt-auto py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+  <footer class="mt-auto py-5 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <div class="text-center sm:text-left">
         <p class="font-extrabold text-slate-800">SURYA AGENCIES</p>
         <p class="text-[11px] text-slate-400">Ice Cream & Dairy Ordering Portal • Unified System</p>
       </div>
       <div class="flex items-center space-x-3">
+        <a href="/privacy.html" class="text-xs font-bold text-slate-600 hover:text-rose-600">Privacy Policy</a>
+        <span class="text-slate-300">•</span>
         <button type="button" onclick="appController.toggleTheme()" class="text-xs font-bold text-slate-600 hover:text-rose-600 flex items-center space-x-1">
           <span class="theme-icon-indicator">🌙</span>
           <span>Theme</span>

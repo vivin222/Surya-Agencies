@@ -1135,7 +1135,28 @@ class CustomerApp {
     if (!window.socketClient) return;
 
     // Real-Time Stock Updates
-    window.socketClient.on('products:stock_batch_updated', (updatedList) => {
+    window.socketClient.on('product:created', (newProd) => {
+        if (!newProd) return;
+        const idx = this.products.findIndex(p => p.id === newProd.id);
+        if (idx !== -1) {
+          this.products[idx] = newProd;
+        } else {
+          this.products.unshift(newProd);
+        }
+        this.renderCategoryPills();
+        this.renderProductsGrid();
+      });
+
+      window.socketClient.on('product:updated', (updatedProd) => {
+        if (!updatedProd) return;
+        const idx = this.products.findIndex(p => p.id === updatedProd.id);
+        if (idx !== -1) {
+          this.products[idx] = updatedProd;
+          this.renderProductsGrid();
+        }
+      });
+
+      window.socketClient.on('products:stock_batch_updated', (updatedList) => {
       if (!Array.isArray(updatedList)) return;
       let changed = false;
 
@@ -1568,7 +1589,7 @@ class CustomerApp {
 
   // --- CHECKOUT & DYNAMIC UPI QR CODE ---
 
-  openCheckoutModal() {
+    openCheckoutModal() {
     this.closeCartDrawer();
 
     const container = document.getElementById('checkout-modal-container');
@@ -1581,31 +1602,31 @@ class CustomerApp {
     const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     container.innerHTML = `
-      <div id="checkout-modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="customerApp.closeCheckoutModal(event)">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+      <div id="checkout-modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onclick="customerApp.closeCheckoutModal(event)">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
-              <h3 class="text-lg font-black text-slate-900 dark:text-white font-display">Surya Agencies Checkout</h3>
-              <p class="text-xs text-slate-500">Pick up fresh at the parlour counter</p>
+              <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">Surya Agencies Checkout</h3>
+              <p class="text-[11px] sm:text-xs text-slate-500">Pick up fresh at the parlour counter</p>
             </div>
             <button type="button" onclick="customerApp.closeCheckoutModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center hover:bg-slate-200">✕</button>
           </div>
 
-          <form id="checkout-form" onsubmit="customerApp.submitOrder(event)" class="mt-6 space-y-4">
+          <form id="checkout-form" onsubmit="customerApp.submitOrder(event)" class="mt-4 space-y-3.5">
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Customer Name *</label>
-              <input type="text" id="checkout-name" value="${user.name || ''}" required placeholder="Enter Your Full Name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+              <input type="text" id="checkout-name" value="${user.name || ''}" required placeholder="Enter Your Full Name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
             </div>
 
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Mobile Phone Number (For Order Tracking) *</label>
-              <input type="tel" id="checkout-phone" value="${user.phone || ''}" required placeholder="Enter 10-digit Mobile Number" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+              <input type="tel" id="checkout-phone" value="${user.phone || ''}" required placeholder="Enter 10-digit Mobile Number" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
             </div>
 
             <!-- Payment Method Choice -->
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 mb-2">Choose Payment Option</label>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-2 gap-2.5">
                 <label id="payment-upi-label" class="border-2 border-rose-600 bg-rose-50/60 dark:bg-rose-950/40 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all">
                   <input type="radio" name="checkout-payment" value="upi" checked onchange="customerApp.togglePaymentMethod('upi')" class="text-rose-600 focus:ring-rose-500" />
                   <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">📱 UPI Payment</span>
@@ -1617,7 +1638,7 @@ class CustomerApp {
               </div>
             </div>
 
-            <!-- DYNAMIC UPI QR CODE SECTION -->
+            <!-- DYNAMIC LARGE UPI QR CODE SECTION (NO PLAIN TEXT UPI ID DISPLAYED) -->
             <div id="checkout-upi-box" class="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-slate-50 to-pink-50 dark:from-slate-800 dark:to-slate-900 border border-purple-200/80 dark:border-purple-900/50 space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
@@ -1630,35 +1651,29 @@ class CustomerApp {
                 <span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200">INSTANT UPI</span>
               </div>
 
-              <!-- QR Code Canvas Container -->
-              <div class="flex flex-col sm:flex-row items-center justify-center gap-4 py-2">
-                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-md flex items-center justify-center min-w-[140px] min-h-[140px]">
+              <!-- Large QR Code Canvas Container -->
+              <div class="flex flex-col items-center justify-center gap-3 py-2">
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-md flex items-center justify-center min-w-[170px] min-h-[170px]">
                   <div id="checkout-upi-qrcode"></div>
                 </div>
-                <div class="text-center sm:text-left space-y-1.5 flex-1">
-                  <div class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-xs">
-                    <span class="text-[9px] uppercase font-bold text-slate-400 block">Surya Agencies UPI ID</span>
-                    <span class="font-mono text-xs font-extrabold text-slate-800 dark:text-slate-200 select-all">${this.upiId}</span>
-                  </div>
-
-                  <a 
-                    href="upi://pay?pa=${this.upiId}&pn=Surya%20Agencies&am=${total}&cu=INR&tn=Surya%20Agencies%20Order" 
-                    class="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition-all space-x-1.5 sm:hidden"
-                  >
-                    <span>⚡ Pay Directly via UPI App</span>
-                  </a>
-                  <p class="text-[10px] text-slate-400 font-medium hidden sm:block">Scan this QR code with Google Pay, PhonePe, or Paytm app on your phone.</p>
-                </div>
+                
+                <a 
+                  href="upi://pay?pa=${encodeURIComponent(this.upiId)}&pn=Surya%20Agencies&am=${total}&cu=INR&tn=Surya%20Agencies%20Order" 
+                  class="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition-all space-x-1.5 sm:hidden"
+                >
+                  <span>⚡ Pay Directly via UPI App</span>
+                </a>
+                <p class="text-[11px] text-slate-500 font-medium text-center">Scan this QR code with Google Pay, PhonePe, Paytm, or any BHIM UPI app on your phone.</p>
               </div>
             </div>
 
             <!-- Order Summary Box -->
-            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2">
+            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
               <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300">
                 <span>Items in Order</span>
                 <span class="font-bold">${this.cart.reduce((s, i) => s + i.quantity, 0)} items</span>
               </div>
-              <div class="flex justify-between text-base font-black text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-700 pt-2">
+              <div class="flex justify-between text-base font-black text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-700 pt-1.5">
                 <span>Total Amount</span>
                 <span class="text-rose-600 font-mono">₹${total}</span>
               </div>
@@ -1667,7 +1682,7 @@ class CustomerApp {
             <button 
               type="submit" 
               id="submit-order-btn"
-              class="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
+              class="w-full py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-sm shadow-xl shadow-rose-600/25 active:scale-98 transition-all flex items-center justify-center space-x-2"
             >
               <span>Confirm & Place Order →</span>
             </button>
@@ -1679,35 +1694,19 @@ class CustomerApp {
     this.renderCheckoutUPIQR(total);
   }
 
-  togglePaymentMethod(method) {
-    const upiBox = document.getElementById('checkout-upi-box');
-    const upiLabel = document.getElementById('payment-upi-label');
-    const cashLabel = document.getElementById('payment-cash-label');
-
-    if (method === 'upi') {
-      if (upiBox) upiBox.classList.remove('hidden');
-      if (upiLabel) upiLabel.className = 'border-2 border-rose-600 bg-rose-50/60 dark:bg-rose-950/40 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all';
-      if (cashLabel) cashLabel.className = 'border border-slate-300 dark:border-slate-700 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all';
-    } else {
-      if (upiBox) upiBox.classList.add('hidden');
-      if (upiLabel) upiLabel.className = 'border border-slate-300 dark:border-slate-700 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer hover:border-slate-400 transition-all';
-      if (cashLabel) cashLabel.className = 'border-2 border-rose-600 bg-rose-50/60 dark:bg-rose-950/40 rounded-2xl p-3 flex items-center space-x-2 cursor-pointer transition-all';
-    }
-  }
-
   renderCheckoutUPIQR(amount) {
     setTimeout(() => {
       const qrContainer = document.getElementById('checkout-upi-qrcode');
       if (!qrContainer) return;
 
-      const upiUrl = `upi://pay?pa=${this.upiId}&pn=Surya%20Agencies&am=${amount}&cu=INR&tn=Surya%20Icecream%20Order`;
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(this.upiId)}&pn=Surya%20Agencies&am=${amount}&cu=INR&tn=Surya%20Icecream%20Order`;
 
       qrContainer.innerHTML = '';
       if (typeof QRCode !== 'undefined') {
         new QRCode(qrContainer, {
           text: upiUrl,
-          width: 130,
-          height: 130,
+          width: 155,
+          height: 155,
           colorDark: '#0f172a',
           colorLight: '#ffffff',
           correctLevel: QRCode.CorrectLevel.M

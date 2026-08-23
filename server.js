@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
 const os = require('os');
+const multer = require('multer');
 const db = require('./db');
 
 const app = express();
@@ -47,6 +48,36 @@ const activeShopkeeperSessions = new Set();
 // Active Customer Phone OTP Store (in-memory with 5-minute expiry)
 const phoneOtpStore = new Map();
 
+// Multer Disk Storage Configuration for Product Image Uploads
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname) || '.jpg';
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e6);
+    cb(null, 'product-' + uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (JPG, PNG, WebP) are allowed!'));
+    }
+  }
+});
+
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -54,6 +85,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static assets & directories
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
@@ -196,6 +228,76 @@ app.post('/api/auth/customer/google', async (req, res) => {
 // -------------------------------------------------------------
 
 // Get all products (Public - Real-Time)
+
+// Image Upload Endpoint (Shopkeeper Only)
+app.post('/api/upload/image', requireShopkeeperAuth, upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No image file uploaded' });
+    }
+    const imageUrl = '/uploads/' + req.file.filename;
+    console.log('📸 Product image uploaded:', imageUrl);
+    res.json({ success: true, url: imageUrl, filename: req.file.filename });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Create New Product / Stock Endpoint (Shopkeeper Only - Real-Time Broadcast)
+app.post('/api/products', requireShopkeeperAuth, async (req, res) => {
+  try {
+    const { name, category, packSize, price, costPrice, stock, available, description, image } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'Product name is required' });
+    }
+    if (!category) {
+      return res.status(400).json({ success: false, error: 'Category is required' });
+    }
+
+    const newProduct = await db.createProduct({
+      name,
+      category,
+      packSize: packSize || 'Standard Pack',
+      price: price !== undefined && price !== '' ? Number(price) : null,
+      costPrice: costPrice !== undefined && costPrice !== '' ? Number(costPrice) : null,
+      stock: parseInt(stock, 10) || 0,
+      available: available !== undefined ? Boolean(available) : true,
+      description: description || '',
+      image: image || '/assets/arun-vanilla-cup.jpg'
+    });
+
+    // Real-Time Socket Broadcasts to All Connected Customers & Shopkeepers
+    io.emit('product:created', newProduct);
+    io.emit('products:stock_batch_updated', [newProduct]);
+
+    console.log(`➕ New Product Added: ${newProduct.name} (${newProduct.category}) - Price: ₹${newProduct.price}, Stock: ${newProduct.stock}`);
+
+    res.status(201).json({
+      success: true,
+      product: newProduct,
+      message: `Successfully added ${newProduct.name} to catalogue!`
+    });
+  } catch (err) {
+    console.error('Error creating product:', err);
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// Revenue & Profit/Loss Analytics Report API (Shopkeeper Only)
+app.get('/api/reports/revenue', requireShopkeeperAuth, async (req, res) => {
+  try {
+    const reportData = await db.getRevenueReports();
+    res.json({
+      success: true,
+      reports: reportData
+    });
+  } catch (err) {
+    console.error('Error generating revenue reports:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/products', async (req, res) => {
   try {
     const products = await db.getProducts();

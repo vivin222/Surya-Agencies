@@ -114,6 +114,7 @@ class DatabaseService {
       
       // Dynamic column migration for safety
       try { await this.run('ALTER TABLE products ADD COLUMN packSize TEXT'); } catch(e){}
+      try { await this.run('ALTER TABLE products ADD COLUMN costPrice REAL'); } catch(e){}
       try { await this.run('ALTER TABLE orders ADD COLUMN customerId TEXT'); } catch(e){}
       try { await this.run('ALTER TABLE orders ADD COLUMN customerEmail TEXT'); } catch(e){}
 
@@ -189,6 +190,29 @@ class DatabaseService {
 
   // --- PRODUCTS MANAGEMENT ---
 
+  
+  // Create New Product
+  async createProduct({ name, category, packSize, price, costPrice, stock, available = true, description = '', image = '' }) {
+    if (this.ready) await this.ready;
+    if (!name || !name.trim()) throw new Error('Product name is required');
+    if (!category) throw new Error('Product category is required');
+
+    const id = 'prod-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+    const numPrice = price !== null && price !== undefined && price !== '' ? Number(price) : null;
+    const numCost = costPrice !== null && costPrice !== undefined && costPrice !== '' ? Number(costPrice) : null;
+    const numStock = parseInt(stock, 10) || 0;
+    const avail = available ? 1 : 0;
+    const img = image || '/assets/arun-vanilla-cup.jpg';
+
+    await this.run(
+      `INSERT INTO products (id, name, category, packSize, price, costPrice, stock, available, description, image, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [id, name.trim(), category, packSize || 'Standard Pack', numPrice, numCost, numStock, avail, description || '', img]
+    );
+
+    return this.getProductById(id);
+  }
+
   async getProducts() {
     if (this.ready) await this.ready;
     const rows = await this.all(`SELECT * FROM products ORDER BY category ASC, name ASC`);
@@ -196,6 +220,7 @@ class DatabaseService {
       ...r,
       available: Boolean(r.available),
       price: r.price !== null && r.price !== undefined ? Number(r.price) : null,
+      costPrice: r.costPrice !== null && r.costPrice !== undefined ? Number(r.costPrice) : null,
       stock: Number(r.stock)
     }));
   }
@@ -212,7 +237,7 @@ class DatabaseService {
     };
   }
 
-  async updateProduct(id, updateData) {
+    async updateProduct(id, updateData) {
     if (this.ready) await this.ready;
     const existing = await this.getProductById(id);
     if (!existing) throw new Error(`Product not found: ${id}`);
@@ -221,6 +246,7 @@ class DatabaseService {
     const category = updateData.category !== undefined ? updateData.category : existing.category;
     const packSize = updateData.packSize !== undefined ? updateData.packSize : existing.packSize;
     const price = updateData.price !== undefined ? (updateData.price === null || updateData.price === '' ? null : Number(updateData.price)) : existing.price;
+    const costPrice = updateData.costPrice !== undefined ? (updateData.costPrice === null || updateData.costPrice === '' ? null : Number(updateData.costPrice)) : existing.costPrice;
     const stock = updateData.stock !== undefined ? parseInt(updateData.stock, 10) : existing.stock;
     const available = updateData.available !== undefined ? (updateData.available ? 1 : 0) : (existing.available ? 1 : 0);
     const description = updateData.description !== undefined ? updateData.description : existing.description;
@@ -228,9 +254,9 @@ class DatabaseService {
 
     await this.run(
       `UPDATE products 
-       SET name = ?, category = ?, packSize = ?, price = ?, stock = ?, available = ?, description = ?, image = ?, updatedAt = CURRENT_TIMESTAMP
+       SET name = ?, category = ?, packSize = ?, price = ?, costPrice = ?, stock = ?, available = ?, description = ?, image = ?, updatedAt = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name, category, packSize, price, stock, available, description, image, id]
+      [name, category, packSize, price, costPrice, stock, available, description, image, id]
     );
 
     return this.getProductById(id);
@@ -584,6 +610,170 @@ class DatabaseService {
       }
     }
     return this.getSettings();
+  }
+
+  
+  // --- REVENUE & PROFIT/LOSS ANALYTICS ENGINE ---
+
+  async getRevenueReports() {
+    if (this.ready) await this.ready;
+    
+    // Fetch all non-cancelled completed or paid orders
+    const orders = await this.all(
+      `SELECT * FROM orders WHERE orderStatus != 'CANCELLED' ORDER BY createdAt DESC`
+    );
+
+    const allProducts = await this.getProducts();
+    const productCostMap = new Map();
+    allProducts.forEach(p => {
+      productCostMap.set(p.id, p.costPrice);
+    });
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).getTime();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    let todayRevenue = 0;
+    let todayOrdersCount = 0;
+    let todayProfit = 0;
+    let todayCostableUnits = 0;
+
+    let weekRevenue = 0;
+    let weekOrdersCount = 0;
+    let weekProfit = 0;
+
+    let monthRevenue = 0;
+    let monthOrdersCount = 0;
+    let monthProfit = 0;
+
+    let totalRevenue = 0;
+    let totalCompletedOrders = 0;
+    let cashRevenue = 0;
+    let upiRevenue = 0;
+
+    let totalProfit = 0;
+    let totalCostConfiguredSales = 0;
+    let totalUncostedSales = 0;
+
+    const productSalesMap = new Map();
+
+    for (const order of orders) {
+      const orderTime = new Date(order.createdAt || Date.now()).getTime();
+      const orderTotal = Number(order.total) || 0;
+      const isCompleted = order.orderStatus === 'COMPLETED';
+
+      // Count all non-cancelled orders for gross revenue metrics
+      totalRevenue += orderTotal;
+      if (isCompleted) totalCompletedOrders += 1;
+
+      if (order.paymentMethod === 'upi') {
+        upiRevenue += orderTotal;
+      } else {
+        cashRevenue += orderTotal;
+      }
+
+      if (orderTime >= startOfToday) {
+        todayRevenue += orderTotal;
+        if (isCompleted) todayOrdersCount += 1;
+      }
+
+      if (orderTime >= startOfWeek) {
+        weekRevenue += orderTotal;
+        if (isCompleted) weekOrdersCount += 1;
+      }
+
+      if (orderTime >= startOfMonth) {
+        monthRevenue += orderTotal;
+        if (isCompleted) monthOrdersCount += 1;
+      }
+
+      // Parse items for item-wise sales and profit calculation
+      let items = [];
+      try {
+        items = JSON.parse(order.items || '[]');
+      } catch (e) {
+        items = [];
+      }
+
+      for (const item of items) {
+        const prodId = item.productId || item.id;
+        const qty = parseInt(item.quantity, 10) || 0;
+        const sellingPrice = Number(item.price) || 0;
+        const itemTotal = Number(item.itemTotal) || (sellingPrice * qty);
+
+        const costPrice = productCostMap.get(prodId);
+        const hasCost = costPrice !== null && costPrice !== undefined;
+
+        let itemProfit = null;
+        if (hasCost) {
+          itemProfit = (sellingPrice - costPrice) * qty;
+          totalProfit += itemProfit;
+          totalCostConfiguredSales += 1;
+
+          if (orderTime >= startOfToday) todayProfit += itemProfit;
+          if (orderTime >= startOfWeek) weekProfit += itemProfit;
+          if (orderTime >= startOfMonth) monthProfit += itemProfit;
+        } else {
+          totalUncostedSales += 1;
+        }
+
+        // Aggregate Product Sales
+        if (!productSalesMap.has(prodId)) {
+          productSalesMap.set(prodId, {
+            id: prodId,
+            name: item.name || 'Unknown Product',
+            packSize: item.packSize || '',
+            category: item.category || 'General',
+            image: item.image || '/assets/arun-vanilla-cup.jpg',
+            sellingPrice: sellingPrice,
+            costPrice: hasCost ? costPrice : null,
+            totalQuantitySold: 0,
+            totalRevenue: 0,
+            totalProfit: hasCost ? 0 : null,
+            hasCostPrice: hasCost
+          });
+        }
+
+        const prodStat = productSalesMap.get(prodId);
+        prodStat.totalQuantitySold += qty;
+        prodStat.totalRevenue += itemTotal;
+        if (hasCost) {
+          prodStat.totalProfit = (prodStat.totalProfit || 0) + itemProfit;
+        }
+      }
+    }
+
+    const productRankings = Array.from(productSalesMap.values()).sort((a, b) => b.totalQuantitySold - a.totalQuantitySold);
+
+    return {
+      today: {
+        revenue: todayRevenue,
+        ordersCount: todayOrdersCount,
+        profit: todayProfit
+      },
+      thisWeek: {
+        revenue: weekRevenue,
+        ordersCount: weekOrdersCount,
+        profit: weekProfit
+      },
+      thisMonth: {
+        revenue: monthRevenue,
+        ordersCount: monthOrdersCount,
+        profit: monthProfit
+      },
+      allTime: {
+        totalRevenue: totalRevenue,
+        totalCompletedOrders: totalCompletedOrders,
+        cashRevenue: cashRevenue,
+        upiRevenue: upiRevenue,
+        totalProfit: totalProfit,
+        totalCostConfiguredSales: totalCostConfiguredSales,
+        totalUncostedSales: totalUncostedSales
+      },
+      products: productRankings,
+      totalOrdersEvaluated: orders.length
+    };
   }
 
   async resetAllData() {

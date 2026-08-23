@@ -20,6 +20,59 @@ class CustomerApp {
     this.init();
   }
 
+    // --- TIMEZONE-SAFE IST (ASIA/KOLKATA) DATE & TIME FORMATTERS ---
+
+  formatISTDateTime(isoString) {
+    if (!isoString) return '';
+    try {
+      let str = String(isoString).trim();
+      if (str.includes(' ') && !str.includes('T')) {
+        str = str.replace(' ', 'T') + 'Z';
+      } else if (!str.endsWith('Z') && !str.includes('+') && str.length <= 19) {
+        str = str + 'Z';
+      }
+      const date = new Date(str);
+      if (isNaN(date.getTime())) return String(isoString);
+
+      const options = {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      };
+      return new Intl.DateTimeFormat('en-IN', options).format(date) + ' IST';
+    } catch (e) {
+      return String(isoString);
+    }
+  }
+
+  formatISTTimeOnly(isoString) {
+    if (!isoString) return '';
+    try {
+      let str = String(isoString).trim();
+      if (str.includes(' ') && !str.includes('T')) {
+        str = str.replace(' ', 'T') + 'Z';
+      } else if (!str.endsWith('Z') && !str.includes('+') && str.length <= 19) {
+        str = str + 'Z';
+      }
+      const date = new Date(str);
+      if (isNaN(date.getTime())) return String(isoString);
+
+      const options = {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      };
+      return new Intl.DateTimeFormat('en-IN', options).format(date) + ' IST';
+    } catch (e) {
+      return String(isoString);
+    }
+  }
+
   async init() {
     this.setupRealtimeListeners();
     this.setupHashRouting();
@@ -829,6 +882,7 @@ class CustomerApp {
               </span>
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">${currentStatus.desc}</p>
+            <span class="text-[11px] text-slate-400 dark:text-slate-400 block mt-1 font-semibold">🕒 Placed: <strong class="text-slate-700 dark:text-slate-300 font-bold">${this.formatISTDateTime(order.createdAt)}</strong></span>
           </div>
 
           <button 
@@ -896,7 +950,7 @@ class CustomerApp {
             <p class="text-xs text-slate-500 dark:text-slate-400 leading-snug">
               Shopkeeper will scan this QR or type <strong>${order.orderNumber}</strong> to hand over your order.
             </p>
-            <span class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 block">Total: ₹${order.total} (${order.paymentMethod === 'upi' ? 'UPI' : 'Cash at Counter'})</span>
+            <span class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 block">Placed: ${this.formatISTDateTime(order.createdAt)} • Total: ₹${order.total} (${order.paymentMethod === 'upi' ? 'UPI' : 'Cash at Counter'})</span>
           </div>
         </div>
 
@@ -1004,7 +1058,7 @@ class CustomerApp {
                   <span class="font-black text-slate-900 dark:text-white">${order.orderNumber}</span>
                   <span class="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">${order.orderStatus}</span>
                 </div>
-                <span class="text-xs text-slate-400 mt-0.5 block">${new Date(order.createdAt).toLocaleDateString()} at ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span class="text-xs text-slate-400 mt-0.5 block">${this.formatISTDateTime(order.createdAt)}</span>
               </div>
               <div class="flex items-center justify-between sm:justify-end gap-3">
                 <span class="text-base font-black text-rose-600 font-mono">₹${order.total}</span>

@@ -28,6 +28,59 @@ class ShopkeeperApp {
     this.init();
   }
 
+    // --- TIMEZONE-SAFE IST (ASIA/KOLKATA) DATE & TIME FORMATTERS ---
+
+  formatISTDateTime(isoString) {
+    if (!isoString) return '';
+    try {
+      let str = String(isoString).trim();
+      if (str.includes(' ') && !str.includes('T')) {
+        str = str.replace(' ', 'T') + 'Z';
+      } else if (!str.endsWith('Z') && !str.includes('+') && str.length <= 19) {
+        str = str + 'Z';
+      }
+      const date = new Date(str);
+      if (isNaN(date.getTime())) return String(isoString);
+
+      const options = {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      };
+      return new Intl.DateTimeFormat('en-IN', options).format(date) + ' IST';
+    } catch (e) {
+      return String(isoString);
+    }
+  }
+
+  formatISTTimeOnly(isoString) {
+    if (!isoString) return '';
+    try {
+      let str = String(isoString).trim();
+      if (str.includes(' ') && !str.includes('T')) {
+        str = str.replace(' ', 'T') + 'Z';
+      } else if (!str.endsWith('Z') && !str.includes('+') && str.length <= 19) {
+        str = str + 'Z';
+      }
+      const date = new Date(str);
+      if (isNaN(date.getTime())) return String(isoString);
+
+      const options = {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      };
+      return new Intl.DateTimeFormat('en-IN', options).format(date) + ' IST';
+    } catch (e) {
+      return String(isoString);
+    }
+  }
+
   async init() {
     this.setupRealtimeListeners();
   }
@@ -54,7 +107,7 @@ class ShopkeeperApp {
         type: 'ORDER_NEW',
         icon: '🛒',
         title: `New Order ${newOrder.orderNumber}`,
-        message: `Placed by ${newOrder.customerName} (₹${newOrder.total} • ${newOrder.paymentMethod === 'upi' ? 'UPI' : 'Cash'})`,
+        message: `Placed by ${newOrder.customerName} at ${this.formatISTTimeOnly(newOrder.createdAt)} (₹${newOrder.total} • ${newOrder.paymentMethod === 'upi' ? 'UPI' : 'Cash'})`,
         timestamp: new Date()
       };
       this.addNotification(notif);
@@ -588,7 +641,7 @@ class ShopkeeperApp {
     const subtitle = document.getElementById('detail-modal-order-subtitle');
     if (!modal || !content) return;
 
-    if (subtitle) subtitle.textContent = `Order ${order.orderNumber} • ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    if (subtitle) subtitle.textContent = `Order ${order.orderNumber} • Placed: ${this.formatISTDateTime(order.createdAt)}`;
 
     let parsedItems = [];
     try {
@@ -799,7 +852,7 @@ class ShopkeeperApp {
                 </span>
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                Customer: <strong class="text-slate-800 dark:text-slate-200">${order.customerName}</strong> • Phone: ${order.customerPhone || 'N/A'} • ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                Customer: <strong class="text-slate-800 dark:text-slate-200">${order.customerName}</strong> • Phone: ${order.customerPhone || 'N/A'} • 🕒 <span class="font-bold text-slate-700 dark:text-slate-300">${this.formatISTDateTime(order.createdAt)}</span>
               </p>
             </div>
 

@@ -386,9 +386,10 @@ class DatabaseService {
         });
       }
 
-      // 3. Create Order Record
+            // 3. Create Order Record with exact server ISO 8601 UTC timestamp
       const orderNumber = await this.getNextOrderNumber();
       const orderId = `order-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+      const nowIso = new Date().toISOString(); // e.g. '2026-08-23T15:10:45.123Z'
       
       const normalizedPaymentMethod = paymentMethod === 'upi' ? 'upi' : 'pay_at_shop';
       const normalizedPaymentStatus = paymentStatus === 'PAID' ? 'PAID' : 'PENDING';
@@ -396,7 +397,7 @@ class DatabaseService {
 
       await this.run(
         `INSERT INTO orders (id, orderNumber, customerId, customerName, customerPhone, customerEmail, items, total, paymentMethod, paymentStatus, orderStatus, notes, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           orderId,
           orderNumber,
@@ -409,7 +410,9 @@ class DatabaseService {
           normalizedPaymentMethod,
           normalizedPaymentStatus,
           initialOrderStatus,
-          notes ? notes.trim() : ''
+          notes ? notes.trim() : '',
+          nowIso,
+          nowIso
         ]
       );
 
@@ -428,17 +431,30 @@ class DatabaseService {
     }
   }
 
-  async getOrders() {
+    async getOrders() {
     if (this.ready) await this.ready;
     const rows = await this.all(`SELECT * FROM orders ORDER BY createdAt DESC`);
     return rows.map(r => ({
       ...r,
       items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
-      total: Number(r.total)
+      total: Number(r.total),
+      createdAt: this.normalizeIsoDate(r.createdAt),
+      updatedAt: this.normalizeIsoDate(r.updatedAt)
     }));
   }
 
-    async getOrderById(idOrOrderNumber) {
+      normalizeIsoDate(dateStr) {
+    if (!dateStr) return new Date().toISOString();
+    let s = String(dateStr).trim();
+    if (s.includes(' ') && !s.includes('T')) {
+      s = s.replace(' ', 'T') + 'Z';
+    } else if (!s.endsWith('Z') && !s.includes('+') && !s.includes('-0') && s.length <= 19) {
+      s = s + 'Z';
+    }
+    return s;
+  }
+
+  async getOrderById(idOrOrderNumber) {
     if (this.ready) await this.ready;
     if (!idOrOrderNumber) return null;
 
@@ -464,7 +480,9 @@ class DatabaseService {
     return {
       ...row,
       items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items,
-      total: Number(row.total)
+      total: Number(row.total),
+      createdAt: this.normalizeIsoDate(row.createdAt),
+      updatedAt: this.normalizeIsoDate(row.updatedAt)
     };
   }
 

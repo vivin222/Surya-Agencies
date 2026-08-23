@@ -538,7 +538,12 @@ class ShopkeeperApp {
     }).join('');
   }
 
-  async updateOrderStatus(orderId, newStatus) {
+      async updateOrderStatus(orderId, newStatus) {
+    if (!newStatus) {
+      alert('Please select an order status');
+      return;
+    }
+
     try {
       const token = sessionStorage.getItem('surya_shopkeeper_token');
       const res = await fetch(`/api/orders/${orderId}/status`, {
@@ -548,7 +553,10 @@ class ShopkeeperApp {
           'Authorization': `Bearer ${token}`,
           'x-shopkeeper-verified': 'true'
         },
-        body: JSON.stringify({ orderStatus: newStatus })
+        body: JSON.stringify({ 
+          status: newStatus,
+          orderStatus: newStatus 
+        })
       });
 
       const data = await res.json();
@@ -560,7 +568,7 @@ class ShopkeeperApp {
         }
         this.fetchDashboardStats();
         if (window.appController) {
-          window.appController.showToast(`Order status updated to ${newStatus}`, 'success');
+          window.appController.showToast(`Order ${data.order ? data.order.orderNumber : ''} marked as ${newStatus}`, 'success');
         }
       } else {
         alert(data.error || 'Failed to update order status');
@@ -589,7 +597,45 @@ class ShopkeeperApp {
     this.renderProductsTable();
   }
 
-  renderProductsTable() {
+  
+  // Instant 1-Click Availability Toggle (🟢 AVAILABLE <-> 🔴 NOT AVAILABLE)
+  async toggleProductAvailability(productId) {
+    const prod = this.products.find(p => p.id === productId);
+    if (!prod) return;
+
+    const newAvailability = !prod.available;
+
+    try {
+      const token = sessionStorage.getItem('surya_shopkeeper_token');
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'x-shopkeeper-verified': 'true'
+        },
+        body: JSON.stringify({ available: newAvailability })
+      });
+
+      const data = await res.json();
+      if (data.success && data.product) {
+        const idx = this.products.findIndex(p => p.id === productId);
+        if (idx !== -1) {
+          this.products[idx] = data.product;
+        }
+        this.renderProductsTable();
+        if (window.appController) {
+          window.appController.showToast(`${data.product.name} is now ${newAvailability ? '🟢 AVAILABLE' : '🔴 NOT AVAILABLE'}`, 'info');
+        }
+      } else {
+        alert(data.error || 'Failed to toggle availability');
+      }
+    } catch (e) {
+      console.error('Error toggling availability:', e);
+    }
+  }
+
+      renderProductsTable() {
     const container = document.getElementById('shopkeeper-products-table');
     if (!container) return;
 
@@ -602,11 +648,11 @@ class ShopkeeperApp {
     }
 
     if (this.productStockFilter === 'IN_STOCK') {
-      list = list.filter(p => p.stock > 0);
+      list = list.filter(p => p.stock > 0 && p.available);
     } else if (this.productStockFilter === 'LOW_STOCK') {
       list = list.filter(p => p.stock > 0 && p.stock <= 5);
     } else if (this.productStockFilter === 'OUT_OF_STOCK') {
-      list = list.filter(p => p.stock === 0);
+      list = list.filter(p => p.stock === 0 || !p.available);
     }
 
     if (list.length === 0) {
@@ -622,11 +668,12 @@ class ShopkeeperApp {
 
     container.innerHTML = list.map(prod => {
       const stockInt = Math.max(0, parseInt(prod.stock, 10) || 0);
+      const isManualOff = !prod.available;
       const isOut = stockInt === 0;
       const isLowStock = stockInt > 0 && stockInt <= 5;
 
       return `
-        <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-all">
+        <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-all">
           <div class="flex items-center space-x-3 flex-1 min-w-0">
             <div class="relative group cursor-pointer flex-shrink-0" onclick="shopkeeperApp.openEditImageModal('${prod.id}')" title="Click to change image">
               <img src="${prod.image || '/assets/arun-vanilla-cup.jpg'}" alt="${prod.name}" class="w-14 h-14 object-contain rounded-2xl bg-slate-50 dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-700" />
@@ -639,21 +686,42 @@ class ShopkeeperApp {
               <div class="flex items-center gap-1.5 flex-wrap">
                 <h4 class="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm truncate">${prod.name}</h4>
                 <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${prod.category}</span>
-                ${isOut 
-                  ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">🔴 OUT OF STOCK</span>' 
-                  : isLowStock 
-                    ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">⚡ LOW STOCK (${stockInt} left)</span>`
-                    : `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">🟢 IN STOCK (${stockInt} units)</span>`
+                
+                ${isManualOff 
+                  ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">🔴 DISABLED (OFF)</span>'
+                  : isOut 
+                    ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">🔴 OUT OF STOCK</span>' 
+                    : isLowStock 
+                      ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">⚡ LOW STOCK (${stockInt} left)</span>`
+                      : `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">🟢 IN STOCK (${stockInt} units)</span>`
                 }
               </div>
               <span class="text-[11px] text-slate-400 font-semibold block mt-0.5">${prod.packSize || 'Standard Pack'}</span>
             </div>
           </div>
 
-          <!-- Price, Cost, and Stock Whole Integer Editor -->
-          <div class="flex items-center gap-2 sm:gap-3 flex-wrap md:flex-nowrap justify-between md:justify-end">
+          <!-- Controls: Instant Availability Toggle + Price + Cost + Stock -->
+          <div class="flex items-center gap-2 sm:gap-3 flex-wrap lg:flex-nowrap justify-between lg:justify-end">
+            
+            <!-- 🔘 INSTANT 1-CLICK AVAILABILITY TOGGLE BUTTON -->
+            <div>
+              <label class="text-[9px] font-bold text-slate-400 uppercase block">Availability</label>
+              <button 
+                type="button" 
+                onclick="shopkeeperApp.toggleProductAvailability('${prod.id}')" 
+                class="px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center space-x-1 border shadow-xs ${
+                  prod.available 
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100' 
+                    : 'bg-red-50 dark:bg-red-950/60 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-100'
+                }"
+                title="Click to toggle Available / Not Available"
+              >
+                <span>${prod.available ? '🟢 AVAILABLE' : '🔴 NOT AVAILABLE'}</span>
+              </button>
+            </div>
+
             <!-- Selling Price Input -->
-            <div class="w-24">
+            <div class="w-20 sm:w-24">
               <label class="text-[9px] font-bold text-slate-400 uppercase block">Selling Price</label>
               <div class="flex items-center rounded-xl border border-slate-300 dark:border-slate-600 px-2 py-1 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-rose-500">
                 <span class="text-xs text-slate-400 font-bold mr-1">₹</span>
@@ -662,7 +730,7 @@ class ShopkeeperApp {
             </div>
 
             <!-- Cost Price Input -->
-            <div class="w-24">
+            <div class="w-20 sm:w-24">
               <label class="text-[9px] font-bold text-slate-400 uppercase block" title="Used for net profit calculations">Cost Price</label>
               <div class="flex items-center rounded-xl border border-slate-300 dark:border-slate-600 px-2 py-1 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-rose-500">
                 <span class="text-xs text-slate-400 font-bold mr-1">₹</span>
@@ -671,8 +739,8 @@ class ShopkeeperApp {
             </div>
 
             <!-- Stock Integer Input -->
-            <div class="w-20">
-              <label class="text-[9px] font-bold text-slate-400 uppercase block">Units</label>
+            <div class="w-16 sm:w-20">
+              <label class="text-[9px] font-bold text-slate-400 uppercase block">Stock</label>
               <input type="number" id="prod-stock-${prod.id}" value="${stockInt}" min="0" step="1" class="w-full px-2 py-1 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" />
             </div>
 

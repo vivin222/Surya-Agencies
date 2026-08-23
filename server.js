@@ -1,11 +1,17 @@
+/**
+ * Real-Time Ice Cream & Dairy Parlour System — Surya Agencies
+ * Backend Server with Express, Socket.io, Multer, and SQLite Integration
+ */
+
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const os = require('os');
+const cors = require('cors');
 const multer = require('multer');
+const fs = require('fs');
+const { Server } = require('socket.io');
+
 const db = require('./db');
 
 const app = express();
@@ -13,40 +19,27 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: '*',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE']
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']
   }
 });
 
-const PORT = process.env.PORT || 8080;
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
 
-// Helper: Discover local network IPv4 address for same-WiFi mobile testing
+// Helper to determine Local Network IP Address
 function getLocalIpAddress() {
-  if (process.env.HOST_IP) {
-    return process.env.HOST_IP.trim();
-  }
-
   const interfaces = os.networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
       if (iface.family === 'IPv4' && !iface.internal) {
-        if (
-          iface.address.startsWith('192.168.') ||
-          iface.address.startsWith('10.') ||
-          iface.address.startsWith('172.16.')
-        ) {
-          return iface.address;
-        }
+        return iface.address;
       }
     }
   }
   return 'localhost';
 }
 
-// Active Shopkeeper Sessions Store (in-memory for secure prototype session management)
-const activeShopkeeperSessions = new Set();
-
-// Active Customer Phone OTP Store (in-memory with 5-minute expiry)
+// In-Memory Phone OTP storage
 const phoneOtpStore = new Map();
 
 // Multer Disk Storage Configuration for Product Image Uploads
@@ -68,7 +61,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: function (req, file, cb) {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -78,11 +71,10 @@ const upload = multer({
   }
 });
 
-
-// Middleware
+// Middleware with generous 15MB limit for direct Base64 persistent images
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Serve static assets & directories
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
@@ -90,122 +82,101 @@ app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
-// Shopkeeper Authentication Guard Middleware
-function requireShopkeeperAuth(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    if (activeShopkeeperSessions.has(token)) {
+// Authentication Middleware for Shopkeeper (Owner)
+const requireShopkeeperAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const customHeader = req.headers['x-shopkeeper-verified'];
+
+    if (customHeader === 'true') {
       return next();
     }
-  }
 
-  if (req.headers['x-shopkeeper-verified'] === 'true') {
-    return next();
-  }
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      if (token && token.length > 5) {
+        return next();
+      }
+    }
 
-  return res.status(401).json({
-    success: false,
-    error: 'Unauthorized: Shopkeeper login required.'
-  });
-}
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized: Shopkeeper credentials required'
+    });
+  } catch (err) {
+    return res.status(401).json({ success: false, error: 'Authentication failed' });
+  }
+};
 
 // -------------------------------------------------------------
-// AUTHENTICATION & SERVER INFO API
+// AUTHENTICATION APIs
 // -------------------------------------------------------------
-
-app.get('/api/server-info', (req, res) => {
-  const localIp = getLocalIpAddress();
-  res.json({
-    success: true,
-    shopName: 'Surya Agencies',
-    tagline: 'Ice Cream & Dairy Ordering Portal',
-    port: PORT,
-    localIp: localIp,
-    customerUrl: `http://${localIp}:${PORT}/#customer`,
-    shopkeeperUrl: `http://${localIp}:${PORT}/#shopkeeper`,
-    fullUrl: `http://${localIp}:${PORT}/`
-  });
-});
 
 // Shopkeeper Login API
 app.post('/api/auth/shopkeeper/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ success: false, error: 'Username and password are required' });
-    }
 
-    const isValid = await db.verifyShopkeeperCredentials(username, password);
-    if (!isValid) {
-      return res.status(401).json({
+    if (!username || !password) {
+      return res.status(400).json({
         success: false,
-        error: 'Invalid Shopkeeper username or password! Please check your credentials.'
+        error: 'Both username and password are required'
       });
     }
 
-    const sessionToken = `sk_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    activeShopkeeperSessions.add(sessionToken);
+    const verified = await db.verifyShopkeeper(username.trim(), password.trim());
 
-    console.log('✅ Shopkeeper logged in successfully:', username);
+    if (!verified) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid Shopkeeper Username or Password. Please try again.'
+      });
+    }
+
+    const token = 'surya_shopkeeper_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    console.log(`🔐 Shopkeeper authenticated successfully: ${username}`);
 
     res.json({
       success: true,
-      token: sessionToken,
-      username: username,
-      message: 'Shopkeeper authentication successful.'
+      token,
+      message: 'Welcome back to Surya Agencies Shopkeeper Portal!'
     });
   } catch (err) {
+    console.error('Error during shopkeeper login:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Customer Login / Register (Email/Phone/Guest)
-app.post('/api/auth/customer/login', async (req, res) => {
-  try {
-    const { name, phone, email, avatar, isGuest } = req.body;
-
-    const customer = await db.findOrCreateCustomer({
-      name: name || (email ? email.split('@')[0] : (isGuest ? 'Guest Customer' : 'Surya Customer')),
-      email: email || null,
-      phone: phone || null,
-      avatar: avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-      authProvider: isGuest ? 'guest' : 'local'
-    });
-
-    const token = 'cust_' + customer.id + '_' + Date.now();
-    res.json({ success: true, customer, token });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Customer Google Sign-In API
+// Customer Google Sign-In Callback API
 app.post('/api/auth/customer/google', async (req, res) => {
   try {
-    let { name, email, avatar, googleId, credential } = req.body;
+    const { credential, name, email, avatar, googleId } = req.body;
 
-    if (credential && !email) {
+    let custName = name;
+    let custEmail = email;
+    let custAvatar = avatar;
+    let custGId = googleId;
+
+    if (credential) {
       try {
-        const parts = credential.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
-          name = name || payload.name;
-          email = email || payload.email;
-          avatar = avatar || payload.picture;
-          googleId = googleId || payload.sub;
-        }
+        const payloadBase64 = credential.split('.')[1];
+        const decodedPayload = JSON.parse(Buffer.from(payloadBase64, 'base64').toString('utf8'));
+        custName = decodedPayload.name || custName;
+        custEmail = decodedPayload.email || custEmail;
+        custAvatar = decodedPayload.picture || custAvatar;
+        custGId = decodedPayload.sub || custGId;
       } catch (decodeErr) {
         console.warn('Could not decode raw Google JWT, using body payload:', decodeErr.message);
       }
     }
 
     const customer = await db.findOrCreateCustomer({
-      name: name || (email ? email.split('@')[0] : 'Google Customer'),
-      email: email || null,
+      name: custName || (custEmail ? custEmail.split('@')[0] : 'Google Customer'),
+      email: custEmail || null,
       phone: req.body.phone || null,
-      avatar: avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-      googleId: googleId || ('g_' + Date.now()),
+      avatar: custAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+      googleId: custGId || ('g_' + Date.now()),
       authProvider: 'google'
     });
 
@@ -224,22 +195,118 @@ app.post('/api/auth/customer/google', async (req, res) => {
   }
 });
 
+// Customer Phone OTP Request API
+app.post('/api/auth/customer/send-otp', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone || phone.trim().length < 10) {
+      return res.status(400).json({ success: false, error: 'Valid 10-digit mobile number required' });
+    }
+    const cleanPhone = phone.trim();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    phoneOtpStore.set(cleanPhone, { otp, expires: Date.now() + 5 * 60 * 1000 });
+
+    console.log(`📱 OTP generated for ${cleanPhone}: ${otp}`);
+
+    res.json({
+      success: true,
+      message: `OTP sent to ${cleanPhone}`,
+      otpPreview: otp
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Customer Phone OTP Verify API
+app.post('/api/auth/customer/verify-otp', async (req, res) => {
+  try {
+    const { phone, otp, name } = req.body;
+    const cleanPhone = (phone || '').trim();
+    const cleanOtp = (otp || '').trim();
+
+    const record = phoneOtpStore.get(cleanPhone);
+    if (!record || record.otp !== cleanOtp) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired OTP. Please try again.' });
+    }
+
+    phoneOtpStore.delete(cleanPhone);
+
+    const customer = await db.findOrCreateCustomer({
+      name: name || ('Customer ' + cleanPhone.slice(-4)),
+      phone: cleanPhone,
+      email: cleanPhone + '@phone.surya',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+      authProvider: 'phone'
+    });
+
+    const token = 'cust_p_' + customer.id + '_' + Date.now();
+    res.json({
+      success: true,
+      customer,
+      token,
+      message: 'Phone verification successful!'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // -------------------------------------------------------------
-// PRODUCTS API
+// PRODUCTS API (REAL-TIME STOCK & AVAILABILITY)
 // -------------------------------------------------------------
 
 // Get all products (Public - Real-Time)
+app.get('/api/products', async (req, res) => {
+  try {
+    const products = await db.getProducts();
+    res.json({ success: true, products });
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
-// Image Upload Endpoint (Shopkeeper Only)
+// Get single product
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const product = await db.getProductById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Product not found' });
+    }
+    res.json({ success: true, product });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Image Upload Endpoint (Shopkeeper Only - Supports Multer & Persistent Base64)
 app.post('/api/upload/image', requireShopkeeperAuth, upload.single('image'), (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: 'No image file uploaded' });
+    if (req.file) {
+      const filename = req.file.filename;
+      const imageUrl = '/uploads/' + filename;
+      
+      let dataUrl = imageUrl;
+      try {
+        const buffer = fs.readFileSync(req.file.path);
+        const mime = req.file.mimetype || 'image/jpeg';
+        dataUrl = `data:${mime};base64,${buffer.toString('base64')}`;
+      } catch (readErr) {
+        console.warn('Could not generate base64 dataUrl, using static URL:', readErr.message);
+      }
+
+      console.log('📸 Product image uploaded:', imageUrl);
+      return res.json({ success: true, url: dataUrl, staticUrl: imageUrl, filename });
     }
-    const imageUrl = '/uploads/' + req.file.filename;
-    console.log('📸 Product image uploaded:', imageUrl);
-    res.json({ success: true, url: imageUrl, filename: req.file.filename });
+
+    if (req.body && req.body.image) {
+      return res.json({ success: true, url: req.body.image });
+    }
+
+    return res.status(400).json({ success: false, error: 'No image file or data provided' });
   } catch (err) {
+    console.error('Upload error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -268,7 +335,7 @@ app.post('/api/products', requireShopkeeperAuth, async (req, res) => {
       image: image || '/assets/arun-vanilla-cup.jpg'
     });
 
-    // Real-Time Socket Broadcasts to All Connected Customers & Shopkeepers
+    // Real-Time Socket Broadcasts
     io.emit('product:created', newProduct);
     io.emit('products:stock_batch_updated', [newProduct]);
 
@@ -285,44 +352,7 @@ app.post('/api/products', requireShopkeeperAuth, async (req, res) => {
   }
 });
 
-// Revenue & Profit/Loss Analytics Report API (Shopkeeper Only)
-app.get('/api/reports/revenue', requireShopkeeperAuth, async (req, res) => {
-  try {
-    const reportData = await db.getRevenueReports();
-    res.json({
-      success: true,
-      reports: reportData
-    });
-  } catch (err) {
-    console.error('Error generating revenue reports:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.get('/api/products', async (req, res) => {
-  try {
-    const products = await db.getProducts();
-    res.json({ success: true, products });
-  } catch (err) {
-    console.error('Error fetching products:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Get single product
-app.get('/api/products/:id', async (req, res) => {
-  try {
-    const product = await db.getProductById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ success: false, error: 'Product not found' });
-    }
-    res.json({ success: true, product });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Update product (Price, Stock, Availability, PackSize) - Shopkeeper Only
+// Update product (Price, Cost, Stock, Availability, PackSize, Image) - Shopkeeper Only
 app.patch('/api/products/:id', requireShopkeeperAuth, async (req, res) => {
   try {
     const updatedProduct = await db.updateProduct(req.params.id, req.body);
@@ -429,12 +459,12 @@ app.get('/api/orders/:id', async (req, res) => {
 // Update Order Status (Shopkeeper controls: NEW -> ACCEPTED -> PREPARING -> READY_FOR_PICKUP -> COMPLETED -> CANCELLED)
 app.patch('/api/orders/:id/status', requireShopkeeperAuth, async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!status) {
-      return res.status(400).json({ success: false, error: 'Status is required' });
+    const status = req.body.status || req.body.orderStatus;
+    if (!status || !status.trim()) {
+      return res.status(400).json({ success: false, error: 'Order status is required (e.g. ACCEPTED, PREPARING, READY_FOR_PICKUP, COMPLETED, CANCELLED)' });
     }
 
-    const updatedOrder = await db.updateOrderStatus(req.params.id, status);
+    const updatedOrder = await db.updateOrderStatus(req.params.id, status.trim());
 
     if (updatedOrder.updatedProducts && updatedOrder.updatedProducts.length > 0) {
       io.emit('products:stock_batch_updated', updatedOrder.updatedProducts);
@@ -476,68 +506,21 @@ app.post('/api/orders/:id/pickup', requireShopkeeperAuth, async (req, res) => {
 });
 
 // -------------------------------------------------------------
+// REVENUE & REPORTS API (FINANCIAL ANALYTICS & PROFIT/LOSS)
+// -------------------------------------------------------------
+app.get('/api/reports/revenue', requireShopkeeperAuth, async (req, res) => {
+  try {
+    const reports = await db.getRevenueReports();
+    res.json({ success: true, reports });
+  } catch (err) {
+    console.error('Error generating revenue reports:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
 // SETTINGS & STATS API
 // -------------------------------------------------------------
-
-
-// Customer Phone OTP Request API
-app.post('/api/auth/customer/send-otp', async (req, res) => {
-  try {
-    const { phone } = req.body;
-    if (!phone || phone.trim().length < 10) {
-      return res.status(400).json({ success: false, error: 'Valid 10-digit mobile number required' });
-    }
-    const cleanPhone = phone.trim();
-    // Generate secure 4-digit OTP
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    phoneOtpStore.set(cleanPhone, { otp, expires: Date.now() + 5 * 60 * 1000 });
-
-    console.log(`📱 OTP generated for ${cleanPhone}: ${otp}`);
-
-    res.json({
-      success: true,
-      message: `OTP sent to ${cleanPhone}`,
-      otpPreview: otp // Sent for simulation/instant user login experience
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Customer Phone OTP Verify API
-app.post('/api/auth/customer/verify-otp', async (req, res) => {
-  try {
-    const { phone, otp, name } = req.body;
-    const cleanPhone = (phone || '').trim();
-    const cleanOtp = (otp || '').trim();
-
-    const record = phoneOtpStore.get(cleanPhone);
-    if (!record || record.otp !== cleanOtp) {
-      return res.status(400).json({ success: false, error: 'Invalid or expired OTP. Please try again.' });
-    }
-
-    // OTP is valid
-    phoneOtpStore.delete(cleanPhone);
-
-    const customer = await db.findOrCreateCustomer({
-      name: name || ('Customer ' + cleanPhone.slice(-4)),
-      phone: cleanPhone,
-      email: cleanPhone + '@phone.surya',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-      authProvider: 'phone'
-    });
-
-    const token = 'cust_p_' + customer.id + '_' + Date.now();
-    res.json({
-      success: true,
-      customer,
-      token,
-      message: 'Phone verification successful!'
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
 
 // Update Shop Settings & UPI ID (Shopkeeper Only - Real-Time Broadcast)
 app.patch('/api/settings', requireShopkeeperAuth, async (req, res) => {
@@ -546,7 +529,6 @@ app.patch('/api/settings', requireShopkeeperAuth, async (req, res) => {
     const safeSettings = { ...updatedSettings };
     delete safeSettings.shopkeeperPassword;
 
-    // Broadcast updated settings (especially UPI ID & parlour phone) to all connected devices in real time
     io.emit('settings:updated', safeSettings);
     console.log('🔄 Shop Settings & UPI ID updated and broadcasted:', safeSettings.upiId);
 
@@ -563,7 +545,6 @@ app.patch('/api/settings', requireShopkeeperAuth, async (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     const settings = await db.getSettings();
-    // Do NOT expose shopkeeper password to client
     const safeSettings = { ...settings };
     delete safeSettings.shopkeeperPassword;
     res.json({ success: true, settings: safeSettings });
@@ -603,11 +584,13 @@ io.on('connection', (socket) => {
 // Start Server
 server.listen(PORT, HOST, () => {
   const localIp = getLocalIpAddress();
-  console.log('===============================================================');
-  console.log('🍨 SURYA AGENCIES — REAL-TIME ORDERING SYSTEM IS LIVE!');
-  console.log(`🏠 Local Host: http://localhost:${PORT}/`);
-  console.log(`📱 Same Wi-Fi Link: http://${localIp}:${PORT}/`);
-  console.log(`📱 Customer Portal: http://${localIp}:${PORT}/#customer`);
-  console.log(`🏪 Shopkeeper Portal: http://${localIp}:${PORT}/#shopkeeper`);
-  console.log('===============================================================');
+  console.log(`
+===============================================================
+🍨 SURYA AGENCIES — REAL-TIME ORDERING SYSTEM IS LIVE!
+🏠 Local Host: http://localhost:${PORT}/
+📱 Same Wi-Fi Link: http://${localIp}:${PORT}/
+📱 Customer Portal: http://${localIp}:${PORT}/#customer
+🏪 Shopkeeper Portal: http://${localIp}:${PORT}/#shopkeeper
+===============================================================
+  `);
 });

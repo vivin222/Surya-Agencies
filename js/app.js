@@ -374,25 +374,65 @@ class AppController {
       document.getElementById('auth-phone-step-1').classList.add('hidden');
       document.getElementById('auth-phone-step-2').classList.remove('hidden');
 
-      const otpInput = document.getElementById('cust-modal-otp');
-      if (otpInput) {
-        otpInput.value = data.otpPreview || '';
-        otpInput.focus();
-      }
+      this.currentGeneratedOtp = data.otpPreview || '1234';
 
-      this.showToast(`📲 OTP sent! Code is: ${data.otpPreview}`, 'info');
+      const displayEl = document.getElementById('sms-otp-display');
+      if (displayEl) displayEl.textContent = this.currentGeneratedOtp;
+
+      // Play SMS chime
+      this.playChime();
+
+      // Clear previous inputs & focus box 1
+      for (let i = 1; i <= 4; i++) {
+        const box = document.getElementById(`otp-digit-${i}`);
+        if (box) box.value = '';
+      }
+      const firstBox = document.getElementById('otp-digit-1');
+      if (firstBox) firstBox.focus();
+
+      this.showToast(`📲 New OTP Generated: ${this.currentGeneratedOtp}`, 'success');
 
     } catch (err) {
       this.showToast(err.message, 'error');
     }
   }
 
+  onOtpInput(index, val) {
+    if (val && index < 4) {
+      const nextBox = document.getElementById(`otp-digit-${index + 1}`);
+      if (nextBox) nextBox.focus();
+    }
+    this.syncHiddenOtp();
+  }
+
+  syncHiddenOtp() {
+    let fullOtp = '';
+    for (let i = 1; i <= 4; i++) {
+      const box = document.getElementById(`otp-digit-${i}`);
+      if (box) fullOtp += box.value;
+    }
+    const hidden = document.getElementById('cust-modal-otp');
+    if (hidden) hidden.value = fullOtp;
+  }
+
+  autoFillOTP() {
+    if (!this.currentGeneratedOtp) return;
+    const digits = this.currentGeneratedOtp.split('');
+    for (let i = 1; i <= 4; i++) {
+      const box = document.getElementById(`otp-digit-${i}`);
+      if (box && digits[i - 1]) box.value = digits[i - 1];
+    }
+    this.syncHiddenOtp();
+    this.showToast('✓ OTP auto-filled!', 'success');
+  }
+
   async verifyPhoneOTP() {
+    this.syncHiddenOtp();
     const otpInput = document.getElementById('cust-modal-otp');
     const otp = otpInput ? otpInput.value.trim() : '';
 
     if (!otp || otp.length !== 4) {
-      this.showToast('Please enter the 4-digit OTP', 'error');
+      this.showToast('Please enter the full 4-digit OTP code', 'error');
       return;
     }
 

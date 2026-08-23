@@ -224,17 +224,23 @@ class CustomerApp {
     });
   }
 
-  renderCategoriesBar() {
+    renderCategoriesBar() {
     const container = document.getElementById('customer-categories-bar');
     if (!container) return;
 
+    const allActive = this.selectedCategory === 'ALL';
     const allPill = `
       <button 
         type="button" 
         onclick="customerApp.setCategory('ALL')" 
-        class="cat-pill ${this.selectedCategory === 'ALL' ? 'cat-pill-active' : 'cat-pill-inactive'}"
+        class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center space-x-2 border shadow-xs ${
+          allActive 
+            ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/25' 
+            : 'bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700/80 hover:border-rose-400 hover:bg-white dark:hover:bg-slate-800'
+        }"
       >
-        <span>🍨 All Products (${this.products.length})</span>
+        <span>🍨 All Products</span>
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${allActive ? 'bg-white/25 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}">${this.products.length}</span>
       </button>
     `;
 
@@ -245,9 +251,14 @@ class CustomerApp {
         <button 
           type="button" 
           onclick="customerApp.setCategory('${cat}')" 
-          class="cat-pill ${isActive ? 'cat-pill-active' : 'cat-pill-inactive'}"
+          class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center space-x-2 border shadow-xs ${
+            isActive 
+              ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/25' 
+              : 'bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700/80 hover:border-rose-400 hover:bg-white dark:hover:bg-slate-800'
+          }"
         >
-          <span>${cat} (${count})</span>
+          <span>${this.getCategoryIcon(cat)} ${cat}</span>
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black ${isActive ? 'bg-white/25 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}">${count}</span>
         </button>
       `;
     }).join('');
@@ -341,7 +352,7 @@ class CustomerApp {
     `;
   }
 
-  renderProductsGrid() {
+    renderProductsGrid() {
     const container = document.getElementById('customer-products-grid');
     const emptyEl = document.getElementById('customer-empty-products');
     const countEl = document.getElementById('current-category-count');
@@ -361,66 +372,8 @@ class CustomerApp {
 
     if (emptyEl) emptyEl.classList.add('hidden');
 
-    // Case 1: Specific Category Selected
-    if (this.selectedCategory !== 'ALL') {
-      container.innerHTML = `
-        <section class="category-section">
-          <div class="flex items-center justify-between mb-2.5 px-1">
-            <div class="flex items-center space-x-2">
-              <span class="text-lg sm:text-xl">${this.getCategoryIcon(this.selectedCategory)}</span>
-              <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display tracking-tight">${this.selectedCategory}</h3>
-              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">${items.length} items</span>
-            </div>
-          </div>
-          
-          <!-- Transparent Category Container/Box -->
-          <div class="category-box">
-            <div class="product-grid">
-              ${items.map(p => this.renderProductCardHtml(p)).join('')}
-            </div>
-          </div>
-        </section>
-      `;
-      return;
-    }
-
-    // Case 2: "ALL" Selected or Search Active -> Group products by categories in transparent containers
-    // Determine which categories have matching products
-    const catsWithItems = [];
-    const usedCats = new Set();
-
-    this.categories.forEach(cat => {
-      const catProducts = items.filter(p => p.category === cat);
-      if (catProducts.length > 0) {
-        catsWithItems.push({ category: cat, products: catProducts });
-        usedCats.add(cat);
-      }
-    });
-
-    // Also include any products with uncategorized or other categories
-    const otherProducts = items.filter(p => !usedCats.has(p.category));
-    if (otherProducts.length > 0) {
-      catsWithItems.push({ category: 'Other Products', products: otherProducts });
-    }
-
-    container.innerHTML = catsWithItems.map(group => `
-      <section class="category-section">
-        <div class="flex items-center justify-between mb-2.5 px-1">
-          <div class="flex items-center space-x-2">
-            <span class="text-lg sm:text-xl">${this.getCategoryIcon(group.category)}</span>
-            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display tracking-tight">${group.category}</h3>
-            <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">${group.products.length} items</span>
-          </div>
-        </div>
-
-        <!-- Transparent Category Container/Box wrapping product cards -->
-        <div class="category-box">
-          <div class="product-grid">
-            ${group.products.map(p => this.renderProductCardHtml(p)).join('')}
-          </div>
-        </div>
-      </section>
-    `).join('');
+    // Render all product cards in full-width responsive grid
+    container.innerHTML = items.map(p => this.renderProductCardHtml(p)).join('');
   }
 
   // --- CART OPERATIONS ---

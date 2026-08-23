@@ -210,15 +210,18 @@ class AppController {
   }
 
   triggerGoogleSignIn() {
-    const promptName = prompt('Enter your Google Account Name for quick Sign-in:', this.customerUser ? this.customerUser.name : 'Sundar Pichai');
-    if (!promptName) return;
+    const enteredName = prompt('Enter your Full Name to sign in:');
+    if (!enteredName || !enteredName.trim()) return;
 
-    const email = promptName.toLowerCase().replace(/\s+/g, '.') + '@gmail.com';
+    const enteredPhone = prompt('Enter your Mobile Phone Number (for order updates):') || '';
+    const cleanName = enteredName.trim();
+    const cleanPhone = enteredPhone.trim();
+    const email = cleanName.toLowerCase().replace(/\s+/g, '.') + '@gmail.com';
 
     this.saveCustomerAuth({
-      name: promptName,
+      name: cleanName,
       email: email,
-      phone: '9840012345',
+      phone: cleanPhone,
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
       authProvider: 'google'
     });

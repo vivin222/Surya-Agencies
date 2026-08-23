@@ -1533,7 +1533,7 @@ class CustomerApp {
     const container = document.getElementById('checkout-modal-container');
     if (!container) return;
 
-    const user = (window.appController && window.appController.customerUser) || { name: '', phone: '', email: '' };
+    const user = (window.appController && window.appController.customerUser && !window.appController.customerUser.isGuest) ? window.appController.customerUser : { name: '', phone: '', email: '' };
     const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     container.innerHTML = `
@@ -1550,12 +1550,12 @@ class CustomerApp {
           <form id="checkout-form" onsubmit="customerApp.submitOrder(event)" class="mt-6 space-y-4">
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Customer Name *</label>
-              <input type="text" id="checkout-name" value="${user.name || ''}" required placeholder="Your Full Name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+              <input type="text" id="checkout-name" value="${user.name || ''}" required placeholder="Enter Your Full Name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
             </div>
 
             <div>
               <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Phone Number (For Order Tracking)</label>
-              <input type="tel" id="checkout-phone" value="${user.phone || ''}" placeholder="98400 12345" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
+              <input type="tel" id="checkout-phone" value="${user.phone || ''}" placeholder="Enter 10-digit Mobile Number" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium" />
             </div>
 
             <!-- Payment Method Choice -->

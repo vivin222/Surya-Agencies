@@ -1,6 +1,7 @@
 /**
  * Shopkeeper Portal Logic — Surya Agencies
- * Live Orders Feed, Notification Bell & History, Stock Availability Filters, KPI Analytics, Add Product with Image Upload, and Revenue/Profit Reports
+ * Live Orders Feed, Camera QR Scanner, Quick Stock Controls (−1 / +1),
+ * Low-Stock Min Thresholds, Notification Bell, and Revenue Analytics
  */
 
 class ShopkeeperApp {
@@ -10,10 +11,13 @@ class ShopkeeperApp {
     this.notifications = [];
     this.unreadNotificationsCount = 0;
     this.activeFilter = 'ALL';
-    this.activeTab = 'orders'; // 'orders' | 'products' | 'reports' | 'settings'
+    this.activeTab = 'orders'; // 'orders' | 'scanner' | 'products' | 'reports' | 'settings'
+    this.orderSearchQuery = '';
     this.productSearchQuery = '';
     this.productCategoryFilter = 'ALL';
     this.productStockFilter = 'ALL'; // 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK'
+    this.html5QrCode = null;
+    this.isScanning = false;
     this.reportsData = null;
     this.settings = {
       upiId: 'suryaagencies@upi',
@@ -148,6 +152,8 @@ class ShopkeeperApp {
         }
 
         const stock = Math.max(0, parseInt(updatedProd.stock, 10) || 0);
+        const minThresh = parseInt(updatedProd.minThreshold, 10) || 5;
+
         if (stock === 0) {
           this.addNotification({
             id: 'notif-out-' + updatedProd.id + '-' + Date.now(),
@@ -157,13 +163,13 @@ class ShopkeeperApp {
             message: `"${updatedProd.name}" is now out of stock (0 units)!`,
             timestamp: new Date()
           });
-        } else if (stock > 0 && stock <= 5) {
+        } else if (stock > 0 && stock <= minThresh) {
           this.addNotification({
             id: 'notif-low-' + updatedProd.id + '-' + Date.now(),
             type: 'STOCK_LOW',
             icon: '📦',
             title: 'Low Stock Warning',
-            message: `"${updatedProd.name}" has only ${stock} unit(s) left!`,
+            message: `"${updatedProd.name}" has only ${stock} unit(s) left (Threshold: ${minThresh})!`,
             timestamp: new Date()
           });
         }
@@ -184,10 +190,9 @@ class ShopkeeperApp {
     });
   }
 
-  // --- NOTIFICATION SYSTEM ENGINE ---
+  // --- SMART NOTIFICATION SYSTEM ---
 
   addNotification(notif) {
-    // Avoid duplicate notifications for same title & message within 5 seconds
     const isDuplicate = this.notifications.some(n => 
       n.title === notif.title && 
       n.message === notif.message && 
@@ -304,7 +309,7 @@ class ShopkeeperApp {
         if (kpiPending) kpiPending.textContent = s.newOrders + s.ordersPreparing + s.ordersReady;
         if (kpiRevenue) kpiRevenue.textContent = `₹${s.totalRevenue}`;
         
-        const lowStockCount = this.products.filter(p => p.stock <= 5).length;
+        const lowStockCount = this.products.filter(p => p.stock <= (p.minThreshold || 5)).length;
         if (kpiStock) kpiStock.textContent = lowStockCount;
       }
     } catch (e) {}
@@ -378,7 +383,7 @@ class ShopkeeperApp {
     if (addressInput) addressInput.value = this.settings.shopAddress || '';
   }
 
-  // --- TAB NAVIGATION (4 TABS) ---
+  // --- TAB NAVIGATION (5 TABS) ---
 
   switchTab(tab) {
     this.activeTab = tab;
@@ -403,16 +408,260 @@ class ShopkeeperApp {
     if (tab === 'settings') this.populateSettingsForm();
   }
 
-  // --- TAB 1: ORDERS RENDERING & STEPPERS ---
+  // --- CAMERA QR SCANNER & ORDER INSPECTION ---
+
+  async openQRScannerModal() {
+    const modal = document.getElementById('shop-qr-scanner-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+
+    const statusEl = document.getElementById('shop-scanner-status');
+    const readerEl = document.getElementById('shop-qr-reader');
+
+    if (typeof Html5Qrcode === 'undefined') {
+      if (statusEl) {
+        statusEl.textContent = 'Camera scanner library not loaded. Please use the manual order lookup below.';
+        statusEl.className = 'text-xs text-amber-600 font-bold mt-2 text-center';
+      }
+      return;
+    }
+
+    try {
+      if (!this.html5QrCode) {
+        this.html5QrCode = new Html5Qrcode('shop-qr-reader');
+      }
+
+      if (statusEl) {
+        statusEl.textContent = '🟢 Requesting Camera Permission...';
+        statusEl.className = 'text-xs text-emerald-600 font-bold mt-2 text-center';
+      }
+
+      const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+
+      await this.html5QrCode.start(
+        { facingMode: 'environment' },
+        config,
+        (decodedText) => {
+          this.handleScannedQR(decodedText);
+        },
+        (error) => {}
+      );
+
+      this.isScanning = true;
+      if (statusEl) {
+        statusEl.textContent = '🟢 Camera active. Align customer QR code inside box.';
+        statusEl.className = 'text-xs text-emerald-600 font-bold mt-2 text-center';
+      }
+    } catch (err) {
+      console.warn('Camera start error:', err);
+      this.isScanning = false;
+      if (statusEl) {
+        statusEl.textContent = '⚠️ Camera permission denied or unavailable. Enter Order Number manually below.';
+        statusEl.className = 'text-xs text-amber-600 font-bold mt-2 text-center';
+      }
+    }
+  }
+
+  async closeQRScannerModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('shop-qr-scanner-modal');
+    if (modal) modal.classList.add('hidden');
+
+    if (this.html5QrCode && this.isScanning) {
+      try {
+        await this.html5QrCode.stop();
+        this.isScanning = false;
+      } catch (e) {}
+    }
+  }
+
+  handleScannedQR(decodedText) {
+    if (window.appController) window.appController.playChime();
+    this.closeQRScannerModal();
+
+    let cleanOrderCode = decodedText.trim();
+    if (cleanOrderCode.includes('/#order/')) {
+      cleanOrderCode = cleanOrderCode.split('/#order/')[1];
+    } else if (cleanOrderCode.includes('/#ticket/')) {
+      cleanOrderCode = cleanOrderCode.split('/#ticket/')[1];
+    }
+
+    this.findAndInspectOrder(cleanOrderCode);
+  }
+
+  lookupOrderByManualInput() {
+    const input = document.getElementById('manual-order-search-input');
+    if (!input || !input.value.trim()) {
+      alert('Please enter an Order ID or Order Number');
+      return;
+    }
+
+    const val = input.value.trim();
+    this.closeQRScannerModal();
+    this.findAndInspectOrder(val);
+  }
+
+  findAndInspectOrder(query) {
+    const cleanQ = query.replace('#', '').toUpperCase();
+    const found = this.orders.find(o => 
+      o.id === query || 
+      o.orderNumber.replace('#', '').toUpperCase() === cleanQ ||
+      o.orderNumber.toUpperCase() === query.toUpperCase()
+    );
+
+    if (found) {
+      this.openOrderDetailsModal(found);
+    } else {
+      alert(`No order found matching "${query}". Please check the order number.`);
+    }
+  }
+
+  openOrderDetailsModal(order) {
+    const modal = document.getElementById('shop-order-details-modal');
+    const content = document.getElementById('shop-order-details-content');
+    const subtitle = document.getElementById('detail-modal-order-subtitle');
+    if (!modal || !content) return;
+
+    if (subtitle) subtitle.textContent = `Order ${order.orderNumber} • ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+    let parsedItems = [];
+    try {
+      parsedItems = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+    } catch (e) {
+      parsedItems = [];
+    }
+
+    const isNew = order.orderStatus === 'NEW';
+    const isAccepted = order.orderStatus === 'ACCEPTED';
+    const isPreparing = order.orderStatus === 'PREPARING';
+    const isReady = order.orderStatus === 'READY_FOR_PICKUP';
+    const isCompleted = order.orderStatus === 'COMPLETED';
+    const isCancelled = order.orderStatus === 'CANCELLED';
+
+    content.innerHTML = `
+      <!-- Customer Information Card -->
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="font-extrabold text-slate-900 dark:text-white text-sm">${order.customerName}</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-black ${order.paymentMethod === 'upi' ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}">
+            ${order.paymentMethod === 'upi' ? '📱 UPI (Paid Online)' : '💵 Pay at Shop'}
+          </span>
+        </div>
+        <p class="text-slate-500 dark:text-slate-400 font-mono">Phone: <strong>${order.customerPhone || 'Counter Pickup'}</strong></p>
+        <div class="flex items-center space-x-2 pt-1">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Current Status:</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
+            isReady ? 'bg-purple-100 text-purple-800 animate-pulse' :
+            isCompleted ? 'bg-emerald-100 text-emerald-800' :
+            isCancelled ? 'bg-red-100 text-red-800' :
+            'bg-rose-100 text-rose-800'
+          }">
+            ${order.orderStatus.replace(/_/g, ' ')}
+          </span>
+        </div>
+      </div>
+
+      <!-- Items List -->
+      <div class="space-y-2">
+        <h5 class="text-[10px] font-black uppercase text-slate-400">Ordered Products & Quantities</h5>
+        <div class="space-y-1.5 max-h-48 overflow-y-auto">
+          ${parsedItems.map(item => `
+            <div class="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white block">${item.name}</span>
+                <span class="text-[10px] text-slate-400">${item.packSize || 'Standard Pack'}</span>
+              </div>
+              <div class="text-right">
+                <span class="font-bold font-mono text-slate-800 dark:text-slate-200"><strong>${item.quantity}</strong> × ₹${item.price}</span>
+                <span class="font-black text-rose-600 dark:text-rose-400 block font-mono text-xs">= ₹${item.itemTotal || (item.price * item.quantity)}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="flex justify-between items-center text-sm font-black text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-slate-700">
+          <span>Total Order Value</span>
+          <span class="text-rose-600 font-mono text-base">₹${order.total}</span>
+        </div>
+      </div>
+
+      <!-- 1-Tap Lifecycle Status Stepper Action Buttons -->
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+        <span class="text-[10px] font-black uppercase text-slate-400 block">Update Order Status</span>
+        <div class="grid grid-cols-2 gap-2">
+          ${isNew ? `
+            <button type="button" onclick="shopkeeperApp.updateStatusFromModal('${order.id}', 'ACCEPTED')" class="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm">
+              ✓ Accept Order
+            </button>
+            <button type="button" onclick="shopkeeperApp.updateStatusFromModal('${order.id}', 'CANCELLED')" class="w-full py-2.5 px-3 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs">
+              ✕ Reject / Cancel
+            </button>
+          ` : ''}
+
+          ${isAccepted ? `
+            <button type="button" onclick="shopkeeperApp.updateStatusFromModal('${order.id}', 'PREPARING')" class="col-span-2 w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm">
+              ⚡ Start Preparing Items
+            </button>
+          ` : ''}
+
+          ${isPreparing ? `
+            <button type="button" onclick="shopkeeperApp.updateStatusFromModal('${order.id}', 'READY_FOR_PICKUP')" class="col-span-2 w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-sm">
+              🔔 Mark Ready for Counter Pickup
+            </button>
+          ` : ''}
+
+          ${isReady ? `
+            <button type="button" onclick="shopkeeperApp.updateStatusFromModal('${order.id}', 'COMPLETED')" class="col-span-2 w-full py-3 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-black text-xs shadow-md">
+              ✓ Handed to Customer (Complete Order)
+            </button>
+          ` : ''}
+
+          ${isCompleted ? `
+            <div class="col-span-2 text-center py-2 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-200 text-emerald-700 dark:text-emerald-400 font-black text-xs">
+              ✓ Order is Completed & Picked Up!
+            </div>
+          ` : ''}
+
+          ${isCancelled ? `
+            <div class="col-span-2 text-center py-2 bg-red-50 dark:bg-red-950/60 rounded-xl border border-red-200 text-red-700 dark:text-red-400 font-black text-xs">
+              ✕ Order was Cancelled
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+  }
+
+  async updateStatusFromModal(orderId, newStatus) {
+    await this.updateOrderStatus(orderId, newStatus);
+    const updated = this.orders.find(o => o.id === orderId);
+    if (updated) {
+      this.openOrderDetailsModal(updated);
+    }
+  }
+
+  closeOrderDetailsModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('shop-order-details-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  // --- ORDERS TAB FILTERING & RENDERING ---
+
+  searchOrders(query) {
+    this.orderSearchQuery = query.trim().toLowerCase();
+    this.renderOrders();
+  }
 
   filterOrders(filter) {
     this.activeFilter = filter;
     const buttons = document.querySelectorAll('.shop-filter-btn');
     buttons.forEach(btn => {
       if (btn.textContent.trim().toUpperCase().includes(filter.replace('_', ' '))) {
-        btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white whitespace-nowrap';
+        btn.className = 'shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white whitespace-nowrap';
       } else {
-        btn.className = 'shop-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap';
+        btn.className = 'shop-filter-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 whitespace-nowrap';
       }
     });
     this.renderOrders();
@@ -425,8 +674,18 @@ class ShopkeeperApp {
     if (!container) return;
 
     let filtered = this.orders;
+
     if (this.activeFilter !== 'ALL') {
-      filtered = this.orders.filter(o => o.orderStatus === this.activeFilter);
+      filtered = filtered.filter(o => o.orderStatus === this.activeFilter);
+    }
+
+    if (this.orderSearchQuery) {
+      filtered = filtered.filter(o => 
+        o.orderNumber.toLowerCase().includes(this.orderSearchQuery) ||
+        (o.customerName && o.customerName.toLowerCase().includes(this.orderSearchQuery)) ||
+        (o.customerPhone && o.customerPhone.includes(this.orderSearchQuery)) ||
+        (o.createdAt && o.createdAt.includes(this.orderSearchQuery))
+      );
     }
 
     const activePending = this.orders.filter(o => ['NEW', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP'].includes(o.orderStatus)).length;
@@ -460,12 +719,12 @@ class ShopkeeperApp {
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
             <div>
               <div class="flex items-center space-x-2">
-                <span class="font-black text-slate-900 dark:text-white font-display text-base sm:text-lg">${order.orderNumber}</span>
+                <span class="font-black text-slate-900 dark:text-white font-display text-base sm:text-lg cursor-pointer hover:text-rose-600" onclick="shopkeeperApp.openOrderDetailsModal(shopkeeperApp.orders.find(o => o.id === '${order.id}'))">${order.orderNumber}</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isReady ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 animate-pulse' :
+                  isReady ? 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 animate-pulse' :
                   isCompleted ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200' :
-                  isCancelled ? 'bg-red-100 dark:bg-red-950/80 text-red-800 dark:text-red-300' :
-                  'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
+                  isCancelled ? 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300' :
+                  'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
                 }">
                   ${order.orderStatus.replace(/_/g, ' ')}
                 </span>
@@ -494,10 +753,10 @@ class ShopkeeperApp {
             `).join('')}
           </div>
 
-          <!-- Action Stepper Buttons -->
+          <!-- Action Buttons -->
           <div class="flex flex-wrap items-center gap-2 pt-1">
             ${isNew ? `
-              <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'ACCEPTED')" class="px-3.5 py-1.5 rounded-xl bg-slate-900 dark:bg-rose-600 text-white font-bold text-xs shadow-sm hover:bg-slate-800 flex items-center space-x-1">
+              <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'ACCEPTED')" class="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center space-x-1">
                 <span>✓ Accept Order</span>
               </button>
               <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'CANCELLED')" class="px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 font-bold text-xs hover:bg-red-100">
@@ -512,7 +771,7 @@ class ShopkeeperApp {
             ` : ''}
 
             ${isPreparing ? `
-              <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'READY_FOR_PICKUP')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-sm hover:bg-emerald-700 flex items-center space-x-1">
+              <button type="button" onclick="shopkeeperApp.updateOrderStatus('${order.id}', 'READY_FOR_PICKUP')" class="px-3.5 py-1.5 rounded-xl bg-purple-600 text-white font-bold text-xs shadow-sm hover:bg-purple-700 flex items-center space-x-1">
                 <span>🔔 Mark Ready for Counter Pickup</span>
               </button>
             ` : ''}
@@ -532,13 +791,17 @@ class ShopkeeperApp {
             ${isCancelled ? `
               <span class="text-xs font-bold text-red-600 dark:text-red-400">✕ Cancelled Order</span>
             ` : ''}
+
+            <button type="button" onclick="shopkeeperApp.openOrderDetailsModal(shopkeeperApp.orders.find(o => o.id === '${order.id}'))" class="ml-auto px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-200">
+              🔍 Inspect Order
+            </button>
           </div>
         </div>
       `;
     }).join('');
   }
 
-      async updateOrderStatus(orderId, newStatus) {
+  async updateOrderStatus(orderId, newStatus) {
     if (!newStatus) {
       alert('Please select an order status');
       return;
@@ -568,7 +831,7 @@ class ShopkeeperApp {
         }
         this.fetchDashboardStats();
         if (window.appController) {
-          window.appController.showToast(`Order ${data.order ? data.order.orderNumber : ''} marked as ${newStatus}`, 'success');
+          window.appController.showToast(`Order marked as ${newStatus.replace(/_/g, ' ')}`, 'success');
         }
       } else {
         alert(data.error || 'Failed to update order status');
@@ -578,7 +841,7 @@ class ShopkeeperApp {
     }
   }
 
-  // --- TAB 2: PRODUCT MANAGEMENT & STOCK EDITING ---
+  // --- TAB 2: PRODUCT MANAGEMENT, QUICK STEPPERS (−1 / +1) & INSTANT TOGGLE ---
 
   searchProducts(query) {
     this.productSearchQuery = query.toLowerCase();
@@ -597,7 +860,6 @@ class ShopkeeperApp {
     this.renderProductsTable();
   }
 
-  
   // Instant 1-Click Availability Toggle (🟢 AVAILABLE <-> 🔴 NOT AVAILABLE)
   async toggleProductAvailability(productId) {
     const prod = this.products.find(p => p.id === productId);
@@ -635,7 +897,42 @@ class ShopkeeperApp {
     }
   }
 
-      renderProductsTable() {
+  // Quick Stock Step Change (+1 or -1)
+  async quickChangeStock(productId, delta) {
+    const prod = this.products.find(p => p.id === productId);
+    if (!prod) return;
+
+    const currentStock = Math.max(0, parseInt(prod.stock, 10) || 0);
+    const newStock = Math.max(0, currentStock + delta);
+
+    // Optimistic UI update
+    prod.stock = newStock;
+    this.renderProductsTable();
+
+    try {
+      const token = sessionStorage.getItem('surya_shopkeeper_token');
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'x-shopkeeper-verified': 'true'
+        },
+        body: JSON.stringify({ stock: newStock })
+      });
+
+      const data = await res.json();
+      if (data.success && data.product) {
+        const idx = this.products.findIndex(p => p.id === productId);
+        if (idx !== -1) this.products[idx] = data.product;
+        this.fetchDashboardStats();
+      }
+    } catch (e) {
+      console.error('Quick stock change error:', e);
+    }
+  }
+
+  renderProductsTable() {
     const container = document.getElementById('shopkeeper-products-table');
     if (!container) return;
 
@@ -648,9 +945,9 @@ class ShopkeeperApp {
     }
 
     if (this.productStockFilter === 'IN_STOCK') {
-      list = list.filter(p => p.stock > 0 && p.available);
+      list = list.filter(p => p.stock > (p.minThreshold || 5) && p.available);
     } else if (this.productStockFilter === 'LOW_STOCK') {
-      list = list.filter(p => p.stock > 0 && p.stock <= 5);
+      list = list.filter(p => p.stock > 0 && p.stock <= (p.minThreshold || 5));
     } else if (this.productStockFilter === 'OUT_OF_STOCK') {
       list = list.filter(p => p.stock === 0 || !p.available);
     }
@@ -668,12 +965,13 @@ class ShopkeeperApp {
 
     container.innerHTML = list.map(prod => {
       const stockInt = Math.max(0, parseInt(prod.stock, 10) || 0);
+      const minThresh = parseInt(prod.minThreshold, 10) || 5;
       const isManualOff = !prod.available;
       const isOut = stockInt === 0;
-      const isLowStock = stockInt > 0 && stockInt <= 5;
+      const isLowStock = stockInt > 0 && stockInt <= minThresh;
 
       return `
-        <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-all">
+        <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-all">
           <div class="flex items-center space-x-3 flex-1 min-w-0">
             <div class="relative group cursor-pointer flex-shrink-0" onclick="shopkeeperApp.openEditImageModal('${prod.id}')" title="Click to change image">
               <img src="${prod.image || '/assets/arun-vanilla-cup.jpg'}" alt="${prod.name}" class="w-14 h-14 object-contain rounded-2xl bg-slate-50 dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-700" />
@@ -700,8 +998,8 @@ class ShopkeeperApp {
             </div>
           </div>
 
-          <!-- Controls: Instant Availability Toggle + Price + Cost + Stock -->
-          <div class="flex items-center gap-2 sm:gap-3 flex-wrap lg:flex-nowrap justify-between lg:justify-end">
+          <!-- Controls: Instant Availability Toggle + Quick Stock Steppers (−1 / +1) + Price + Cost -->
+          <div class="flex items-center gap-2 sm:gap-3 flex-wrap xl:flex-nowrap justify-between xl:justify-end">
             
             <!-- 🔘 INSTANT 1-CLICK AVAILABILITY TOGGLE BUTTON -->
             <div>
@@ -720,28 +1018,38 @@ class ShopkeeperApp {
               </button>
             </div>
 
+            <!-- ⚡ QUICK STOCK CONTROLS (− 1 | Stock | + 1) -->
+            <div>
+              <label class="text-[9px] font-bold text-slate-400 uppercase block">Stock Units</label>
+              <div class="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl p-0.5 shadow-xs">
+                <button type="button" onclick="shopkeeperApp.quickChangeStock('${prod.id}', -1)" class="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-black flex items-center justify-center hover:bg-slate-200 shadow-xs">−</button>
+                <input type="number" id="prod-stock-${prod.id}" value="${stockInt}" min="0" step="1" class="w-12 text-center text-xs font-black text-slate-900 dark:text-white bg-transparent focus:outline-none" onchange="shopkeeperApp.saveProductChanges('${prod.id}')" />
+                <button type="button" onclick="shopkeeperApp.quickChangeStock('${prod.id}', 1)" class="w-6 h-6 rounded-lg bg-rose-600 text-white font-black flex items-center justify-center hover:bg-rose-700 shadow-xs">+</button>
+              </div>
+            </div>
+
             <!-- Selling Price Input -->
-            <div class="w-20 sm:w-24">
+            <div class="w-20">
               <label class="text-[9px] font-bold text-slate-400 uppercase block">Selling Price</label>
               <div class="flex items-center rounded-xl border border-slate-300 dark:border-slate-600 px-2 py-1 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-rose-500">
-                <span class="text-xs text-slate-400 font-bold mr-1">₹</span>
+                <span class="text-xs text-slate-400 font-bold mr-0.5">₹</span>
                 <input type="number" id="prod-price-${prod.id}" value="${prod.price || 0}" min="0" step="0.5" class="w-full text-xs font-black text-slate-900 dark:text-white bg-transparent focus:outline-none" />
               </div>
             </div>
 
             <!-- Cost Price Input -->
-            <div class="w-20 sm:w-24">
-              <label class="text-[9px] font-bold text-slate-400 uppercase block" title="Used for net profit calculations">Cost Price</label>
+            <div class="w-18">
+              <label class="text-[9px] font-bold text-slate-400 uppercase block" title="Cost Price for net profit">Cost</label>
               <div class="flex items-center rounded-xl border border-slate-300 dark:border-slate-600 px-2 py-1 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-rose-500">
-                <span class="text-xs text-slate-400 font-bold mr-1">₹</span>
+                <span class="text-xs text-slate-400 font-bold mr-0.5">₹</span>
                 <input type="number" id="prod-cost-${prod.id}" value="${prod.costPrice !== null && prod.costPrice !== undefined ? prod.costPrice : ''}" placeholder="None" min="0" step="0.5" class="w-full text-xs font-medium text-slate-700 dark:text-slate-200 bg-transparent focus:outline-none" />
               </div>
             </div>
 
-            <!-- Stock Integer Input -->
-            <div class="w-16 sm:w-20">
-              <label class="text-[9px] font-bold text-slate-400 uppercase block">Stock</label>
-              <input type="number" id="prod-stock-${prod.id}" value="${stockInt}" min="0" step="1" class="w-full px-2 py-1 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-black text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" />
+            <!-- Min Threshold Input -->
+            <div class="w-16">
+              <label class="text-[9px] font-bold text-slate-400 uppercase block" title="Triggers low stock alert when units fall to this">Min</label>
+              <input type="number" id="prod-min-${prod.id}" value="${minThresh}" min="1" step="1" class="w-full px-2 py-1 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" />
             </div>
 
             <!-- Action Buttons -->
@@ -750,7 +1058,7 @@ class ShopkeeperApp {
                 type="button" 
                 onclick="shopkeeperApp.saveProductChanges('${prod.id}')" 
                 class="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 text-white font-extrabold text-xs shadow-sm"
-                title="Save Price, Cost, and Stock"
+                title="Save Price, Cost, Stock, and Min Threshold"
               >
                 Save
               </button>
@@ -758,10 +1066,10 @@ class ShopkeeperApp {
               <button 
                 type="button" 
                 onclick="shopkeeperApp.openEditImageModal('${prod.id}')" 
-                class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs"
+                class="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs"
                 title="Update product photo"
               >
-                🖼️ Image
+                🖼️
               </button>
             </div>
           </div>
@@ -774,10 +1082,12 @@ class ShopkeeperApp {
     const priceInput = document.getElementById(`prod-price-${productId}`);
     const costInput = document.getElementById(`prod-cost-${productId}`);
     const stockInput = document.getElementById(`prod-stock-${productId}`);
+    const minInput = document.getElementById(`prod-min-${productId}`);
 
     const newPrice = priceInput ? Number(priceInput.value) : null;
     const newCost = costInput && costInput.value.trim() !== '' ? Number(costInput.value) : null;
     const newStock = stockInput ? Math.max(0, parseInt(stockInput.value, 10) || 0) : 0;
+    const newMin = minInput ? Math.max(1, parseInt(minInput.value, 10) || 5) : 5;
 
     try {
       const token = sessionStorage.getItem('surya_shopkeeper_token');
@@ -791,7 +1101,8 @@ class ShopkeeperApp {
         body: JSON.stringify({
           price: newPrice,
           costPrice: newCost,
-          stock: newStock
+          stock: newStock,
+          minThreshold: newMin
         })
       });
 
@@ -858,11 +1169,11 @@ class ShopkeeperApp {
     const price = document.getElementById('new-prod-price').value;
     const costPrice = document.getElementById('new-prod-cost').value;
     const stock = Math.max(0, parseInt(document.getElementById('new-prod-stock').value, 10) || 0);
+    const minThreshold = Math.max(1, parseInt(document.getElementById('new-prod-min-threshold').value, 10) || 5);
     const description = document.getElementById('new-prod-desc').value.trim();
     const fileInput = document.getElementById('new-prod-image-file');
 
     let imageUrl = '/assets/arun-vanilla-cup.jpg';
-
     if (category === 'Dairy Products') imageUrl = '/assets/arokya-milk.jpg';
     else if (category === 'Ice Cream Cones') imageUrl = '/assets/arun-cone.jpg';
     else if (category === 'Ice Cream Bars & Sticks') imageUrl = '/assets/arun-chocobar.jpg';
@@ -905,6 +1216,7 @@ class ShopkeeperApp {
           price: Number(price),
           costPrice: costPrice.trim() !== '' ? Number(costPrice) : null,
           stock: stock,
+          minThreshold: minThreshold,
           available: stock > 0,
           description,
           image: imageUrl

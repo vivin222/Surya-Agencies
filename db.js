@@ -68,6 +68,7 @@ class DatabaseService {
         price REAL,
         stock INTEGER NOT NULL DEFAULT 0,
         available INTEGER NOT NULL DEFAULT 1,
+        minThreshold INTEGER NOT NULL DEFAULT 5,
         description TEXT,
         image TEXT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -115,6 +116,7 @@ class DatabaseService {
       // Dynamic column migration for safety
       try { await this.run('ALTER TABLE products ADD COLUMN packSize TEXT'); } catch(e){}
       try { await this.run('ALTER TABLE products ADD COLUMN costPrice REAL'); } catch(e){}
+      try { await this.run('ALTER TABLE products ADD COLUMN minThreshold INTEGER NOT NULL DEFAULT 5'); } catch(e){}
       try { await this.run('ALTER TABLE orders ADD COLUMN customerId TEXT'); } catch(e){}
       try { await this.run('ALTER TABLE orders ADD COLUMN customerEmail TEXT'); } catch(e){}
 
@@ -195,7 +197,8 @@ class DatabaseService {
     // Create New Product (Automatic Availability based on stock > 0)
     // Create New Product
     // Create New Product
-  async createProduct({ name, category, packSize, price, costPrice, stock, available, description = '', image = '' }) {
+    // Create New Product
+  async createProduct({ name, category, packSize, price, costPrice, stock, minThreshold = 5, available, description = '', image = '' }) {
     if (this.ready) await this.ready;
     if (!name || !name.trim()) throw new Error('Product name is required');
     if (!category) throw new Error('Product category is required');
@@ -204,28 +207,35 @@ class DatabaseService {
     const numPrice = price !== null && price !== undefined && price !== '' ? Number(price) : null;
     const numCost = costPrice !== null && costPrice !== undefined && costPrice !== '' ? Number(costPrice) : null;
     const numStock = Math.max(0, parseInt(stock, 10) || 0);
+    const numMin = parseInt(minThreshold, 10) || 5;
     const avail = available !== undefined ? (available ? 1 : 0) : (numStock > 0 ? 1 : 0);
     const img = image || '/assets/arun-vanilla-cup.jpg';
 
     await this.run(
-      `INSERT INTO products (id, name, category, packSize, price, costPrice, stock, available, description, image, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [id, name.trim(), category, packSize || 'Standard Pack', numPrice, numCost, numStock, avail, description || '', img]
+      `INSERT INTO products (id, name, category, packSize, price, costPrice, stock, minThreshold, available, description, image, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [id, name.trim(), category, packSize || 'Standard Pack', numPrice, numCost, numStock, numMin, avail, description || '', img]
     );
 
     return this.getProductById(id);
   }
 
-        async getProducts() {
+          async getProducts() {
     if (this.ready) await this.ready;
     const rows = await this.all(`SELECT * FROM products ORDER BY category ASC, name ASC`);
     return rows.map(r => {
       const stockInt = Math.max(0, parseInt(r.stock, 10) || 0);
+      const minThresh = parseInt(r.minThreshold, 10) || 5;
+      const isOut = stockInt === 0;
+      const isLow = stockInt > 0 && stockInt <= minThresh;
       return {
         ...r,
         stock: stockInt,
+        minThreshold: minThresh,
         available: Boolean(r.available),
         isOrderable: Boolean(r.available) && stockInt > 0,
+        isLowStock: isLow,
+        isOutOfStock: isOut,
         price: r.price !== null && r.price !== undefined ? Number(r.price) : null,
         costPrice: r.costPrice !== null && r.costPrice !== undefined ? Number(r.costPrice) : null
       };
@@ -237,17 +247,23 @@ class DatabaseService {
     const r = await this.get(`SELECT * FROM products WHERE id = ?`, [id]);
     if (!r) return null;
     const stockInt = Math.max(0, parseInt(r.stock, 10) || 0);
+    const minThresh = parseInt(r.minThreshold, 10) || 5;
+    const isOut = stockInt === 0;
+    const isLow = stockInt > 0 && stockInt <= minThresh;
     return {
       ...r,
       stock: stockInt,
+      minThreshold: minThresh,
       available: Boolean(r.available),
       isOrderable: Boolean(r.available) && stockInt > 0,
+      isLowStock: isLow,
+      isOutOfStock: isOut,
       price: r.price !== null && r.price !== undefined ? Number(r.price) : null,
       costPrice: r.costPrice !== null && r.costPrice !== undefined ? Number(r.costPrice) : null
     };
   }
 
-          async updateProduct(id, updateData) {
+            async updateProduct(id, updateData) {
     if (this.ready) await this.ready;
     const existing = await this.getProductById(id);
     if (!existing) throw new Error(`Product not found: ${id}`);
@@ -260,6 +276,7 @@ class DatabaseService {
     
     // Whole integer stock, never negative
     const stock = updateData.stock !== undefined ? Math.max(0, parseInt(updateData.stock, 10) || 0) : Math.max(0, existing.stock);
+    const minThreshold = updateData.minThreshold !== undefined ? parseInt(updateData.minThreshold, 10) || 5 : existing.minThreshold;
     
     // Explicit manual availability flag if provided, else keep existing manual choice
     const available = updateData.available !== undefined ? (updateData.available ? 1 : 0) : (existing.available ? 1 : 0);
@@ -269,9 +286,9 @@ class DatabaseService {
 
     await this.run(
       `UPDATE products 
-       SET name = ?, category = ?, packSize = ?, price = ?, costPrice = ?, stock = ?, available = ?, description = ?, image = ?, updatedAt = CURRENT_TIMESTAMP
+       SET name = ?, category = ?, packSize = ?, price = ?, costPrice = ?, stock = ?, minThreshold = ?, available = ?, description = ?, image = ?, updatedAt = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name, category, packSize, price, costPrice, stock, available, description, image, id]
+      [name, category, packSize, price, costPrice, stock, minThreshold, available, description, image, id]
     );
 
     return this.getProductById(id);

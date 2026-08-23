@@ -274,3 +274,44 @@ button, input, select, a {
   min-height: 44px;
   min-width: 44px;
 }
+
+
+/* Html5Qrcode Reader Custom Styles */
+#shop-qr-reader {
+  width: 100% !important;
+  border: none !important;
+}
+
+#shop-qr-reader video {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 1rem !important;
+  object-fit: cover !important;
+}
+
+#shop-qr-reader__scan_region {
+  background: rgba(0,0,0,0.2) !important;
+  border-radius: 1rem !important;
+}
+
+#shop-qr-reader__dashboard {
+  padding: 0.5rem !important;
+}
+
+#shop-qr-reader__dashboard_section_csr button {
+  background-color: #0f172a !important;
+  color: white !important;
+  padding: 0.35rem 0.75rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+/* Safe area inset for modern mobile bottom bars */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+}

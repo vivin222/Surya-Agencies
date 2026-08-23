@@ -160,6 +160,11 @@ class CustomerApp {
 
   // --- API DATA FETCHING ---
 
+  async refreshProducts() {
+    await this.fetchProducts();
+    this.render();
+  }
+
   async fetchProducts() {
     try {
       const res = await fetch('/api/products');

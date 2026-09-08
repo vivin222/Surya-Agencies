@@ -103,7 +103,7 @@ Each implemented module is grounded in concrete, audited codebase files:
   * *Evidence:* `js/customer-app.js`
 
 ### B. Shopkeeper Operations Portal
-* **Protected Shopkeeper Authentication:** Secure credentials-based session portal for authorized parlour staff (`surya_agencies`).
+* **Protected Shopkeeper Authentication:** Secure credentials-based session portal for authorized parlour staff.
   * *Evidence:* `server.js`, `js/shopkeeper-app.js`
 * **Live Orders Feed:** Real-time order dispatch board with status filters (`All`, `New`, `Accepted`, `Preparing`, `Ready`, `Completed`) and audio chime alerts.
   * *Evidence:* `js/shopkeeper-app.js`
@@ -284,9 +284,7 @@ Result: ALL 10 TESTS PASSED (100%)
 4. **Access the application:**
    * **Main Gateway:** `http://localhost:3000`
    * **Customer Store:** `http://localhost:3000/#customer`
-   * **Shopkeeper Portal:** `http://localhost:3000/#shopkeeper`
-     * *Demo Username:* `surya_agencies`
-     * *Demo Password:* `suryaiceavi23`
+   * **Shopkeeper Portal:** Available through the deployed application using the designated demonstration credentials.
 
 5. **Execute automated test suites:**
    ```bash

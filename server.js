@@ -506,12 +506,6 @@ app.get('/api/orders/lookup/:query', async (req, res) => {
   }
 });
 
-    res.json({ success: true, order: found });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 // Get Single Order by ID or Order Number
 app.get('/api/orders/:id', async (req, res) => {
   try {

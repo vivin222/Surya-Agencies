@@ -4,7 +4,8 @@
 > **Milestone Status:** Improved, Tested & Validated Working System (~70% Project Milestone)  
 > **Live Production URL:** [https://surya-agencies.onrender.com](https://surya-agencies.onrender.com)  
 > **Primary Repository:** [https://github.com/vivin222/surya-agencies-project-review-1](https://github.com/vivin222/surya-agencies-project-review-1)  
-> **Evaluation Phase:** Review 2 of 3 (Progressing from ~35% Initial Prototype ➔ ~70% Validated System)
+> **Evaluation Phase:** Review 2 of 3 (Progressing from ~35% Initial Prototype ➔ ~70% Validated System)  
+> **Milestone Clarification:** Review 2 Scope — Completed, Tested & Validated. Overall project completion remains at approximately 70%; Review 3 contains the remaining final-stage work.
 
 ---
 
@@ -107,7 +108,7 @@ Each implemented module is grounded in concrete, audited codebase files:
   * *Evidence:* `js/shopkeeper-app.js`, `server.js`, `db.js`
 * **Product Catalog Management:** Ability to add new products, modify prices, and upload persistent product photos via Multer.
   * *Evidence:* `server.js`, `uploads/`
-* **Revenue & Sales Analytics:** Aggregated sales metrics, net profit calculations, and payment breakdowns with dark-mode contrast optimization.
+* **Revenue & Sales Analytics:** Aggregated sales metrics, completed orders tracking, and revenue totals with dark-mode contrast optimization.
   * *Evidence:* `js/shopkeeper-app.js`, `db.js`
 
 ### C. Backend, Database & State Machine
@@ -134,7 +135,7 @@ Each implemented module is grounded in concrete, audited codebase files:
 
 ## 🗄️ 5. SQLite Database Schema Specification
 
-The application utilizes an embedded, ACID-compliant **SQLite3** database (`icecream.sqlite`) with foreign key references, default timestamps, and indexed primary keys:
+The application uses an embedded, ACID-compliant **SQLite3** database (`icecream.sqlite`) with parameterized queries, default timestamps, and indexed primary keys as implemented in `db.js`:
 
 ### Table 1: `products`
 Stores product catalog specifications, pricing, stock levels, and category groupings.
@@ -145,7 +146,7 @@ Stores product catalog specifications, pricing, stock levels, and category group
 | `name` | `TEXT` | `NOT NULL` | Brand product name (e.g. *Arun Disc Cone Butterscotch 120ml*) |
 | `category` | `TEXT` | `NOT NULL` | Category name (Cones, Cups & Duets, Bars & Sticks, Tubs, Cakes, etc.) |
 | `packSize` | `TEXT` | `DEFAULT 'Standard Pack'` | Packaging quantity / volume specification |
-| `price` | `REAL` | `NOT NULL` | Retail price in Indian Rupees (₹) |
+| `price` | `REAL` | `DEFAULT NULL` | Retail selling price in Indian Rupees (₹) |
 | `costPrice` | `REAL` | `DEFAULT NULL` | Wholesale cost price for profit calculation |
 | `stock` | `INTEGER` | `NOT NULL DEFAULT 0` | Total available inventory count |
 | `available` | `INTEGER` | `NOT NULL DEFAULT 1` | Binary availability toggle (`1` = Available, `0` = Unavailable) |
@@ -202,9 +203,34 @@ Stores parlour operational parameters, shop details, UPI ID, and credentials.
 
 ## 🔌 6. REST API Reference Documentation
 
-The application exposes a clean, RESTful JSON API for storefront and parlour operations:
+The application exposes a clean, RESTful JSON API for storefront and parlour operations as implemented in `server.js`:
 
-### 1. Product Catalog Endpoints
+### 1. Authentication Endpoints
+* **`POST /api/auth/shopkeeper/login`**
+  * **Description:** Authenticates shopkeeper credentials and returns a session token.
+  * **Auth:** Public
+  * **Payload:** `{ "username": "...", "password": "..." }`
+  * **Response:** `200 OK` — `{ "success": true, "token": "...", "message": "..." }` | `401 Unauthorized`
+
+* **`POST /api/auth/customer/google`**
+  * **Description:** Handles customer Google OAuth sign-in payload.
+  * **Auth:** Public
+  * **Payload:** `{ "credential": "...", "name": "...", "email": "...", "avatar": "...", "googleId": "..." }`
+  * **Response:** `200 OK` — `{ "success": true, "customer": { ... }, "token": "..." }`
+
+* **`POST /api/auth/customer/send-otp`**
+  * **Description:** Generates a 4-digit verification OTP for customer phone login.
+  * **Auth:** Public
+  * **Payload:** `{ "phone": "9840012345" }`
+  * **Response:** `200 OK` — `{ "success": true, "message": "...", "otpPreview": "..." }`
+
+* **`POST /api/auth/customer/verify-otp`**
+  * **Description:** Validates customer phone OTP and creates/logs in customer session.
+  * **Auth:** Public
+  * **Payload:** `{ "phone": "9840012345", "otp": "1234", "name": "Customer Name" }`
+  * **Response:** `200 OK` — `{ "success": true, "customer": { ... }, "token": "..." }`
+
+### 2. Product Catalog Endpoints
 * **`GET /api/products`**
   * **Description:** Retrieves all catalog products with real-time stock levels, pricing, and availability flags.
   * **Auth:** Public
@@ -217,7 +243,7 @@ The application exposes a clean, RESTful JSON API for storefront and parlour ope
 
 * **`POST /api/products`**
   * **Description:** Adds a new product to the catalog with real-time WebSocket broadcast.
-  * **Auth:** Shopkeeper Credentials (`x-shopkeeper-verified` or Bearer Token)
+  * **Auth:** Shopkeeper Credentials (`x-shopkeeper-verified: true` or `Authorization: Bearer <token>`)
   * **Payload:** `{ "name": "...", "category": "...", "price": 50, "stock": 30, "available": true, ... }`
   * **Response:** `201 Created` — `{ "success": true, "product": { ... } }`
 
@@ -232,7 +258,7 @@ The application exposes a clean, RESTful JSON API for storefront and parlour ope
   * **Auth:** Shopkeeper Credentials
   * **Response:** `200 OK` — `{ "success": true, "url": "data:image/jpeg;base64,...", "staticUrl": "/uploads/..." }`
 
-### 2. Order Management Endpoints
+### 3. Order Management Endpoints
 * **`POST /api/orders`**
   * **Description:** Validates customer cart, verifies stock availability, decrements inventory atomically, and creates order with unique Token and Ticket QR.
   * **Auth:** Public
@@ -281,7 +307,7 @@ The application exposes a clean, RESTful JSON API for storefront and parlour ope
   * **Auth:** Shopkeeper Credentials
   * **Response:** `200 OK` — `{ "success": true, "order": { ... }, "message": "Order pickup verified and completed!" }`
 
-### 3. QR Code, Analytics & Settings Endpoints
+### 4. QR Code, Analytics & Settings Endpoints
 * **`GET /api/qr`**
   * **Description:** Generates high-contrast vector SVG or PNG QR code from query text/data.
   * **Auth:** Public
@@ -294,7 +320,7 @@ The application exposes a clean, RESTful JSON API for storefront and parlour ope
   * **Response:** `200 OK` — `{ "success": true, "stats": { "totalProducts": 95, "ordersCompleted": 1, "totalRevenue": 100, ... } }`
 
 * **`GET /api/reports/revenue`**
-  * **Description:** Returns detailed daily, weekly, and monthly sales aggregation and payment method breakdowns.
+  * **Description:** Returns sales reporting data and financial breakdowns.
   * **Auth:** Shopkeeper Credentials
   * **Response:** `200 OK` — `{ "success": true, "reports": { ... } }`
 
@@ -310,20 +336,31 @@ The application exposes a clean, RESTful JSON API for storefront and parlour ope
 
 ---
 
-## 📈 7. Review-2 Testing & Controlled Validation Findings
+## 📈 7. Review-2 Controlled Testing & Functional Validation Findings
 
-Functional validation and controlled testing were conducted using automated verification suites to assess system correctness and workflow reliability:
+Review 2 validation focused on controlled functional testing of ordering, inventory protection, cancellation handling, QR/ticket resolution, state transitions, IST timestamps, dashboard analytics, and error handling:
 
-### Controlled Validation Observations
+### Controlled Validation Summary
 
-| Evaluation Area | Traditional Baseline Observation | Review 2 System Workflow Observation | Validation Result |
-| :--- | :--- | :--- | :--- |
-| **Product Discovery** | Customer inquires verbally for every flavor | Complete 95+ item catalog browsable on mobile device | **Verified Functional** |
-| **Inventory Overselling** | Out-of-stock disputes during peak rush | Atomic transaction lock rejects orders exceeding stock | **Verified 100% Deterministic** |
-| **Order Identification** | Verbal customer name calls causing confusion | Unique `#A001` Token and optical Ticket QR code | **Verified Multi-Format Lookup** |
-| **Status Communication** | Customer repeatedly asks counter staff for status | 5-step visual tracking timeline updated via WebSockets | **Verified Real-Time Sync** |
-| **Order Cancellation** | Manual stock bookkeeping errors | Automated stock restoration upon order cancellation | **Verified Atomic Rollback** |
-| **Pickup Verification** | Manual paper slip or verbal check | Camera QR scanner and instant completion API | **Verified Terminal Protection** |
+| Evaluation Area | Evaluated System Workflow | Automated Test Verification |
+| :--- | :--- | :--- |
+| **Product Discovery & Catalog** | Browsing complete 95+ item catalog across 8 categories | **Verified & Passing (Test 1)** |
+| **Availability Controls** | 1-tap availability toggle (`🟢 AVAILABLE` ↔ `🔴 NOT AVAILABLE`) | **Verified & Passing (Test 2)** |
+| **Order Quantity Bounds** | Rejection of non-positive or malformed quantities | **Verified & Passing (Test 3)** |
+| **Inventory Deduction** | Automatic atomic stock decrement upon order creation | **Verified & Passing (Test 4)** |
+| **Insufficient Stock Protection** | Immediate rejection when order quantity exceeds stock | **Verified & Passing (Test 5)** |
+| **Zero-Stock Handling** | Transition to out-of-stock when inventory reaches 0 | **Verified & Passing (Test 6)** |
+| **Product Stock Allocation** | Dynamic product creation with initial stock allocation | **Verified & Passing (Test 7)** |
+| **Order Token Generation** | Sequential human-readable token generation (`#A001` format) | **Verified & Passing (Test 8)** |
+| **Multi-Format Ticket Lookup** | Order lookup by Raw ID, `#Token`, clean token, and URL | **Verified & Passing (Test 9)** |
+| **Optical QR Generation & Scan** | Standardized Data URL QR code payload generation and resolution | **Verified & Passing (Test 10)** |
+| **5-Step Order Lifecycle** | Full sequential progression (`NEW` ➔ `ACCEPTED` ➔ `PREPARING` ➔ `READY` ➔ `COMPLETED`) | **Verified & Passing (Test 11)** |
+| **Order Cancellation & Stock Restoration** | Atomic restoration of reserved inventory upon cancellation | **Verified & Passing (Test 12)** |
+| **State Machine Transition Guards** | Protection rejecting status modifications on completed/cancelled orders | **Verified & Passing (Test 13)** |
+| **Invalid Payload Rejection** | Rejection of empty item arrays or missing customer names | **Verified & Passing (Test 14)** |
+| **Deterministic IST Timestamps** | Server UTC timestamps rendered deterministically in `Asia/Kolkata` | **Verified & Passing (Test 15)** |
+| **Dashboard Analytics Aggregation** | Accurate calculation of total products, completed orders, and revenue | **Verified & Passing (Test 16)** |
+| **Non-Existent Resource Handling** | Safe `null` / `404` handling for missing orders or products | **Verified & Passing (Test 17)** |
 
 ---
 
@@ -345,7 +382,7 @@ Functional validation and controlled testing were conducted using automated veri
 
 ## 📊 9. Project Milestone Roadmap
 
-> **Milestone Clarification:** The milestone percentages represent **project lifecycle progress and evaluation stages**, NOT the proportion of code files. Overall project completion is at approximately 70%; Review 3 contains the remaining final-stage work.
+> **Milestone Progress Overview:** The milestone percentages represent **project lifecycle progress and evaluation stages**, NOT the proportion of code files. Overall project completion is at approximately 70%; Review 3 contains the remaining final-stage work.
 
 ```mermaid
 flowchart LR
@@ -357,11 +394,11 @@ flowchart LR
 * **Status:** **Completed & Verified in Codebase.**
 
 ### Milestone 2: Review 2 — ~70% Project Milestone [CURRENT COMPLETED MILESTONE]
-* **Scope & Focus:** Review 2 Deliverables — Completed & Validated:
+* **Scope & Focus:** Review 2 Scope — Completed, Tested & Validated:
   * Strict state machine transition guards preventing invalid lifecycle updates on completed/cancelled orders.
   * Transactional stock restoration on order cancellation.
   * Comprehensive 17-point automated test suite covering all critical workflows.
-  * Controlled testing and validation of order placement, stock locks, and QR scanning workflows.
+  * Controlled testing and functional validation of order placement, stock locks, and QR scanning workflows.
   * Granular REST API and SQLite Database Schema documentation.
 * **Status:** **Review 2 Deliverables Completed and Validated.** *(Overall project completion remains at ~70%).*
 
@@ -385,7 +422,7 @@ The repository includes extensive automated test suites validating critical busi
 ✓ TEST 4: Automatic Inventory Deduction (stock reduced atomically)          -> PASS
 ✓ TEST 5: Insufficient Stock Rejection (overselling prevented)             -> PASS
 ✓ TEST 6: Zero-Stock Handling (out-of-stock transitions)                   -> PASS
-✓ TEST 7: Online vs Walk-In Stock Logic (split allocation)                 -> PASS
+✓ TEST 7: Dynamic Product Creation & Initial Stock Allocation              -> PASS
 ✓ TEST 8: Order Token Generation (#A001 - #Z999 format)                    -> PASS
 ✓ TEST 9: Multi-Format Ticket Lookup (raw ID, #Token, clean, URI)          -> PASS
 ✓ TEST 10: Optical QR Generation & jsQR Decoding                           -> PASS
@@ -450,15 +487,15 @@ The repository includes extensive automated test suites validating critical busi
 
 ---
 
-## 🚀 13. Next Phase — Review 3 (100% Final Milestone)
+## 🚀 13. Next Phase — Planned Review-3 / Future Enhancements
 
-The final evaluation phase (**Review 3 — 100% Milestone**) will focus strictly on final optimization, stakeholder field validation, and handover:
+The final evaluation phase (**Review 3 — 100% Milestone**) represents the remaining ~30% of project deliverables:
 
-* **Final Stakeholder & Customer Field Validation:** Conducting on-site evaluation at Surya Agencies parlour during peak hours to gather qualitative feedback from customers and counter staff.
-* **Final UX & Accessibility Polish:** Further optimizing touch targets, font contrast, and cart interactions for low-end mobile devices and one-handed operation.
-* **Performance Profiling & Asset Optimization:** Analyzing client-side bundle size, Service Worker cache hit rates, and WebSocket reconnection resilience under fluctuating 4G/5G connectivity.
-* **Production Security & Reliability Audit:** Final audit of input validation, rate limiting, and session security across all endpoints.
-* **Maintenance & Handover Documentation:** Assembling comprehensive parlour staff operating runbooks, deployment guides, and project archive for final sign-off.
+* **Planned On-Site Field Testing:** Real-world customer testing during peak parlour hours at Surya Agencies.
+* **Planned UX & Mobile Polish:** Fine-tuning touch targets, contrast, and one-handed checkout navigation on mobile devices.
+* **Planned Performance & Asset Optimization:** Bundle size analysis and Service Worker cache hit tuning under intermittent mobile network conditions.
+* **Planned Security & Reliability Review:** Final rate limiting, input sanitization, and session security checks.
+* **Planned Handover Runbook & Documentation:** Assembling parlour staff operating runbooks, deployment guides, and project archive for final sign-off.
 
 ---
 
@@ -466,6 +503,7 @@ The final evaluation phase (**Review 3 — 100% Milestone**) will focus strictly
 
 * **Project Title:** Surya Agencies — QR-Based Self-Service Ordering & Inventory System
 * **Initiative:** Project Better Tomorrow
+* **Repository Description:** `Project Better Tomorrow — QR-based self-service ordering and inventory management system for Surya Agencies. Project Review 2 (~70%) — improved, tested and validated working system.`
 * **Current Evaluation Milestone:** Project Review 2 (~70% Improved, Tested & Validated System)
 * **Target Enterprise:** Surya Agencies (Authorized Hatsun & Arun Icecream Parlour)
 * **Industry Domain:** Retail Dairy & Ice Cream Parlour Automation

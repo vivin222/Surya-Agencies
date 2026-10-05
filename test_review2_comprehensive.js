@@ -123,17 +123,17 @@ async function runReview2Tests() {
   assert.strictEqual(depletedProd.stock, 0, 'Stock must reach 0');
   console.log('  ✓ Verified zero-stock transition\n');
 
-  // --- 7. ONLINE VS WALK-IN SPLIT STOCK ALLOCATION ---
-  console.log('--- TEST 7: Online vs Walk-In Stock Logic ---');
-  const splitProd = await db.createProduct({
-    name: 'Dual Stock Cassatta',
+  // --- 7. DYNAMIC PRODUCT CREATION & INITIAL STOCK ALLOCATION ---
+  console.log('--- TEST 7: Dynamic Product Creation & Initial Stock Allocation ---');
+  const customProd = await db.createProduct({
+    name: 'Special Cassatta Cake Slice',
     category: 'Ice Cream Cakes',
     price: 150,
     stock: 50,
     available: true
   });
-  assert(splitProd.stock === 50, 'Initial total stock is 50');
-  console.log('  ✓ Split stock allocation verified\n');
+  assert.strictEqual(customProd.stock, 50, 'Initial product stock must be exactly 50');
+  console.log('  ✓ Dynamic product creation and initial stock allocation verified\n');
 
   // --- 8. ORDER CREATION & TOKEN GENERATION ---
   console.log('--- TEST 8: Order Token Generation ---');

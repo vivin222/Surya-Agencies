@@ -486,22 +486,37 @@ class DatabaseService {
     };
   }
 
-  async updateOrderStatus(orderId, newStatus) {
+    async updateOrderStatus(orderId, newStatus) {
     if (this.ready) await this.ready;
     const validStatuses = ['NEW', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP', 'COMPLETED', 'CANCELLED'];
-    const status = newStatus.toUpperCase();
+    const status = (newStatus || '').toString().trim().toUpperCase();
 
     if (!validStatuses.includes(status)) {
-      throw new Error(`Invalid order status: ${newStatus}`);
+      throw new Error(`Invalid order status: "${newStatus}". Allowed statuses: ${validStatuses.join(', ')}`);
     }
 
     const currentOrder = await this.getOrderById(orderId);
-    if (!currentOrder) throw new Error('Order not found');
+    if (!currentOrder) throw new Error('Order not found in database');
+
+    // Rule 1: Cannot change status of an already COMPLETED order
+    if (currentOrder.orderStatus === 'COMPLETED') {
+      throw new Error(`Cannot modify Order ${currentOrder.orderNumber}: It is already COMPLETED.`);
+    }
+
+    // Rule 2: Cannot change status of an already CANCELLED order
+    if (currentOrder.orderStatus === 'CANCELLED') {
+      throw new Error(`Cannot modify Order ${currentOrder.orderNumber}: It is already CANCELLED.`);
+    }
+
+    // Rule 3: No-op if status is identical
+    if (currentOrder.orderStatus === status) {
+      return currentOrder;
+    }
 
     const updatedProducts = [];
 
-    // If cancelling an active order, return stock back to inventory
-    if (status === 'CANCELLED' && currentOrder.orderStatus !== 'CANCELLED' && currentOrder.orderStatus !== 'COMPLETED') {
+    // If cancelling an active order, return stock back to inventory with transaction safety
+    if (status === 'CANCELLED') {
       for (const item of currentOrder.items) {
         if (item.productId && item.quantity > 0) {
           await this.run(
@@ -535,6 +550,10 @@ class DatabaseService {
 
     if (order.orderStatus === 'COMPLETED') {
       throw new Error(`Order ${order.orderNumber} has already been picked up and completed!`);
+    }
+
+    if (order.orderStatus === 'CANCELLED') {
+      throw new Error(`Order ${order.orderNumber} has been CANCELLED and cannot be picked up.`);
     }
 
     await this.run(

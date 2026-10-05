@@ -490,17 +490,21 @@ app.get('/api/customer/orders', async (req, res) => {
 // Direct Order Lookup by Order Number or ID (For QR Scanners & Verification)
 app.get('/api/orders/lookup/:query', async (req, res) => {
   try {
-    const query = req.params.query.trim().toUpperCase();
-    const orders = await db.getOrders();
-    const found = orders.find(o => 
-      o.id.toUpperCase() === query || 
-      o.orderNumber.toUpperCase() === query || 
-      o.orderNumber.replace('#', '').toUpperCase() === query.replace('#', '')
-    );
+    const query = req.params.query ? req.params.query.trim() : '';
+    if (!query) {
+      return res.status(400).json({ success: false, error: 'Query parameter is required' });
+    }
+    const found = await db.getOrderById(query);
 
     if (!found) {
-      return res.status(404).json({ success: false, error: 'Order not found' });
+      return res.status(404).json({ success: false, error: `Order not found matching "${query}"` });
     }
+
+    res.json({ success: true, order: found });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
     res.json({ success: true, order: found });
   } catch (err) {
